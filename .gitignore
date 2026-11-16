@@ -1,0 +1,47 @@
+# Repo root = Unity project root (open this folder in Unity Hub)
+Tools/.venv/
+__pycache__/
+# Large or regenerable GIS data (rebuild with Tools/gis scripts)
+SourceArt/GIS/*.pbf
+SourceArt/GIS/*.tif
+SourceArt/GIS/*.geojson
+SourceArt/Footage/
+# Raw Mixamo download library (re-downloadable; the curated set is imported into Assets/Art/Animations/Mixamo)
+SourceArt/Mixamo Animations/
+# Third-party stock and web photos used only as reference
+IMG/
+
+# Unity (project root is this folder)
+/[Ll]ibrary/
+/[Tt]emp/
+/[Oo]bj/
+/[Bb]uild/
+/[Bb]uilds/
+/[Ll]ogs/
+/[Uu]ser[Ss]ettings/
+/[Mm]emoryCaptures/
+/[Rr]ecordings/
+*.csproj
+*.sln
+*.slnx
+*.suo
+*.user
+*.pidb
+*.booproj
+*.apk
+*.aab
+*.unitypackage
+crashlytics-build.properties
+.vscode/
+.idea/
+
+# Unity build leftovers (never ship or commit)
+*_BackUpThisFolder_ButDontShipItWithYourGame/
+*_BurstDebugInformation_DoNotShip/
+# Raw Mixamo download library at the project root (the curated set is in Assets/Art/Animations/Mixamo)
+/Animations/
+/Animations.meta
+.utmp/
+
+# Local working brief (kept out of the repository)
+CLAUDE.md
