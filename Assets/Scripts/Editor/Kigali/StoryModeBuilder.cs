@@ -178,6 +178,8 @@ namespace KR.Editor.Kigali
             EditorUtility.SetDirty(week);
             AssetDatabase.SaveAssets();
 
+            // Hand edits to signs and names live under Story Mode; save them before it is replaced.
+            EditableLayer.Keep();
             // Replace any earlier Story Mode objects.
             foreach (var old in new[] { "Story Mode", "Police posts" })
             {
@@ -224,7 +226,8 @@ namespace KR.Editor.Kigali
             var cameraBody = EditorAssetUtil.LitMaterial(Out, "PhotoCamera", new Color(0.08f, 0.08f, 0.09f), 0.6f);
             host.AddComponent<PhotoCamera>().Configure(rig, director, cameraBody);
             host.AddComponent<StoryWiring>();
-            host.AddComponent<Teleporter>().Configure(rig, RibbonMaterial());
+            var ribbon = RibbonMaterial();
+            host.AddComponent<Teleporter>().Configure(rig, ribbon);
             int npcs = PlaceCharacters(host.transform, terrain, rig != null ? rig.Player.transform.position : home,
                 (officerAt, "officer", "Officer Mukamana", "off_chat", PcPeople.Activity.Idle, true),
                 (mamanAt, "maman_fils", "Maman Fils", "mf_chat", PcPeople.Activity.Talk, true),
@@ -232,6 +235,13 @@ namespace KR.Editor.Kigali
                 (librarianAt, "jean_paul", "Jean-Paul", "jp_chat", PcPeople.Activity.Idle, false),
                 (vendorAt, "gakuba", "Mzee Gakuba", "gk_chat", PcPeople.Activity.Vendor, false));
             ParkingBay(host.transform, bayAt, bayYaw);
+
+            // The living city: real place names, working businesses, police, crossings, people, accident scene, satnav data.
+            CityServicesBuilder.Build(new CityServicesBuilder.Context
+            {
+                Host = host.transform, Terrain = terrain, Vehicles = vehicles, Rig = rig, Director = director, Runner = talk,
+                Nav = navigator, Catalog = catalog, District = District, Campus = campus, RouteMaterial = ribbon,
+            });
             Debug.Log($"[StoryMode] {npcs} characters, {catalog.places.Length} places to discover ({catalog.tour.Length} on the Kimironko tour), parking bay at {bayAt:F0}.");
 
             EditorSceneManager.MarkSceneDirty(scene);
@@ -462,53 +472,20 @@ namespace KR.Editor.Kigali
             return holder;
         }
 
-        // Traffic officers at the signalised junction nearest each hub; speed cameras on three long roads.
-        // Visuals are stand-ins (hi-vis capsules) until Mixamo officers with hand-signal clips replace them.
+        // Speed cameras on three long roads. Traffic officers and foot patrols are real people now (CityServicesBuilder).
         static int PlacePolice(RoadNetworkTraffic vehicles, Terrain terrain, Vector3[] hubs)
         {
             var host = new GameObject("Police posts").transform;
-            var vest = AssetDatabase.LoadAssetAtPath<Material>($"{Out}/M_HiVis.mat");
-            if (vest == null)
-            {
-                vest = new Material(Shader.Find("Universal Render Pipeline/Lit"));
-                AssetDatabase.CreateAsset(vest, $"{Out}/M_HiVis.mat");
-            }
-            vest.SetColor("_BaseColor", new Color(0.85f, 0.95f, 0.1f));
-            vest.EnableKeyword("_EMISSION");
-            vest.SetColor("_EmissionColor", new Color(0.35f, 0.4f, 0.02f));
-            EditorUtility.SetDirty(vest);
             int count = 0;
-            if (vehicles != null)
+            if (vehicles == null)
+                return 0;
+            var longest = vehicles.Paths.OrderByDescending(p => p.points.Length).Take(3).ToArray();
+            foreach (var path in longest)
             {
-                foreach (var hub in hubs)
-                {
-                    Vector3 best = Vector3.zero;
-                    float bestD = float.MaxValue;
-                    for (int i = 0; i < vehicles.StopCount; i++)
-                        if (vehicles.StopLines(i, out var a, out _, out var b, out _, out _, out _))
-                        {
-                            Vector3 j = (a + b) * 0.5f;
-                            float d = Flat(j, hub);
-                            if (d < bestD)
-                            {
-                                bestD = d;
-                                best = j;
-                            }
-                        }
-                    if (bestD > 900f)
-                        continue;
-                    var officer = Stand(host, "Traffic officer", OnGround(terrain, best + new Vector3(6f, 0f, 6f)), vest);
-                    officer.AddComponent<PolicePost>().Configure(PolicePost.Kind.Officer, 80f);
-                    count++;
-                }
-                var longest = vehicles.Paths.OrderByDescending(p => p.points.Length).Take(3).ToArray();
-                foreach (var path in longest)
-                {
-                    var mid = path.points[path.points.Length / 2];
-                    var cam = Stand(host, "Speed camera", OnGround(terrain, mid + new Vector3(path.halfWidth + 2f, 0f, 0f)), null);
-                    cam.AddComponent<PolicePost>().Configure(PolicePost.Kind.SpeedCamera, 60f);
-                    count++;
-                }
+                var mid = path.points[path.points.Length / 2];
+                var cam = Stand(host, "Speed camera", OnGround(terrain, mid + new Vector3(path.halfWidth + 2f, 0f, 0f)), null);
+                cam.AddComponent<PolicePost>().Configure(PolicePost.Kind.SpeedCamera, 60f);
+                count++;
             }
             return count;
         }

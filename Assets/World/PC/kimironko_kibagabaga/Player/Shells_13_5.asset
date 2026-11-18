@@ -17,7 +17,7 @@ Mesh:
     firstVertex: 0
     vertexCount: 8
     localAABB:
-      m_Center: {x: 3331.3005, y: 36.81472, z: 1513.8536}
+      m_Center: {x: 3338.4116, y: 36.70092, z: 1521.918}
       m_Extent: {x: 0.30004883, y: 2.1499996, z: 0.30004883}
   m_Shapes:
     vertices: []
@@ -97,7 +97,7 @@ Mesh:
       format: 0
       dimension: 0
     m_DataSize: 96
-    _typelessdata: 02305045aca80a42b731bd449c395045aca80a42b731bd449c395045aca80a42eb44bd4402305045aca80a42eb44bd4402305045dfdb1b42b731bd449c395045dfdb1b42b731bd449c395045dfdb1b42eb44bd4402305045dfdb1b42eb44bd44
+    _typelessdata: c9a1504524340a42c633be4463ab504524340a42c633be4463ab504524340a42fa46be44c9a1504524340a42fa46be44c9a1504557671b42c633be4463ab504557671b42c633be4463ab504557671b42fa46be44c9a1504557671b42fa46be44
   m_CompressedMesh:
     m_Vertices:
       m_NumItems: 0
@@ -151,7 +151,7 @@ Mesh:
       m_BitSize: 0
     m_UVInfo: 0
   m_LocalAABB:
-    m_Center: {x: 3331.3005, y: 36.81472, z: 1513.8536}
+    m_Center: {x: 3338.4116, y: 36.70092, z: 1521.918}
     m_Extent: {x: 0.30004883, y: 2.1499996, z: 0.30004883}
   m_MeshUsageFlags: 0
   m_CookingOptions: 30
