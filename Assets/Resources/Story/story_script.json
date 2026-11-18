@@ -1,185 +1,1203 @@
 {
-  "version": 1,
-  "conversations": [
+ "version": 1,
+ "conversations": [
+  {
+   "id": "mf_tea",
+   "npc": "maman_fils",
+   "start": "a1",
+   "nodes": [
     {
-      "id": "mf_tea",
-      "npc": "maman_fils",
-      "start": "a1",
-      "nodes": [
-        { "id": "a1", "speaker": "npc", "text": "Mwaramutse! You found the house. Fils told me his friend from ALU was coming. Come in, come in.",
-          "choices": [
-            { "text": "Mwaramutse, Maman Fils. Amakuru?", "next": "a2", "setFlag": "greeted_maman_kinyarwanda" },
-            { "text": "Good morning! Thank you for having me.", "next": "a2b" }
-          ] },
-        { "id": "a2", "speaker": "npc", "text": "Ni meza! You are learning Kinyarwanda, good. Sit down, the icyayi is ready.", "next": "a3" },
-        { "id": "a2b", "speaker": "npc", "text": "You are welcome here. Next time, try 'Mwaramutse'; it makes an old woman happy. Sit down, the icyayi is ready.", "next": "a3" },
-        { "id": "a3", "speaker": "npc", "text": "So, how is Fils doing on campus? He never tells me anything.",
-          "choices": [
-            { "text": "He works hard. We are in the same group for the summative.", "next": "a4" },
-            { "text": "He is always the first one in class.", "next": "a4b", "setFlag": "praised_fils" }
-          ] },
-        { "id": "a4", "speaker": "npc", "text": "A group project! Then you must all finish it together. Drink, before it gets cold.", "next": "a5" },
-        { "id": "a4b", "speaker": "npc", "text": "The first? That boy? You are being kind. Drink, before it gets cold.", "next": "a5" },
-        { "id": "a5", "speaker": "npc", "text": "You came by car? Drive carefully on the way back. The roads near the market are busy at this hour.",
-          "choices": [
-            { "text": "I will. Murakoze cyane for the tea.", "next": "a6", "setFlag": "thanked_maman_kinyarwanda" },
-            { "text": "Thank you, I will be careful.", "next": "a6" }
-          ] },
-        { "id": "a6", "speaker": "npc", "text": "Come back when the summative is finished and tell me how it went.", "next": "" }
-      ]
+     "id": "a1",
+     "speaker": "npc",
+     "text": "Mwaramutse! You found the house. Fils told me his friend from ALU was coming. Come in, come in.",
+     "choices": [
+      {
+       "text": "Mwaramutse, Maman Fils. Amakuru?",
+       "next": "a2",
+       "setFlag": "greeted_maman_kinyarwanda"
+      },
+      {
+       "text": "Good morning! Thank you for having me.",
+       "next": "a2b"
+      }
+     ]
     },
     {
-      "id": "mf_thanks",
-      "npc": "maman_fils",
-      "start": "b1",
-      "nodes": [
-        { "id": "b1", "speaker": "npc", "text": "Mwiriwe! You look tired, but happy. Is it finished?",
-          "choices": [
-            { "text": "We submitted it this afternoon, before the deadline.", "next": "b2" },
-            { "text": "Finished! Fils took the photo for the poster... well, I did.", "next": "b2b" }
-          ] },
-        { "id": "b2", "speaker": "npc", "text": "Before the deadline! That is how it should be. I am proud of you both.", "next": "b3" },
-        { "id": "b2b", "speaker": "npc", "text": "Ha! Then the poster will be beautiful. I am proud of you both.", "next": "b3" },
-        { "id": "b3", "speaker": "you", "text": "Thank you for the tea on Monday. It helped.", "next": "b4" },
-        { "id": "b4", "speaker": "npc", "text": "The door is always open. Now go and rest, and drive slowly.", "next": "" }
-      ]
+     "id": "a2",
+     "speaker": "npc",
+     "text": "Ni meza! You are learning Kinyarwanda, good. Sit down, the icyayi is ready.",
+     "next": "a3"
     },
     {
-      "id": "mf_chat",
-      "npc": "maman_fils",
-      "start": "c1",
-      "nodes": [
-        { "id": "c1", "speaker": "npc", "text": "Muraho! Are you looking for Fils? He is on campus all day this week.", "next": "c2" },
-        { "id": "c2", "speaker": "npc", "text": "Greet the neighbours on your way. A street is friendlier when people say hello.", "next": "" }
-      ]
+     "id": "a2b",
+     "speaker": "npc",
+     "text": "You are welcome here. Next time, try 'Mwaramutse'; it makes an old woman happy. Sit down, the icyayi is ready.",
+     "next": "a3"
     },
     {
-      "id": "jp_library",
-      "npc": "jean_paul",
-      "start": "d1",
-      "nodes": [
-        { "id": "d1", "speaker": "npc", "text": "Good morning. You look like someone with a summative due on Wednesday.",
-          "choices": [
-            { "text": "How did you know?", "next": "d2" },
-            { "text": "Yes. Where should our group start reading?", "next": "d3" }
-          ] },
-        { "id": "d2", "speaker": "npc", "text": "Everyone who walks in this week has the same face. Let me help.", "next": "d3" },
-        { "id": "d3", "speaker": "npc", "text": "Start with the two books on your module's reading list, not the whole shelf. Read the summary chapters first.", "next": "d4" },
-        { "id": "d4", "speaker": "npc", "text": "Read in short blocks and write three lines of notes after each one. Share the notes with your group tonight.",
-          "choices": [
-            { "text": "Short blocks and notes. Got it.", "next": "d5", "setFlag": "study_plan" },
-            { "text": "Can I borrow both books today?", "next": "d5b" }
-          ] },
-        { "id": "d5", "speaker": "npc", "text": "Good. Come back if you get stuck. And do not drive and read at the same time!", "next": "" },
-        { "id": "d5b", "speaker": "npc", "text": "One today, one tomorrow, so your group can share. Now go, the clock is running.", "next": "" }
-      ]
+     "id": "a3",
+     "speaker": "npc",
+     "text": "So, how is Fils doing on campus? He never tells me anything.",
+     "choices": [
+      {
+       "text": "He works hard. We are in the same group for the summative.",
+       "next": "a4"
+      },
+      {
+       "text": "He is always the first one in class.",
+       "next": "a4b",
+       "setFlag": "praised_fils"
+      }
+     ]
     },
     {
-      "id": "jp_chat",
-      "npc": "jean_paul",
-      "start": "e1",
-      "nodes": [
-        { "id": "e1", "speaker": "npc", "text": "The quiet room is free this afternoon if your group needs it.", "next": "" }
-      ]
+     "id": "a4",
+     "speaker": "npc",
+     "text": "A group project! Then you must all finish it together. Drink, before it gets cold.",
+     "next": "a5"
     },
     {
-      "id": "off_lesson",
-      "npc": "officer",
-      "start": "f1",
-      "nodes": [
-        { "id": "f1", "speaker": "npc", "text": "Mwaramutse. I am Officer Mukamana. You are here for the road-safety talk for new drivers? Good. It is short, then three questions.",
-          "choices": [
-            { "text": "Yes, I am ready.", "next": "f2" },
-            { "text": "Will this be on a test?", "next": "f1b" }
-          ] },
-        { "id": "f1b", "speaker": "npc", "text": "Three questions, right after the talk. Listen well.", "next": "f2" },
-        { "id": "f2", "speaker": "npc", "text": "First: in Rwanda, vehicles drive on the right-hand side of the road. Keep right, always.", "next": "f3" },
-        { "id": "f3", "speaker": "npc", "text": "Second: when an officer is directing traffic, the officer's instructions come before the signs and the traffic lights.", "next": "f4" },
-        { "id": "f4", "speaker": "npc", "text": "Third: if an officer signals you to stop, you stop. Refusing to stop is an offence with a heavy fine and even prison.", "next": "f5" },
-        { "id": "f5", "speaker": "npc", "text": "Now, the questions.", "quiz": ["q_right_side", "q_officer_first", "q_refuse_stop"], "next": "f6" },
-        { "id": "f6", "speaker": "npc", "text": "Thank you. Drive like that every day and you will not need to see me again, except to say hello.", "next": "" }
-      ]
+     "id": "a4b",
+     "speaker": "npc",
+     "text": "The first? That boy? You are being kind. Drink, before it gets cold.",
+     "next": "a5"
     },
     {
-      "id": "off_chat",
-      "npc": "officer",
-      "start": "g1",
-      "nodes": [
-        { "id": "g1", "speaker": "npc", "text": "Seatbelt on, speed down, and stop at the white line on red. That is all I ask.", "next": "" }
-      ]
+     "id": "a5",
+     "speaker": "npc",
+     "text": "You came by car? Drive carefully on the way back. The roads near the market are busy at this hour.",
+     "choices": [
+      {
+       "text": "I will. Murakoze cyane for the tea.",
+       "next": "a6",
+       "setFlag": "thanked_maman_kinyarwanda"
+      },
+      {
+       "text": "Thank you, I will be careful.",
+       "next": "a6"
+      }
+     ]
     },
     {
-      "id": "gk_market",
-      "npc": "gakuba",
-      "start": "h1",
-      "nodes": [
-        { "id": "h1", "speaker": "npc", "text": "Muraho, young one! You came just in time; I am closing early today. What are you looking for?",
-          "choices": [
-            { "text": "Fabric for our group's poster display.", "next": "h2" },
-            { "text": "Muraho, Mzee! Fabric, please, something bright.", "next": "h2b", "setFlag": "greeted_gakuba" }
-          ] },
-        { "id": "h2", "speaker": "npc", "text": "A poster? Then you want colour that can be seen from far away. This blue, or this yellow?", "next": "h3" },
-        { "id": "h2b", "speaker": "npc", "text": "Bright! You came to the right stall. This blue, or this yellow?", "next": "h3" },
-        { "id": "h3", "speaker": "npc", "text": "Choose one.",
-          "choices": [
-            { "text": "The blue one.", "next": "h4", "setFlag": "fabric_blue" },
-            { "text": "The yellow one.", "next": "h4", "setFlag": "fabric_yellow" }
-          ] },
-        { "id": "h4", "speaker": "npc", "text": "Good choice. For a student, a fair price. Carry it carefully, the market is crowded.", "next": "h5" },
-        { "id": "h5", "speaker": "you", "text": "Murakoze, Mzee!", "next": "h6" },
-        { "id": "h6", "speaker": "npc", "text": "Come back when you are rich and famous. Ha!", "next": "" }
-      ]
-    },
-    {
-      "id": "gk_chat",
-      "npc": "gakuba",
-      "start": "i1",
-      "nodes": [
-        { "id": "i1", "speaker": "npc", "text": "The stall opens early tomorrow. Come before the midday crowd.", "next": "" }
-      ]
-    },
-    {
-      "id": "al_chat",
-      "npc": "aline",
-      "start": "j1",
-      "nodes": [
-        { "id": "j1", "speaker": "npc", "text": "Hey! Did you see the group chat? We meet on campus before the deadline.",
-          "choices": [
-            { "text": "I will be there.", "next": "j2" },
-            { "text": "Can someone else take the poster photo?", "next": "j2b" }
-          ] },
-        { "id": "j2", "speaker": "npc", "text": "Great. Bring the fabric if you have it.", "next": "" },
-        { "id": "j2b", "speaker": "npc", "text": "No way, you have the steady hands. Stand back so the whole building fits!", "next": "" }
-      ]
+     "id": "a6",
+     "speaker": "npc",
+     "text": "Come back when the summative is finished and tell me how it went.",
+     "next": ""
     }
-  ],
-  "quiz": [
+   ]
+  },
+  {
+   "id": "mf_thanks",
+   "npc": "maman_fils",
+   "start": "b1",
+   "nodes": [
     {
-      "id": "q_right_side",
-      "text": "On which side of the road do vehicles drive in Rwanda?",
-      "options": ["The left-hand side", "The right-hand side", "Either side, if the road is empty"],
-      "correct": 1,
-      "explanation": "Vehicles drive on the right-hand side of the road.",
-      "source": "Law n° 014/2026 of 06/03/2026 governing road traffic, Art. 4 (Official Gazette, Special of 10/03/2026)",
-      "reviewStatus": "draft"
+     "id": "b1",
+     "speaker": "npc",
+     "text": "Mwiriwe! You look tired, but happy. Is it finished?",
+     "choices": [
+      {
+       "text": "We submitted it this afternoon, before the deadline.",
+       "next": "b2"
+      },
+      {
+       "text": "Finished! Fils took the photo for the poster... well, I did.",
+       "next": "b2b"
+      }
+     ]
     },
     {
-      "id": "q_officer_first",
-      "text": "A traffic light is green, but an officer directing traffic signals you to stop. What do you do?",
-      "options": ["Follow the green light", "Stop: the officer's instructions come first", "Sound the horn and continue"],
-      "correct": 1,
-      "explanation": "An officer's instructions take priority over road signs and signals.",
-      "source": "Law n° 014/2026, Art. 6(3)",
-      "reviewStatus": "draft"
+     "id": "b2",
+     "speaker": "npc",
+     "text": "Before the deadline! That is how it should be. I am proud of you both.",
+     "next": "b3"
     },
     {
-      "id": "q_refuse_stop",
-      "text": "What happens if a driver refuses to stop when an officer signals them?",
-      "options": ["Nothing, if they were not speeding", "A warning only", "It is an offence: a fine and possible imprisonment"],
-      "correct": 2,
-      "explanation": "Refusing to stop when signalled by an officer is an offence: a fine of FRW 400,000 to 700,000 and 3 to 6 months' imprisonment.",
-      "source": "Law n° 014/2026, Art. 39",
-      "reviewStatus": "draft"
+     "id": "b2b",
+     "speaker": "npc",
+     "text": "Ha! Then the poster will be beautiful. I am proud of you both.",
+     "next": "b3"
+    },
+    {
+     "id": "b3",
+     "speaker": "you",
+     "text": "Thank you for the tea on Monday. It helped.",
+     "next": "b4"
+    },
+    {
+     "id": "b4",
+     "speaker": "npc",
+     "text": "The door is always open. Now go and rest, and drive slowly.",
+     "next": ""
     }
-  ]
+   ]
+  },
+  {
+   "id": "mf_chat",
+   "npc": "maman_fils",
+   "start": "c1",
+   "nodes": [
+    {
+     "id": "c1",
+     "speaker": "npc",
+     "text": "Muraho! Are you looking for Fils? He is on campus all day this week.",
+     "next": "c2"
+    },
+    {
+     "id": "c2",
+     "speaker": "npc",
+     "text": "Greet the neighbours on your way. A street is friendlier when people say hello.",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "jp_library",
+   "npc": "jean_paul",
+   "start": "d1",
+   "nodes": [
+    {
+     "id": "d1",
+     "speaker": "npc",
+     "text": "Good morning. You look like someone with a summative due on Wednesday.",
+     "choices": [
+      {
+       "text": "How did you know?",
+       "next": "d2"
+      },
+      {
+       "text": "Yes. Where should our group start reading?",
+       "next": "d3"
+      }
+     ]
+    },
+    {
+     "id": "d2",
+     "speaker": "npc",
+     "text": "Everyone who walks in this week has the same face. Let me help.",
+     "next": "d3"
+    },
+    {
+     "id": "d3",
+     "speaker": "npc",
+     "text": "Start with the two books on your module's reading list, not the whole shelf. Read the summary chapters first.",
+     "next": "d4"
+    },
+    {
+     "id": "d4",
+     "speaker": "npc",
+     "text": "Read in short blocks and write three lines of notes after each one. Share the notes with your group tonight.",
+     "choices": [
+      {
+       "text": "Short blocks and notes. Got it.",
+       "next": "d5",
+       "setFlag": "study_plan"
+      },
+      {
+       "text": "Can I borrow both books today?",
+       "next": "d5b"
+      }
+     ]
+    },
+    {
+     "id": "d5",
+     "speaker": "npc",
+     "text": "Good. Come back if you get stuck. And do not drive and read at the same time!",
+     "next": ""
+    },
+    {
+     "id": "d5b",
+     "speaker": "npc",
+     "text": "One today, one tomorrow, so your group can share. Now go, the clock is running.",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "jp_chat",
+   "npc": "jean_paul",
+   "start": "e1",
+   "nodes": [
+    {
+     "id": "e1",
+     "speaker": "npc",
+     "text": "The quiet room is free this afternoon if your group needs it.",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "off_lesson",
+   "npc": "officer",
+   "start": "f1",
+   "nodes": [
+    {
+     "id": "f1",
+     "speaker": "npc",
+     "text": "Mwaramutse. I am Officer Mukamana. You are here for the road-safety talk for new drivers? Good. It is short, then three questions.",
+     "choices": [
+      {
+       "text": "Yes, I am ready.",
+       "next": "f2"
+      },
+      {
+       "text": "Will this be on a test?",
+       "next": "f1b"
+      }
+     ]
+    },
+    {
+     "id": "f1b",
+     "speaker": "npc",
+     "text": "Three questions, right after the talk. Listen well.",
+     "next": "f2"
+    },
+    {
+     "id": "f2",
+     "speaker": "npc",
+     "text": "First: in Rwanda, vehicles drive on the right-hand side of the road. Keep right, always.",
+     "next": "f3"
+    },
+    {
+     "id": "f3",
+     "speaker": "npc",
+     "text": "Second: when an officer is directing traffic, the officer's instructions come before the signs and the traffic lights.",
+     "next": "f4"
+    },
+    {
+     "id": "f4",
+     "speaker": "npc",
+     "text": "Third: if an officer signals you to stop, you stop. Refusing to stop is an offence with a heavy fine and even prison.",
+     "next": "f5"
+    },
+    {
+     "id": "f5",
+     "speaker": "npc",
+     "text": "Now, the questions.",
+     "quiz": [
+      "q_right_side",
+      "q_officer_first",
+      "q_refuse_stop"
+     ],
+     "next": "f6"
+    },
+    {
+     "id": "f6",
+     "speaker": "npc",
+     "text": "Thank you. Drive like that every day and you will not need to see me again, except to say hello.",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "off_chat",
+   "npc": "officer",
+   "start": "g1",
+   "nodes": [
+    {
+     "id": "g1",
+     "speaker": "npc",
+     "text": "Seatbelt on, speed down, and stop at the white line on red. That is all I ask.",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "gk_market",
+   "npc": "gakuba",
+   "start": "h1",
+   "nodes": [
+    {
+     "id": "h1",
+     "speaker": "npc",
+     "text": "Muraho, young one! You came just in time; I am closing early today. What are you looking for?",
+     "choices": [
+      {
+       "text": "Fabric for our group's poster display.",
+       "next": "h2"
+      },
+      {
+       "text": "Muraho, Mzee! Fabric, please, something bright.",
+       "next": "h2b",
+       "setFlag": "greeted_gakuba"
+      }
+     ]
+    },
+    {
+     "id": "h2",
+     "speaker": "npc",
+     "text": "A poster? Then you want colour that can be seen from far away. This blue, or this yellow?",
+     "next": "h3"
+    },
+    {
+     "id": "h2b",
+     "speaker": "npc",
+     "text": "Bright! You came to the right stall. This blue, or this yellow?",
+     "next": "h3"
+    },
+    {
+     "id": "h3",
+     "speaker": "npc",
+     "text": "Choose one.",
+     "choices": [
+      {
+       "text": "The blue one.",
+       "next": "h4",
+       "setFlag": "fabric_blue"
+      },
+      {
+       "text": "The yellow one.",
+       "next": "h4",
+       "setFlag": "fabric_yellow"
+      }
+     ]
+    },
+    {
+     "id": "h4",
+     "speaker": "npc",
+     "text": "Good choice. For a student, a fair price. Carry it carefully, the market is crowded.",
+     "next": "h5"
+    },
+    {
+     "id": "h5",
+     "speaker": "you",
+     "text": "Murakoze, Mzee!",
+     "next": "h6"
+    },
+    {
+     "id": "h6",
+     "speaker": "npc",
+     "text": "Come back when you are rich and famous. Ha!",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "gk_chat",
+   "npc": "gakuba",
+   "start": "i1",
+   "nodes": [
+    {
+     "id": "i1",
+     "speaker": "npc",
+     "text": "The stall opens early tomorrow. Come before the midday crowd.",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "al_chat",
+   "npc": "aline",
+   "start": "j1",
+   "nodes": [
+    {
+     "id": "j1",
+     "speaker": "npc",
+     "text": "Hey! Did you see the group chat? We meet on campus before the deadline.",
+     "choices": [
+      {
+       "text": "I will be there.",
+       "next": "j2"
+      },
+      {
+       "text": "Can someone else take the poster photo?",
+       "next": "j2b"
+      }
+     ]
+    },
+    {
+     "id": "j2",
+     "speaker": "npc",
+     "text": "Great. Bring the fabric if you have it.",
+     "next": ""
+    },
+    {
+     "id": "j2b",
+     "speaker": "npc",
+     "text": "No way, you have the steady hands. Stand back so the whole building fits!",
+     "next": ""
+    }
+   ]
+  },
+  {
+   "id": "svc_food",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Muraho! Welcome to {place}. Table for one, or something to take away?",
+     "choices": [
+      {
+       "text": "A cup of African tea, please.",
+       "next": "tea",
+       "setFlag": "order_tea"
+      },
+      {
+       "text": "Something to eat. What do you recommend?",
+       "next": "eat"
+      },
+      {
+       "text": "Just a bottle of water, thanks.",
+       "next": "water",
+       "setFlag": "order_water"
+      },
+      {
+       "text": "Just looking, thank you.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "tea",
+     "speaker": "npc",
+     "text": "African tea, coming right up. Take a seat outside, I'll bring it over.",
+     "next": "served"
+    },
+    {
+     "id": "eat",
+     "speaker": "npc",
+     "text": "The buffet is fresh today: rice, beans, matoke, greens and meat. Shall I bring you a plate?",
+     "choices": [
+      {
+       "text": "Yes please, a plate.",
+       "next": "served",
+       "setFlag": "order_plate"
+      },
+      {
+       "text": "Maybe later, thank you.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "water",
+     "speaker": "npc",
+     "text": "Here you are. Cold from the fridge.",
+     "next": "served"
+    },
+    {
+     "id": "served",
+     "speaker": "npc",
+     "text": "I'll bring it to your table outside. Enjoy! Murakoze for coming to {place}.",
+     "setFlag": "ate_out"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "No problem. Come back any time!"
+    }
+   ]
+  },
+  {
+   "id": "svc_bar",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Hello! Welcome to {place}. What can I get you?",
+     "choices": [
+      {
+       "text": "A soda, please.",
+       "next": "soda",
+       "setFlag": "order_soda"
+      },
+      {
+       "text": "Is there football on TV tonight?",
+       "next": "tv"
+      },
+      {
+       "text": "Nothing, thanks.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "soda",
+     "speaker": "npc",
+     "text": "One soda, cold. I'll put it on your table.",
+     "next": "done"
+    },
+    {
+     "id": "tv",
+     "speaker": "npc",
+     "text": "There is always a match somewhere. Come back in the evening, the place fills up.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Enjoy your evening at {place}!",
+     "setFlag": "visited_bar"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "All right. See you another time."
+    }
+   ]
+  },
+  {
+   "id": "svc_shop",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Muraho! Welcome to {place}. Can I help you find something?",
+     "choices": [
+      {
+       "text": "I need a few things for the house.",
+       "next": "house"
+      },
+      {
+       "text": "Do you sell phone credit?",
+       "next": "credit"
+      },
+      {
+       "text": "Just looking, thank you.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "house",
+     "speaker": "npc",
+     "text": "Soap, sugar, rice, oil... it's all on the shelves. Take a basket and pay at the counter.",
+     "next": "paid"
+    },
+    {
+     "id": "credit",
+     "speaker": "npc",
+     "text": "Yes, at the counter. Which network?",
+     "choices": [
+      {
+       "text": "Any is fine, thanks.",
+       "next": "paid"
+      }
+     ]
+    },
+    {
+     "id": "paid",
+     "speaker": "npc",
+     "text": "Thank you! Murakoze, come again to {place}.",
+     "setFlag": "went_shopping"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "Take your time. Call me if you need anything."
+    }
+   ]
+  },
+  {
+   "id": "svc_pharmacy",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day. Welcome to {place}. How can I help?",
+     "choices": [
+      {
+       "text": "I'd like some plasters and hand sanitiser.",
+       "next": "basic"
+      },
+      {
+       "text": "I have a prescription.",
+       "next": "rx"
+      },
+      {
+       "text": "Just asking, thank you.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "basic",
+     "speaker": "npc",
+     "text": "Here you are. Anything else?",
+     "next": "done"
+    },
+    {
+     "id": "rx",
+     "speaker": "npc",
+     "text": "Let me see it. Please wait a few minutes while I prepare it, and follow the instructions on the box.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Take care of yourself!",
+     "setFlag": "visited_pharmacy"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "Of course. Stay well."
+    }
+   ]
+  },
+  {
+   "id": "svc_clinic",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day, welcome to {place}. Do you have an appointment?",
+     "choices": [
+      {
+       "text": "No, I just need some information.",
+       "next": "info"
+      },
+      {
+       "text": "I'm visiting someone.",
+       "next": "visit"
+      },
+      {
+       "text": "No, thank you.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "info",
+     "speaker": "npc",
+     "text": "Here is a leaflet with our services and hours. For an emergency, come straight to the front desk.",
+     "next": "done"
+    },
+    {
+     "id": "visit",
+     "speaker": "npc",
+     "text": "Visitors sign in here, please. Visiting hours are on the board.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Have a good day.",
+     "setFlag": "visited_clinic"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "All right. Take care."
+    }
+   ]
+  },
+  {
+   "id": "svc_bank",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day! Welcome to {place}. How can we help you today?",
+     "choices": [
+      {
+       "text": "I'd like to open a student account.",
+       "next": "acct"
+      },
+      {
+       "text": "Where is the cash machine?",
+       "next": "atm"
+      },
+      {
+       "text": "Nothing, thanks.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "acct",
+     "speaker": "npc",
+     "text": "Bring your ID and your student card, and a colleague inside will help you. It doesn't take long.",
+     "next": "done"
+    },
+    {
+     "id": "atm",
+     "speaker": "npc",
+     "text": "Just outside, on the left of the door.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Thank you for coming to {place}.",
+     "setFlag": "visited_bank"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "You're welcome. Have a good day."
+    }
+   ]
+  },
+  {
+   "id": "svc_hotel",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Welcome to {place}! Are you checking in?",
+     "choices": [
+      {
+       "text": "No, I'm meeting a friend at the restaurant.",
+       "next": "meet"
+      },
+      {
+       "text": "Do you have a room tonight?",
+       "next": "room"
+      },
+      {
+       "text": "Just passing, thanks.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "meet",
+     "speaker": "npc",
+     "text": "Of course. The restaurant is straight through, on your right.",
+     "next": "done"
+    },
+    {
+     "id": "room",
+     "speaker": "npc",
+     "text": "Let me check... yes, we have one. Would you like to see it first?",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Enjoy your stay at {place}!",
+     "setFlag": "visited_hotel"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "Have a lovely day."
+    }
+   ]
+  },
+  {
+   "id": "svc_salon",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Muraho! Welcome to {place}. Haircut, braids, or just a trim?",
+     "choices": [
+      {
+       "text": "A quick trim, please.",
+       "next": "trim"
+      },
+      {
+       "text": "How long is the wait?",
+       "next": "wait"
+      },
+      {
+       "text": "Not today, thanks.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "trim",
+     "speaker": "npc",
+     "text": "Sit here. Ten minutes and you'll look sharp for class.",
+     "next": "done"
+    },
+    {
+     "id": "wait",
+     "speaker": "npc",
+     "text": "Two people before you. Have a seat, there's music.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Looking good! Come back soon.",
+     "setFlag": "visited_salon"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "All right, see you next time."
+    }
+   ]
+  },
+  {
+   "id": "svc_garage",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day! What does the car need?",
+     "choices": [
+      {
+       "text": "Fill it up, please.",
+       "next": "fuel"
+      },
+      {
+       "text": "Can you check the tyre pressure?",
+       "next": "tyres"
+      },
+      {
+       "text": "Nothing, thanks.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "fuel",
+     "speaker": "npc",
+     "text": "Filling up now. Please switch off the engine and put your phone away near the pumps.",
+     "next": "done"
+    },
+    {
+     "id": "tyres",
+     "speaker": "npc",
+     "text": "Sure. They were a little low; all four are right now. Safe driving!",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Thank you, and drive safely.",
+     "setFlag": "visited_garage"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "No problem. Drive safely."
+    }
+   ]
+  },
+  {
+   "id": "svc_office",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day, welcome to {place}. Who are you here to see?",
+     "choices": [
+      {
+       "text": "I'm just asking for directions.",
+       "next": "dir"
+      },
+      {
+       "text": "I have a meeting later.",
+       "next": "meet"
+      },
+      {
+       "text": "Sorry, wrong door.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "dir",
+     "speaker": "npc",
+     "text": "Your phone's map will get you there. Press N for the satnav if you're driving.",
+     "next": "done"
+    },
+    {
+     "id": "meet",
+     "speaker": "npc",
+     "text": "Please sign in when you come back, and I'll call them down.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Have a good day."
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "No problem!"
+    }
+   ]
+  },
+  {
+   "id": "svc_school",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day. Welcome to {place}. Classes are on; can I help you?",
+     "choices": [
+      {
+       "text": "I'm just looking around the neighbourhood.",
+       "next": "look"
+      },
+      {
+       "text": "No, thank you.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "look",
+     "speaker": "npc",
+     "text": "You're welcome. Please don't go into the classrooms during lessons.",
+     "next": "bye"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "Have a good day."
+    }
+   ]
+  },
+  {
+   "id": "svc_gym",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Hey! Welcome to {place}. Ready to train?",
+     "choices": [
+      {
+       "text": "How much is a day pass?",
+       "next": "pass"
+      },
+      {
+       "text": "Just looking.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "pass",
+     "speaker": "npc",
+     "text": "Ask at the desk inside, they'll explain the options. Bring water and a towel!",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "See you on the floor!",
+     "setFlag": "visited_gym"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "Any time."
+    }
+   ]
+  },
+  {
+   "id": "svc_alu",
+   "npc": "staff",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Welcome to ALU! How can I help you today?",
+     "choices": [
+      {
+       "text": "Where can I study quietly?",
+       "next": "study"
+      },
+      {
+       "text": "Where is the canteen?",
+       "next": "food"
+      },
+      {
+       "text": "I'm fine, thanks.",
+       "next": "bye"
+      }
+     ]
+    },
+    {
+     "id": "study",
+     "speaker": "npc",
+     "text": "The library and the study rooms are open all day. Keep your voice down and you'll be fine.",
+     "next": "done"
+    },
+    {
+     "id": "food",
+     "speaker": "npc",
+     "text": "The canteen is just across the courtyard. Lunch is ready from midday.",
+     "next": "done"
+    },
+    {
+     "id": "done",
+     "speaker": "npc",
+     "text": "Good luck with your work!"
+    },
+    {
+     "id": "bye",
+     "speaker": "npc",
+     "text": "Have a great day on campus."
+    }
+   ]
+  },
+  {
+   "id": "police_chat",
+   "npc": "police",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Good day. Everything all right?",
+     "choices": [
+      {
+       "text": "Yes, thank you, officer.",
+       "next": "ok"
+      },
+      {
+       "text": "Any advice for a new driver?",
+       "next": "tips"
+      }
+     ]
+    },
+    {
+     "id": "ok",
+     "speaker": "npc",
+     "text": "Good. Keep to the speed limit and always wear your seatbelt. Have a safe day."
+    },
+    {
+     "id": "tips",
+     "speaker": "npc",
+     "text": "Slow down near schools and markets, stop for people on the zebra crossings, and never use your phone while driving.",
+     "setFlag": "police_tips"
+    }
+   ]
+  },
+  {
+   "id": "acc_driver",
+   "npc": "other_driver",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Eh! Look what you did to my car! Weren't you looking?",
+     "choices": [
+      {
+       "text": "I'm very sorry. Are you hurt?",
+       "next": "hurt",
+       "setFlag": "acc_apologised"
+      },
+      {
+       "text": "You stopped too suddenly!",
+       "next": "argue",
+       "setFlag": "acc_argued"
+      }
+     ]
+    },
+    {
+     "id": "hurt",
+     "speaker": "npc",
+     "text": "I'm fine, thank God. But the car... Look at this.",
+     "next": "details"
+    },
+    {
+     "id": "argue",
+     "speaker": "npc",
+     "text": "Don't shout at me! If you want, we wait for the police and they decide.",
+     "choices": [
+      {
+       "text": "You're right. I'm sorry. Let's sort it out calmly.",
+       "next": "details",
+       "setFlag": "acc_apologised"
+      },
+      {
+       "text": "Fine, let's wait for the police.",
+       "next": "police"
+      }
+     ]
+    },
+    {
+     "id": "police",
+     "speaker": "npc",
+     "text": "Then we wait. Put your hazard lights on and stay off the road.",
+     "next": "details"
+    },
+    {
+     "id": "details",
+     "speaker": "npc",
+     "text": "Let's take photos of both cars and exchange numbers and insurance details. Then we move the cars aside.",
+     "choices": [
+      {
+       "text": "Of course. Here is my number.",
+       "next": "end"
+      }
+     ]
+    },
+    {
+     "id": "end",
+     "speaker": "npc",
+     "text": "Thank you. Next time keep your distance and watch the road. Drive safely.",
+     "setFlag": "acc_details_exchanged"
+    }
+   ]
+  }
+ ],
+ "quiz": [
+  {
+   "id": "q_right_side",
+   "text": "On which side of the road do vehicles drive in Rwanda?",
+   "options": [
+    "The left-hand side",
+    "The right-hand side",
+    "Either side, if the road is empty"
+   ],
+   "correct": 1,
+   "explanation": "Vehicles drive on the right-hand side of the road.",
+   "source": "Law n° 014/2026 of 06/03/2026 governing road traffic, Art. 4 (Official Gazette, Special of 10/03/2026)",
+   "reviewStatus": "draft"
+  },
+  {
+   "id": "q_officer_first",
+   "text": "A traffic light is green, but an officer directing traffic signals you to stop. What do you do?",
+   "options": [
+    "Follow the green light",
+    "Stop: the officer's instructions come first",
+    "Sound the horn and continue"
+   ],
+   "correct": 1,
+   "explanation": "An officer's instructions take priority over road signs and signals.",
+   "source": "Law n° 014/2026, Art. 6(3)",
+   "reviewStatus": "draft"
+  },
+  {
+   "id": "q_refuse_stop",
+   "text": "What happens if a driver refuses to stop when an officer signals them?",
+   "options": [
+    "Nothing, if they were not speeding",
+    "A warning only",
+    "It is an offence: a fine and possible imprisonment"
+   ],
+   "correct": 2,
+   "explanation": "Refusing to stop when signalled by an officer is an offence: a fine of FRW 400,000 to 700,000 and 3 to 6 months' imprisonment.",
+   "source": "Law n° 014/2026, Art. 39",
+   "reviewStatus": "draft"
+  }
+ ]
 }

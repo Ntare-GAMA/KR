@@ -96,6 +96,21 @@ Asset Store purchases: keep receipts (proposal §11.1), save the EULA version, a
 
 Place in project: `Assets/Audio/{Music,SFX,Ambience}/`, plus `_ThirdParty/` for licensed packs.
 
+### Story Mode (VR): what to source next, and where
+
+Car horns are already synthesised in code (`AccidentScene`), so they need no file. Everything below is still silent or a placeholder. Add each item to `Documentation/asset-register.csv` with its licence before it goes in.
+
+| Need | Where to get it | Licence check |
+|---|---|---|
+| Your car: engine idle and rev loop, indicator click, door open and close, seatbelt click, handbrake | Sonniss GDC bundles (sonniss.com); Freesound (freesound.org, CC0 filter) | Sonniss: royalty-free. Freesound: CC0 only, or CC BY with a credit line. |
+| Traffic: passing cars, moto-taxis, buses braking | Record on KG 11 Ave and around Kimironko Market (best); Sonniss as a fallback | Your own recording; no identifiable conversations |
+| Ambience: Kimironko market, café terrace (cups, chatter), ALU courtyard, birds at dawn, evening insects, rain on iron roofs | Record on site; Freesound CC0 for gaps | As above |
+| Footsteps (pavement, cobbles, grass), crowd murmur | Sonniss; Kenney audio packs (kenney.nl, CC0) | OK |
+| UI: panel open, select, photo shutter | Kenney "Interface Sounds" and "UI Audio" packs (CC0) | OK |
+| Café furniture, crockery, counters, shop shelves (for interiors later) | Kenney "Furniture Kit" (CC0); Poly Haven models (polyhaven.com, CC0); Quaternius packs (quaternius.com, CC0) | OK. The cups, plates and bottles in the game now are generated in code (`CleanCity.Tableware`) and need no licence. |
+| People: characters that walk properly (the current rigs drift) | Mixamo (mixamo.com): characters and animations, FBX for Unity, T-pose | VERIFY Adobe's current terms for use in a commercial game, and log each character. |
+| Street signs, shop fronts, number plates (blank) | Your own photos of Kimironko and Kibagabaga streets | Yours. Avoid logos and brand marks. |
+
 ---
 
 ## 6. Fonts (TextMeshPro)

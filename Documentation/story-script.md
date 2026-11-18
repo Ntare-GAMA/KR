@@ -175,3 +175,46 @@ Choices are shown as **→**. `[flag]` means the game remembers that choice for 
 The game builds the list from the OpenStreetMap places near each sector centre. It uses only public places: markets, parks, schools, universities, health centres, bus stations, sports grounds and places of worship. It also includes ALU, Kimironko Market and Maman Fils's house. Private businesses such as restaurants, bars, hotels and shops are left out.
 
 Each place has a journal card that starts empty ("Card not written yet"). To fill one, give the text and its source, and it will be added to `Assets/World/Story/Places.asset` as `draft` until reviewed. The **Kimironko tour** starts at the market and then visits the nearest Kimironko places, up to six stops.
+
+## The living city (named places, businesses, police, accidents)
+
+**Names.** Every signboard, satnav destination and house-number plaque comes from OpenStreetMap through `Tools/gis/extract_named.py`, which writes `named_unity.json`. Names are exactly as mapped, and nothing is invented. Private homes have no names in OSM, so they are not named in the game. Where OSM has a house number, the house gets a plaque (for example "No. 7, KG 36 Street"), and every named street has name blades at its ends.
+
+The extract leaves out:
+
+- police, government, military, diplomatic and public-administration sites;
+- MTN-branded places, because the game uses no MTN branding.
+
+TODO (legal): business names appear as plain text with no logos. Confirm before release that showing them is acceptable.
+
+**Businesses.** About 140 businesses near the sector centres have a member of staff at the door. Walk up and press Enter (or X in VR) to talk to them; each kind of business has its own conversation. Customers stand around, and the staff are there only during opening hours. These hours are generic game hours by kind (for example, cafés 07:00 to 22:00 and banks 08:00 to 17:00), not the places' real hours.
+
+| Conversation | Who | What you can do |
+|---|---|---|
+| `svc_food` | Cafés, restaurants, bakeries, the ALU canteen | Order tea, a plate or water |
+| `svc_bar` | Bars | Order a soda, ask about football |
+| `svc_shop` | Shops, supermarkets, markets | Buy household things, phone credit |
+| `svc_pharmacy` | Pharmacies | Basic items, a prescription (no medical advice) |
+| `svc_clinic` | Clinics, hospitals (front desk) | Information, visiting |
+| `svc_bank` | Banks | Student account, cash machine |
+| `svc_hotel` | Hotels, guest houses | Reception |
+| `svc_salon` | Hair salons | A trim |
+| `svc_garage` | Fuel stations, garages, car washes | Fuel, tyre check |
+| `svc_office`, `svc_school`, `svc_gym`, `svc_alu` | Offices, schools, gyms, ALU front desk | Directions, information |
+| `police_chat` | Traffic officers, foot patrols | Road-safety advice |
+| `acc_driver` | The other driver after a crash | Apologise, argue, exchange details |
+
+**Accidents.** If you hit another car, it stops with a long horn blast. Its driver gets out and comes to you, shouting (lines in a bubble above their head), and the cars stuck behind hoot and their drivers call out.
+
+- **Settling it:** stop, shift to P, get out and talk to the driver (`acc_driver`). They drive off afterwards.
+- **Driving away:** this sets the flag `left_crash`.
+
+Flags set: `crash`, `crash_settled`, `acc_apologised`, `acc_argued`, `acc_details_exchanged`.
+
+**Police.** Traffic officers in hi-vis vests direct the busiest junctions near each sector, and pairs of officers walk a stretch of footpath. The uniform is a stand-in with no insignia.
+
+TODO (verify): the colours of the Rwanda National Police traffic uniform and of Kigali street signs.
+
+**Pedestrians.** People cross at the zebra crossings of signal-controlled junctions, only while the cars on that road have red and there is time to reach the other side.
+
+Kinyarwanda in the new lines (review needed): Muraho, Murakoze.

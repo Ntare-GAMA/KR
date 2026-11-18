@@ -20,7 +20,6 @@ namespace KR.Gameplay.Story
         ScriptFile _script;
         readonly Dictionary<string, Conversation> _conversations = new Dictionary<string, Conversation>();
         readonly Dictionary<string, QuizQuestion> _quiz = new Dictionary<string, QuizQuestion>();
-        Npc[] _npcs = new Npc[0];
 
         Npc _near, _with;
         Conversation _current;
@@ -39,6 +38,10 @@ namespace KR.Gameplay.Story
         // True while X belongs to the conversation (a character is in range, or you are talking).
         public bool WantsConfirm => _near != null || _with != null;
         public bool Talking => _with != null;
+        // Raised when any conversation ends (id, the character), e.g. the accident scene waits for it.
+        public event System.Action<string, Npc> Finished;
+        // Raised when a line or a reply sets a flag (flag, the character), e.g. an order at a cafe.
+        public event System.Action<string, Npc> FlagSet;
 
         public void Configure(StoryDirector story, PlayerRig playerRig)
         {
@@ -56,7 +59,6 @@ namespace KR.Gameplay.Story
             foreach (var q in _script.quiz)
                 if (!string.IsNullOrEmpty(q.id))
                     _quiz[q.id] = q;
-            _npcs = FindObjectsByType<Npc>(FindObjectsSortMode.None);
             _panel = MakeCanvas("Conversation panel", new Vector2(760f, 520f), 0.0011f, 30, out _panelText);
             _label = MakeCanvas("Talk label", new Vector2(360f, 70f), 0.0016f, 34, out _labelText);
         }
@@ -108,14 +110,15 @@ namespace KR.Gameplay.Story
             _near = null;
             if (rig.CurrentMode == PlayerRig.Mode.Walking && !GamePause.Paused && !rig.Busy)
             {
-                float best = talkRange * talkRange;
+                float best = float.MaxValue;
                 Vector3 p = rig.Player.transform.position;
-                foreach (var npc in _npcs)
+                var all = Npc.All;
+                for (int i = 0; i < all.Count; i++)
                 {
-                    if (npc == null)
-                        continue;
+                    var npc = all[i];
+                    float r = npc.Range > 0f ? npc.Range : talkRange;
                     float d = (npc.transform.position - p).sqrMagnitude;
-                    if (d < best)
+                    if (d < r * r && d < best)
                     {
                         best = d;
                         _near = npc;
@@ -142,11 +145,16 @@ namespace KR.Gameplay.Story
         }
 
         // The milestone's conversation for this character if one is running, otherwise their everyday chat.
-        void Begin(Npc npc)
+        void Begin(Npc npc) => Begin(npc, null);
+
+        // Starts a conversation with this character; with an id, that conversation instead of the usual one.
+        public void Begin(Npc npc, string conversationId)
         {
-            string id = npc.ChatConversation;
+            if (npc == null || _with != null)
+                return;
+            string id = conversationId ?? npc.ChatConversation;
             var m = director.Current;
-            if (m != null && m.kind == MissionKind.Talk && !string.IsNullOrEmpty(m.conversationId) &&
+            if (conversationId == null && m != null && m.kind == MissionKind.Talk && !string.IsNullOrEmpty(m.conversationId) &&
                 _conversations.TryGetValue(m.conversationId, out var mission) && mission.npc == npc.Id &&
                 (director.State == StoryDirector.Phase.Rushing || director.State == StoryDirector.Phase.Dwelling))
                 id = m.conversationId;
@@ -184,7 +192,10 @@ namespace KR.Gameplay.Story
                 return;
             }
             if (!string.IsNullOrEmpty(_node.setFlag))
+            {
                 director.SetFlag(_node.setFlag);
+                FlagSet?.Invoke(_node.setFlag, _with);
+            }
         }
 
         void Converse()
@@ -219,7 +230,10 @@ namespace KR.Gameplay.Story
             {
                 var c = _node.choices[_choice];
                 if (!string.IsNullOrEmpty(c.setFlag))
+                {
                     director.SetFlag(c.setFlag);
+                    FlagSet?.Invoke(c.setFlag, _with);
+                }
                 QueueQuiz(_node);
                 if (_question == null)
                     Go(c.next);
@@ -281,16 +295,25 @@ namespace KR.Gameplay.Story
                 return _sb.ToString();
             }
             string who = _node.speaker == "you" ? "You" : _with.DisplayName;
-            _sb.Append($"<b>{who}</b>\n{_node.text}\n\n");
+            _sb.Append($"<b>{who}</b>\n{Fill(_node.text)}\n\n");
             if (_node.choices.Length > 0)
             {
                 for (int i = 0; i < _node.choices.Length; i++)
-                    _sb.Append(i == _choice ? "<b>> " : "   ").Append(_node.choices[i].text).Append(i == _choice ? "</b>\n" : "\n");
+                    _sb.Append(i == _choice ? "<b>> " : "   ").Append(Fill(_node.choices[i].text)).Append(i == _choice ? "</b>\n" : "\n");
                 _sb.Append($"\n<size=24>Left stick to choose, {confirm} to reply.</size>");
             }
             else
                 _sb.Append($"<size=24>{confirm}: {(string.IsNullOrEmpty(_node.next) && (_node.quiz == null || _node.quiz.Length == 0) ? "end" : "continue")}</size>");
             return _sb.ToString();
+        }
+
+        // Lines can name the business and the character: {place}, {name}.
+        string Fill(string line)
+        {
+            if (string.IsNullOrEmpty(line) || line.IndexOf('{') < 0 || _with == null)
+                return line;
+            return line.Replace("{place}", string.IsNullOrEmpty(_with.Place) ? "here" : _with.Place)
+                       .Replace("{name}", _with.DisplayName);
         }
 
         // Beside the character at their head height, turned towards you.
@@ -319,7 +342,10 @@ namespace KR.Gameplay.Story
             if (npc != null)
                 npc.Talking(false, Vector3.zero);
             if (conversation != null)
+            {
                 director.OnConversationFinished(conversation.id, _correct, _asked);
+                Finished?.Invoke(conversation.id, npc);
+            }
         }
     }
 }
