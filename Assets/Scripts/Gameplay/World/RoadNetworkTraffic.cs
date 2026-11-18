@@ -19,6 +19,8 @@ namespace KR.Gameplay.World
             public bool oneway;
             [Tooltip("Half the carriageway width; the road surface is a plane between its two edges.")]
             public float halfWidth;
+            [Tooltip("Route weight per metre when driving (main roads cheaper than residential lanes); 0 = 1.")]
+            public float driveCost = 1f;
         }
 
         [Serializable]
@@ -67,6 +69,7 @@ namespace KR.Gameplay.World
 
         float[][] _cumulative;
         float[] _current;
+        float[] _haltUntil;
         float[] _pitch;
         Quaternion[] _modelBase;
         float[] _animBase;
@@ -82,6 +85,11 @@ namespace KR.Gameplay.World
         const float SnapRange = 400f;
 
         Terrain _terrain;
+        Terrain[] _terrains;
+        // Within this distance of the camera, wheels and feet sit on the real road surface (ray down onto the road and
+        // footpath colliders); further out the carriageway plane over the terrain is close enough.
+        const float RayRange = 150f;
+        const int GroundMask = 1 << 0;   // Default layer: roads, footpaths, plates, terrain (not the traffic itself)
         float[] _lift;          // road or footpath surface height above the terrain, per path
         Vector2[] _half;        // half width / half length of each car
         Vector3 _cam;
@@ -97,6 +105,7 @@ namespace KR.Gameplay.World
         public IReadOnlyList<RoadPath> Paths => paths;
         public TrafficSignalSystem Signals => signals;
         public int StopCount => stops?.Length ?? 0;
+        public float StopLineBack => stopLineBack;
 
         // Both stop lines of a signal stop: traffic going forward along the path stops stopLineBack before the
         // junction point, traffic going the other way stops the same distance past it.
@@ -136,6 +145,27 @@ namespace KR.Gameplay.World
             return pts[pts.Length - 1];
         }
         public Transform Body(int i) => cars != null && i >= 0 && i < cars.Length ? cars[i].body : null;
+
+        // Index of the vehicle whose body is (or contains) this transform, or -1.
+        public int IndexOf(Transform t)
+        {
+            if (cars == null || t == null)
+                return -1;
+            for (int i = 0; i < cars.Length; i++)
+                if (cars[i].body != null && (t == cars[i].body || t.IsChildOf(cars[i].body)))
+                    return i;
+            return -1;
+        }
+
+        // Stops one vehicle where it is (accident, police stop) until the given time; 0 releases it.
+        public void Halt(int i, float seconds)
+        {
+            if (_haltUntil != null && i >= 0 && i < _haltUntil.Length)
+                _haltUntil[i] = seconds > 0f ? Time.time + seconds : 0f;
+        }
+
+        public bool Halted(int i) => _haltUntil != null && i >= 0 && i < _haltUntil.Length && Time.time < _haltUntil[i];
+        public float CurrentSpeed(int i) => _current != null && i >= 0 && i < _current.Length ? _current[i] : 0f;
 
         public void Configure(RoadPath[] roadPaths, Car[] carList, bool keepUpright = false, bool queue = true,
                               Stop[] signalStops = null, TrafficSignalSystem signalSystem = null)
@@ -178,6 +208,7 @@ namespace KR.Gameplay.World
             }
             int n = cars.Length;
             _current = new float[n];
+            _haltUntil = new float[n];
             _pitch = new float[n];
             _modelBase = new Quaternion[n];
             _animBase = new float[n];
@@ -190,6 +221,10 @@ namespace KR.Gameplay.World
                 _carsOnPath[car.path].Add(i);
                 if (car.model != null)
                     _modelBase[i] = car.model.localRotation;
+                // People with a PersonAnimator already match their walk to their pace; scaling it here too
+                // made them slide.
+                if (car.animator != null && car.body != null && car.body.GetComponent<PersonAnimator>() != null)
+                    car.animator = null;
                 if (car.animator != null)
                     _animBase[i] = car.animator.speed;
             }
@@ -222,7 +257,16 @@ namespace KR.Gameplay.World
                 _reverseStop[p] = rev[p].ConvertAll(x => x.Item2).ToArray();
             }
 
+            // The scene has the district terrain and the surround tiles; heights come from whichever is under the point.
+            _terrains = Terrain.activeTerrains;
             _terrain = Terrain.activeTerrain;
+            float best = 0f;
+            foreach (var t in _terrains)
+                if (t.terrainData != null && t.terrainData.size.x * t.terrainData.size.z > best)
+                {
+                    best = t.terrainData.size.x * t.terrainData.size.z;
+                    _terrain = t;
+                }
             _lift = new float[paths.Length];
             if (_terrain != null)
                 for (int p = 0; p < paths.Length; p++)
@@ -232,7 +276,38 @@ namespace KR.Gameplay.World
                 _half[i] = cars[i].body != null ? AddCollider(cars[i].body) : Vector2.one;
         }
 
-        float Height(Vector3 p) => _terrain.SampleHeight(p) + _terrain.transform.position.y;
+        float Height(Vector3 p)
+        {
+            var t = _terrain;
+            var o = t.transform.position;
+            var size = t.terrainData.size;
+            if (p.x < o.x || p.z < o.z || p.x > o.x + size.x || p.z > o.z + size.z)
+                foreach (var other in _terrains)
+                {
+                    var oo = other.transform.position;
+                    var ss = other.terrainData.size;
+                    if (p.x >= oo.x && p.z >= oo.z && p.x <= oo.x + ss.x && p.z <= oo.z + ss.z)
+                    {
+                        t = other;
+                        break;
+                    }
+                }
+            return t.SampleHeight(p) + t.transform.position.y;
+        }
+
+        // The real surface under p (road, kerb, footpath or ground) near the expected height; anything much higher
+        // (a bench, a bin, a parked car's shell) or lower is ignored.
+        static bool SurfaceAt(Vector3 p, float expected, out float y)
+        {
+            var from = new Vector3(p.x, expected + 1.2f, p.z);
+            if (Physics.Raycast(from, Vector3.down, out var hit, 2.6f, GroundMask, QueryTriggerInteraction.Ignore))
+            {
+                y = hit.point.y;
+                return true;
+            }
+            y = 0f;
+            return false;
+        }
 
         // Kinematic colliders so the City Life player (on foot or driving) cannot pass through traffic.
         Vector2 AddCollider(Transform body)
@@ -351,7 +426,7 @@ namespace KR.Gameplay.World
                     }
                 room = Mathf.Min(room, CorridorRoom(i));
 
-                float target = car.speed * SpeedScale;
+                float target = Time.time < _haltUntil[i] ? 0f : car.speed * SpeedScale;
                 if (room < 30f)
                     target = Mathf.Min(target, Mathf.Max(0f, room) * 0.6f);
                 float before = _current[i];
@@ -460,8 +535,12 @@ namespace KR.Gameplay.World
             if (_terrain != null && (pos - _cam).sqrMagnitude < SnapRange * SnapRange)
             {
                 float lift = _lift[car.path];
+                bool close = (pos - _cam).sqrMagnitude < RayRange * RayRange;
                 if (upright)
-                    pos.y = Height(pos) + lift;
+                    {
+                    float expected = Height(pos) + lift;
+                    pos.y = close && SurfaceAt(pos, expected, out float feet) ? feet : expected;
+                }
                 else
                 {
                     // Height under each wheel on the carriageway plane, then pitch and roll to fit all four.
@@ -471,10 +550,15 @@ namespace KR.Gameplay.World
                     float Surface(float along, float lateral)
                     {
                         Vector3 c = centre + flat * along;
+                        float plane;
                         if (half <= 0.5f)
-                            return Height(c + side * lateral) + lift;
-                        float l = Height(c - side * half), r = Height(c + side * half);
-                        return Mathf.Lerp(l, r, Mathf.Clamp01((lateral + half) / (2f * half))) + lift;
+                            plane = Height(c + side * lateral) + lift;
+                        else
+                        {
+                            float l = Height(c - side * half), r = Height(c + side * half);
+                            plane = Mathf.Lerp(l, r, Mathf.Clamp01((lateral + half) / (2f * half))) + lift;
+                        }
+                        return close && SurfaceAt(c + side * lateral, plane, out float wheel) ? wheel : plane;
                     }
                     float fl = Surface(h.y, car.offset - h.x), fr = Surface(h.y, car.offset + h.x);
                     float bl = Surface(-h.y, car.offset - h.x), br = Surface(-h.y, car.offset + h.x);

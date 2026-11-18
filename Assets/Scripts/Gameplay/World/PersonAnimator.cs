@@ -31,6 +31,7 @@ namespace KR.Gameplay.World
 
         Vector3 _last;
         float _speed;
+        float _baseSpeed = 1f;
         float _nextAction;
         bool _talking;
 
@@ -56,6 +57,7 @@ namespace KR.Gameplay.World
                 return;
             }
             animator.runtimeAnimatorController = Override();
+            _baseSpeed = animator.speed;
         }
 
         void OnEnable()
@@ -100,7 +102,11 @@ namespace KR.Gameplay.World
             if (!animator.isActiveAndEnabled)
                 return;
             animator.SetFloat(SpeedId, _speed);
-            animator.SetFloat(MoveScaleId, Mathf.Clamp(_speed / Mathf.Max(0.1f, moveClipSpeed), 0.5f, 2f));
+            // Walking: the clip runs at exactly the pace the body moves (no per-person variation), so the feet
+            // stay planted. Standing: the person's own slight variation, so crowds don't move in step.
+            bool moving = _speed > 0.1f;
+            animator.speed = moving ? 1f : _baseSpeed;
+            animator.SetFloat(MoveScaleId, Mathf.Clamp(_speed / Mathf.Max(0.1f, moveClipSpeed), 0.2f, 3f));
             if (actionCount == 0 || _talking || _speed > 0.1f || Time.time < _nextAction)
                 return;
             PlayAction(Random.Range(0, actionCount));

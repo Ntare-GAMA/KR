@@ -47,7 +47,9 @@ namespace KR.Editor.Characters
             var clips = new[] { idle, move, talk, greet,
                                 actions.ElementAtOrDefault(0) ?? idle, actions.ElementAtOrDefault(1) ?? idle, actions.ElementAtOrDefault(2) ?? idle };
             // Root speed of the walk/run so playback matches how fast the person actually moves (no foot sliding).
-            float clipSpeed = move != null ? Mathf.Clamp(move.averageSpeed.magnitude, 0.6f, 6f) : 1.4f;
+            // "In place" clips report no root speed; a normal walk covers about 1.35 m/s, so use that for them.
+            float rootSpeed = move != null ? move.averageSpeed.magnitude : 0f;
+            float clipSpeed = rootSpeed > 0.3f ? Mathf.Clamp(rootSpeed, 0.6f, 6f) : 1.35f;
             animator.applyRootMotion = false;
             animator.runtimeAnimatorController = null;   // PersonAnimator assigns the shared override at runtime
             holder.AddComponent<PersonAnimator>().Configure(animator, _npcBase, _slots, clips, actions.Count, clipSpeed, r.ActionEvery);

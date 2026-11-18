@@ -85,6 +85,8 @@ namespace KR.Editor.Kigali
                 animator.runtimeAnimatorController = Controller(model, activity);
             animator.applyRootMotion = false;
             animator.cullingMode = AnimatorCullingMode.CullCompletely;
+            // Playback varies a little between people so crowds don't move in step; PersonAnimator plays the walk
+            // at exactly the speed the person moves, so feet don't slide.
             animator.speed = 0.85f + (float)rng.NextDouble() * 0.3f;
             ApplySkinTone(body, rng.Next(Tones.Length));
             Spawned++;
@@ -203,8 +205,18 @@ namespace KR.Editor.Kigali
                             toned.SetColor("_BaseColor", Tones[tone]);
                         string safe = string.Concat(m.name.Split(Path.GetInvalidFileNameChars()));
                         string matPath = $"{_dir}/{safe}_tone{tone}.mat";
-                        AssetDatabase.DeleteAsset(matPath);
-                        AssetDatabase.CreateAsset(toned, matPath);
+                        // Update the existing asset in place: deleting and re-creating it gave it a new id, and every
+                        // person placed by an earlier build step lost their material (drawn magenta).
+                        var existing = AssetDatabase.LoadAssetAtPath<Material>(matPath);
+                        if (existing != null)
+                        {
+                            EditorUtility.CopySerialized(toned, existing);
+                            existing.name = Path.GetFileNameWithoutExtension(matPath);
+                            EditorUtility.SetDirty(existing);
+                            toned = existing;
+                        }
+                        else
+                            AssetDatabase.CreateAsset(toned, matPath);
                         Toned[(m, tone)] = toned;
                     }
                     mats[i] = toned;
