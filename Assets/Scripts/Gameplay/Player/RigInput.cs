@@ -16,6 +16,8 @@ namespace KR.Gameplay.Player
         static int _frame = -1;
         static bool _use, _confirm, _belt, _wasUse, _wasConfirm, _wasBelt;
         static bool _gear, _lights, _map, _dest, _menu, _wasGear, _wasLights, _wasMap, _wasDest, _wasMenu;
+        static bool _shutter, _wasShutter, _navReady = true;
+        static int _navX, _navY;
 
         public static Vector2 Move
         {
@@ -109,6 +111,14 @@ namespace KR.Gameplay.Player
         public static bool DestinationPressed { get { Refresh(); return _dest; } }
         public static bool MenuPressed { get { Refresh(); return _menu; } }
 
+        // Photo camera: hold the right grip (C toggles on a desktop); the right trigger (left click) is the shutter.
+        public static float RightGrip => Axis(XRController.rightHand, "grip");
+        public static bool ShutterPressed { get { Refresh(); return _shutter; } }
+        public static bool CameraKeyPressed => Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame;
+        // Menu navigation on the info panel and in conversations: left stick (arrows / W S A D on a desktop).
+        public static int NavX { get { Refresh(); return _navX; } }
+        public static int NavY { get { Refresh(); return _navY; } }
+
         // How closed each real hand is (grip and trigger squeezed), 0 to 1, for the hand models' fingers.
         public static float HandClosed(bool left)
         {
@@ -140,7 +150,7 @@ namespace KR.Gameplay.Player
             bool gear = Button(XRController.rightHand, "thumbstickClicked", "primary2DAxisClick", "joystickClicked");
             bool lights = Button(XRController.leftHand, "thumbstickClicked", "primary2DAxisClick", "joystickClicked");
             bool menu = Button(XRController.leftHand, "menu", "menuButton", "start");
-            bool dest = Axis(XRController.rightHand, "grip") > 0.7f;
+            bool dest = false;   // destinations are chosen on the info panel's Settings page in VR
             _gear = kb != null && kb.rKey.wasPressedThisFrame || gear && !_wasGear;
             _lights = kb != null && kb.lKey.wasPressedThisFrame || lights && !_wasLights;
             _map = kb != null && kb.mKey.wasPressedThisFrame;
@@ -149,6 +159,30 @@ namespace KR.Gameplay.Player
             _wasGear = gear;
             _wasLights = lights;
             _wasMenu = menu;
+
+            bool trigger = Axis(XRController.rightHand, "trigger") > 0.7f;
+            var mouse = Mouse.current;
+            _shutter = trigger && !_wasShutter || mouse != null && mouse.leftButton.wasPressedThisFrame;
+            _wasShutter = trigger;
+
+            // One step per stick push (back to centre before the next), plus the keyboard arrows.
+            var stick = Stick(XRController.leftHand);
+            _navX = _navY = 0;
+            if (stick.magnitude < 0.3f)
+                _navReady = true;
+            else if (_navReady && stick.magnitude > 0.7f)
+            {
+                _navReady = false;
+                if (Mathf.Abs(stick.x) > Mathf.Abs(stick.y)) _navX = stick.x > 0f ? 1 : -1;
+                else _navY = stick.y > 0f ? 1 : -1;
+            }
+            if (kb != null)
+            {
+                if (kb.upArrowKey.wasPressedThisFrame) _navY = 1;
+                if (kb.downArrowKey.wasPressedThisFrame) _navY = -1;
+                if (kb.leftArrowKey.wasPressedThisFrame) _navX = -1;
+                if (kb.rightArrowKey.wasPressedThisFrame) _navX = 1;
+            }
             _wasDest = dest;
         }
 

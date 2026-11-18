@@ -48,7 +48,7 @@ namespace KR.Gameplay.Player
 
         Rigidbody _rb;
         float _steer, _throttle, _brake;
-        bool _handbrake, _reverse;
+        bool _handbrake, _reverse, _park = true, _parkHint;
         Quaternion _wheelBase, _accBase, _brakeBase;
 
         public bool Driven { get; private set; }
@@ -60,7 +60,9 @@ namespace KR.Gameplay.Player
         public float Throttle => _throttle;
         public float BrakePedal => _brake;
         public bool Reverse => _reverse;
-        public string Gear => !Driven ? "P" : _reverse ? "R" : "D";
+        // P (park) holds the car and is the only gear you can get out in; the right stick click cycles P, D, R.
+        public string Gear => !Driven || _park ? "P" : _reverse ? "R" : "D";
+        public bool Parked => !Driven || _park;
         public event System.Action<string> Message;
         // Where the driver's eyes are: above the hip point and a little forward, low enough that the whole
         // windscreen is in view rather than the headlining.
@@ -109,6 +111,7 @@ namespace KR.Gameplay.Player
             {
                 _throttle = _brake = 0f;
                 _reverse = false;
+                _park = true;
             }
         }
 
@@ -126,7 +129,7 @@ namespace KR.Gameplay.Player
 
         void Update()
         {
-            _handbrake = !Driven || RigInput.Handbrake;
+            _handbrake = !Driven || _park || RigInput.Handbrake;
             Speed = Vector3.Dot(_rb.linearVelocity, transform.forward);
             float accel = Driven ? RigInput.Accelerator : 0f;
             float brake = Driven ? RigInput.Brake : 0f;
@@ -136,13 +139,26 @@ namespace KR.Gameplay.Player
             {
                 if (Mathf.Abs(Speed) < 0.8f)
                 {
-                    _reverse = !_reverse;
-                    Message?.Invoke(_reverse ? "Gear R: reverse. The accelerator now drives backwards." : "Gear D: drive.");
+                    // P -> D -> R -> P
+                    if (_park) { _park = false; _reverse = false; }
+                    else if (!_reverse) _reverse = true;
+                    else { _reverse = false; _park = true; }
+                    Message?.Invoke(_park ? "Gear P: parked. You can get out now." : _reverse
+                        ? "Gear R: reverse. The accelerator now drives backwards." : "Gear D: drive.");
                 }
                 else
                     Message?.Invoke("Stop first, then change gear.");
             }
 
+            if (_park && accel > 0.3f && !_parkHint)
+            {
+                _parkHint = true;
+                Message?.Invoke(VrRig.Active ? "In P. Click the right stick for D to drive." : "In P. Press R for D to drive.");
+            }
+            if (accel < 0.1f)
+                _parkHint = false;
+            if (_park)
+                accel = 0f;
             _throttle = _reverse ? -accel : accel;
             _brake = brake;
 

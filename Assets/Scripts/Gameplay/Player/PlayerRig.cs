@@ -30,6 +30,8 @@ namespace KR.Gameplay.Player
         // Set by VrRig while a headset is active: the tracked controller poses the hands follow.
         public Transform VrLeftHand { get; set; }
         public Transform VrRightHand { get; set; }
+        // Something else owns the controls right now (a conversation, the camera); getting in or out waits.
+        public bool Busy { get; set; }
 
         public void Configure(PlayerTuning settings, PlayerMotor motor, FirstPersonCamera cam, DrivableCar ownCar,
                               Vector3 start, float startYaw)
@@ -69,6 +71,11 @@ namespace KR.Gameplay.Player
             var kb = Keyboard.current;
             if (kb != null && kb.escapeKey.wasPressedThisFrame)
                 SetCursor(Cursor.lockState != CursorLockMode.Locked);
+            if (GamePause.Paused || Busy)
+            {
+                Prompt = null;
+                return;
+            }
             bool use = RigInput.UsePressed;
 
             if (CurrentMode == Mode.Walking)
@@ -84,26 +91,30 @@ namespace KR.Gameplay.Player
                 Prompt = null;
                 if (use)
                 {
-                    if (Mathf.Abs(car.Speed) < 2f)
-                        ExitCar();
+                    if (Mathf.Abs(car.Speed) > 0.5f)
+                        Toast("Stop the car first.");
+                    else if (!car.Parked)
+                        Toast(VrRig.Active ? "Shift to P first: click the right stick until the screen shows P." : "Shift to P first: press R until P shows.");
                     else
-                        Toast("Slow down to get out.");
+                        ExitCar();
                 }
             }
         }
 
         void EnterCar()
         {
+            VrRig.Fade(0.35f);
             player.EnterSeat(car.Seat);
             car.SetDriven(true);
             RoadNetworkTraffic.Player = car.transform;
             CurrentMode = Mode.Driving;
-            Toast(VrRig.Active ? "Right trigger accelerate, left trigger brake, left stick steer, right stick click D/R, B handbrake, left stick click lights, A get out."
-                              : "W accelerate, S brake, A/D steer, R gear D/R, Space handbrake, L lights, E get out.", 7f);
+            Toast(VrRig.Active ? "Right trigger accelerate, left trigger brake, left stick steer, right stick click P/D/R gear, B handbrake, left stick click lights, A get out (in P)."
+                              : "W accelerate, S brake, A/D steer, R gear P/D/R, Space handbrake, L lights, E get out (in P).", 7f);
         }
 
         void ExitCar()
         {
+            VrRig.Fade(0.35f);
             car.SetDriven(false);
             player.LeaveSeat(car.ExitPoint, car.transform.eulerAngles.y);
             RoadNetworkTraffic.Player = player.transform;

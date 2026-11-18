@@ -23,7 +23,6 @@ namespace KR.Gameplay.Player
         [SerializeField] float snapAngle = 30f;
         [SerializeField, Tooltip("Eyes sit this far in front of the body's centre.")] float eyeForward = 0.1f;
         [SerializeField, Tooltip("A standing body turns to follow your view past this angle.")] float bodyDeadZone = 50f;
-        [SerializeField, Range(0f, 1f)] float vignetteStrength = 0.75f;
 
         static bool _active;
         bool _inVr, _seated, _turnReady = true;
@@ -33,6 +32,7 @@ namespace KR.Gameplay.Player
         Vector3 _lastPos;
         Vector3 _lastPlayer;
         MaterialPropertyBlock _block;
+        Texture _ring;
 
         // True while a headset is rendering (other scripts switch prompts and HUDs on this).
         public static bool Active => _active;
@@ -105,10 +105,30 @@ namespace KR.Gameplay.Player
                 _lastPlayer = rig.Player.transform.position;
         }
 
+        // A short black fade that hides a cut (getting in or out of the car, a teleport step).
+        static float _fade, _fadeSpeed = 3f;
+        public static void Fade(float seconds)
+        {
+            _fade = 1f;
+            _fadeSpeed = 1f / Mathf.Max(0.05f, seconds);
+        }
+
         void LateUpdate()
         {
             if (!_inVr || rig == null || rig.Player == null)
                 return;
+            HeadsetPresence();
+            if (Comfort.RecenterRequested)
+            {
+                Comfort.RecenterRequested = false;
+                if (_seated)
+                    SitDown(rig.Car);
+                else
+                    transform.RotateAround(head.transform.position, Vector3.up,
+                                           Mathf.DeltaAngle(head.transform.eulerAngles.y, rig.Player.transform.eulerAngles.y));
+            }
+            if (cameraOffset != null)
+                cameraOffset.localPosition = Vector3.up * (Comfort.Seated && !_seated ? 0.45f : 0f);
             bool driving = rig.CurrentMode == PlayerRig.Mode.Driving && rig.Car != null;
             if (driving != _seated)
             {
@@ -167,9 +187,26 @@ namespace KR.Gameplay.Player
             _seatYaw = Mathf.DeltaAngle(seat.eulerAngles.y, transform.eulerAngles.y);
         }
 
+        // Taking the headset off pauses the game (and the car); putting it back on resumes.
+        void HeadsetPresence()
+        {
+            var hmd = InputDevices.GetDeviceAtXRNode(XRNode.Head);
+            if (hmd.isValid && hmd.TryGetFeatureValue(CommonUsages.userPresence, out bool present) && present == GamePause.HeadsetOff)
+                GamePause.SetHeadsetOff(!present);
+        }
+
         void SnapTurn()
         {
+            if (GamePause.Paused)
+                return;
             float x = RigInput.Turn;
+            if (Comfort.TurnMode == Comfort.Turn.Smooth)
+            {
+                if (Mathf.Abs(x) > 0.2f)
+                    transform.RotateAround(head.transform.position, Vector3.up, x * 90f * Time.deltaTime);
+                return;
+            }
+            float angle = Comfort.TurnMode == Comfort.Turn.Snap45 ? 45f : snapAngle;
             if (Mathf.Abs(x) < 0.3f)
             {
                 _turnReady = true;
@@ -178,7 +215,7 @@ namespace KR.Gameplay.Player
             if (!_turnReady || Mathf.Abs(x) < 0.7f)
                 return;
             _turnReady = false;
-            transform.RotateAround(head.transform.position, Vector3.up, Mathf.Sign(x) * snapAngle);
+            transform.RotateAround(head.transform.position, Vector3.up, Mathf.Sign(x) * angle);
         }
 
         // Darken the edge of the view in proportion to how fast the world moves past.
@@ -188,11 +225,15 @@ namespace KR.Gameplay.Player
                 return;
             float speed = Time.deltaTime > 0f ? (transform.position - _lastPos).magnitude / Time.deltaTime : 0f;
             _lastPos = transform.position;
-            float target = Mathf.Clamp01(speed / (_seated ? 12f : 3f)) * vignetteStrength;
+            float target = Mathf.Clamp01(speed / (_seated ? 12f : 3f)) * Comfort.VignetteStrength;
             _vignette = Mathf.MoveTowards(_vignette, target, Time.deltaTime * 2.5f);
+            _fade = Mathf.MoveTowards(_fade, 0f, Time.unscaledDeltaTime * _fadeSpeed);
             _block ??= new MaterialPropertyBlock();
+            _ring ??= vignette.sharedMaterial.GetTexture("_BaseMap");
             vignette.GetPropertyBlock(_block);
-            _block.SetColor("_BaseColor", new Color(0f, 0f, 0f, _vignette));
+            // Fading: the whole view goes black (plain texture); otherwise the ring-shaped comfort vignette.
+            _block.SetTexture("_BaseMap", _fade > 0.01f ? Texture2D.whiteTexture : _ring);
+            _block.SetColor("_BaseColor", new Color(0f, 0f, 0f, _fade > 0.01f ? Mathf.Max(_fade, _vignette) : _vignette));
             vignette.SetPropertyBlock(_block);
         }
 

@@ -174,7 +174,8 @@ namespace KR.Gameplay.Player
             if (Seated)
                 return;
             // Keyboard or left stick; directions are relative to the camera (the headset in VR).
-            Vector2 input = Frozen ? Vector2.zero : RigInput.Move;
+            // Teleport walking (Settings) moves the player in steps instead; the stick only aims.
+            Vector2 input = Frozen || (Comfort.Teleport && VrRig.Active) ? Vector2.zero : RigInput.Move;
             bool run = !Frozen && RigInput.Run;
 
             float yaw = view != null ? view.eulerAngles.y : transform.eulerAngles.y;
