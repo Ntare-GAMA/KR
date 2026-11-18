@@ -1,0 +1,209 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: fde774f84fcc2ea4f93c1fca6c27ddcc, type: 3}
+  m_Name: RushWeek
+  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.StoryWeek
+  title: Rush Week
+  dayNames:
+  - Monday
+  - Tuesday
+  - Wednesday
+  - Thursday
+  - Friday
+  - Saturday
+  milestones:
+  - {fileID: 11400000, guid: aa7d8be25aa84364abf7e98c0cd1b592, type: 2}
+  - {fileID: 11400000, guid: 06d02ec15d9d0784e8e894109785f6a2, type: 2}
+  - {fileID: 11400000, guid: 48d7235d706f0cf439acb602dfb9ee29, type: 2}
+  - {fileID: 11400000, guid: 26b7f724649dac14c881a6a9efa8b53e, type: 2}
+  - {fileID: 11400000, guid: f53d595031299de4ab88b6276ed588ee, type: 2}
+  - {fileID: 11400000, guid: 6144f6a6968005248adca92734a1751e, type: 2}
+  rules:
+  - id: 0
+    title: Wrong side of the road
+    citation: Law 014/2026, Art. 4
+    explanation: Vehicles drive on the right-hand side of the road.
+    timePenalty: 20
+    fineFrw: 0
+    demeritPoints: 2
+    endsRun: 0
+    fromOrder: 0
+  - id: 1
+    title: Ignoring an officer
+    citation: Law 014/2026, Art. 6(3)
+    explanation: An officer's instructions take priority over road signs and signals.
+    timePenalty: 30
+    fineFrw: 0
+    demeritPoints: 0
+    endsRun: 0
+    fromOrder: 0
+  - id: 2
+    title: Refusing to stop
+    citation: Law 014/2026, Art. 39
+    explanation: 'Refusing to stop when signalled by an officer is an offence: a
+      fine of FRW 400,000 to 700,000 and 3 to 6 months'' imprisonment.'
+    timePenalty: 0
+    fineFrw: 400000
+    demeritPoints: 0
+    endsRun: 1
+    fromOrder: 1
+  - id: 3
+    title: Driving without a licence
+    citation: Law 014/2026, Art. 40 and 12(1)(a)
+    explanation: Driving without a licence is an offence (fine of FRW 100,000 to
+      200,000 and/or 15 to 30 days), and the vehicle is immobilised.
+    timePenalty: 120
+    fineFrw: 100000
+    demeritPoints: 0
+    endsRun: 1
+    fromOrder: 1
+  - id: 4
+    title: Ran a red signal
+    citation: Law 014/2026, Art. 5(1)(g); details in the Minister's Order
+    explanation: Road traffic signs and signals must be obeyed. The fine and points
+      are set by the Minister's Order (not yet supplied).
+    timePenalty: 30
+    fineFrw: 0
+    demeritPoints: 3
+    endsRun: 0
+    fromOrder: 0
+  - id: 9
+    title: Did not stop at a STOP sign
+    citation: Law 014/2026, Art. 5(1)(g); details in the Minister's Order
+    explanation: At a STOP sign the vehicle must come to a complete stop at the line,
+      then go only when the way is clear. The fine and points are set by the Minister's
+      Order (not yet supplied).
+    timePenalty: 20
+    fineFrw: 0
+    demeritPoints: 2
+    endsRun: 0
+    fromOrder: 0
+  - id: 5
+    title: Speeding
+    citation: Law 014/2026, Art. 5; limits in the Minister's Order
+    explanation: Speed limits are set by the Minister's Order (not yet supplied);
+      the game uses a placeholder town limit.
+    timePenalty: 25
+    fineFrw: 0
+    demeritPoints: 2
+    endsRun: 0
+    fromOrder: 0
+  - id: 7
+    title: No seatbelt
+    citation: Minister's Order (not yet supplied)
+    explanation: Placeholder rule until the Order's text is added.
+    timePenalty: 15
+    fineFrw: 0
+    demeritPoints: 1
+    endsRun: 0
+    fromOrder: 0
+  - id: 6
+    title: No helmet on a moto
+    citation: Minister's Order (not yet supplied)
+    explanation: Placeholder rule until the Order's text is added.
+    timePenalty: 15
+    fineFrw: 0
+    demeritPoints: 0
+    endsRun: 0
+    fromOrder: 0
+  - id: 8
+    title: Over the alcohol limit
+    citation: Law 014/2026, Art. 9
+    explanation: The maximum blood alcohol level for a driver is 0.80 grams per litre
+      of blood.
+    timePenalty: 0
+    fineFrw: 0
+    demeritPoints: 0
+    endsRun: 1
+    fromOrder: 1
+  cards:
+  - id: card_drive_right
+    theme: road
+    title: Drive on the right
+    textEn: In Rwanda the driving side is the right-hand side of the road.
+    textRw: 
+    textFr: 
+    sources:
+    - "Law n\xB0 014/2026 of 06/03/2026 governing road traffic, Art. 4 (Official
+      Gazette, Special of 10/03/2026)"
+    reviewStatus: draft
+  - id: card_officer
+    theme: road
+    title: Officers come first
+    textEn: When an officer is directing traffic, their instructions take priority
+      over road signs and signals.
+    textRw: 
+    textFr: 
+    sources:
+    - "Law n\xB0 014/2026, Art. 6(3)"
+    reviewStatus: draft
+  - id: card_refuse_stop
+    theme: road
+    title: Always stop when signalled
+    textEn: 'Refusing to stop when an officer signals you is an offence: a fine of
+      FRW 400,000 to 700,000 and 3 to 6 months'' imprisonment.'
+    textRw: 
+    textFr: 
+    sources:
+    - "Law n\xB0 014/2026, Art. 39"
+    reviewStatus: draft
+  - id: card_greetings
+    theme: language
+    title: Greetings for a visit
+    textEn: 'Mwaramutse: good morning. Muraho: hello. Amakuru?: how are you? Murakoze:
+      thank you. Icyayi: tea.'
+    textRw: "Mwaramutse \xB7 Muraho \xB7 Amakuru? \xB7 Murakoze \xB7 Icyayi"
+    textFr: 
+    sources:
+    - 'TODO: native-speaker review'
+    reviewStatus: draft
+  - id: card_market
+    theme: place
+    title: Kimironko Market
+    textEn: Kimironko Market sits right next to Kimironko taxi park, so buses and
+      motos arrive at its door.
+    textRw: 
+    textFr: 
+    sources:
+    - "OpenStreetMap: way 106506354 (market) and way 143205338 (taxi park), \xA9
+      OpenStreetMap contributors"
+    reviewStatus: draft
+  - id: card_study
+    theme: study
+    title: Read in short blocks
+    textEn: Reading in short, focused blocks with notes at the end of each one is
+      easier to keep up during summative week.
+    textRw: 
+    textFr: 
+    sources:
+    - 'TODO: add a study-skills source'
+    reviewStatus: draft
+  - id: card_cell
+    theme: place
+    title: Kibagabaga is a cell
+    textEn: Kibagabaga is a cell within Kimironko sector, Gasabo District.
+    textRw: 
+    textFr: 
+    sources:
+    - 'OpenStreetMap: ''Kibagabaga Cell Office'', way 206839949'
+    - 'TODO: verify against Gasabo District''s list'
+    reviewStatus: draft
+  news:
+  - 'Kimironko: traders expect a busy market day. Allow extra time around the taxi
+    park at midday.'
+  - Students across Kigali enter summative week, and study spaces expect long hours.
+  - 'Rainy season reminder: afternoon showers are common, so carry an umbrella.'
+  - 'Road safety: when an officer directs traffic, their instructions come before
+    the lights.'
+  - 'Kibagabaga: community football this weekend on the local pitch (fictional event).'
+  urbanSpeedLimitKmh: 40
+  speedLimitFromOrder: 0

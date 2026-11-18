@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c81d4d2ce7ff8f4f8f4fca678a64711, type: 3}
+  m_Name: mon_3_tea
+  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.MilestoneDefinition
+  id: mon_3_tea
+  title: Tea with Mama Ineza
+  brief: Your friend's mother lives in Kibagabaga and has asked you for tea. Arriving
+    late is rude, and so is leaving before the tea is finished.
+  placeName: Kibagabaga
+  startAtPoint: 0
+  startPoint: {x: 0, y: 0, z: 0}
+  position: {x: 1373.96, y: 129.88786, z: 4616.5435}
+  radius: 20
+  day: 0
+  opensAtHour: 15
+  parSeconds: 961
+  dwellSeconds: 40
+  dwellLabel: Drinking tea with Mama Ineza...
+  dwellAnimation: Act_Eat
+  knowledgeCardId: card_greetings
+  arrivalLines:
+  - Mwaramutse! Come in, sit down, the icyayi is ready.
+  speaker: Mama Ineza
