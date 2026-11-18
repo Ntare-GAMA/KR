@@ -299,7 +299,7 @@ namespace KR.Gameplay.Story
                 $"Text size: {(c.largeText ? "large" : "normal")}",
                 $"Seated play: {(c.seated ? "on (view raised)" : "off")}",
                 "Recentre view",
-                $"Satnav destination: {dest}",
+                $"Choose a destination (now: {dest})",
                 "Start the Kimironko tour",
             };
             _sb.Clear();
@@ -323,8 +323,13 @@ namespace KR.Gameplay.Story
                 case 4: c.seated = !c.seated; break;
                 case 5: Comfort.RecenterRequested = true; break;
                 case 6:
-                    if (_nav != null)
-                        _nav.ChooseDestination(_nav.Choice + 1 >= _nav.Places.Count ? -1 : _nav.Choice + 1);
+                    var picker = FindFirstObjectByType<DestinationPicker>();
+                    if (picker != null)
+                    {
+                        _open = false;
+                        GamePause.SetPanel(false);
+                        picker.Show();
+                    }
                     break;
                 case 7: StartTour(); break;
             }

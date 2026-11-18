@@ -6,11 +6,12 @@ namespace KR.Gameplay.World
     // The drivable road network as a graph, built once from the traffic paths (the same lanes the city's cars use).
     // Path points become nodes, consecutive points become edges (one way where the road is one-way), and path
     // ends are joined to any point within a few metres, which links side roads into junctions.
-    // A* finds the shortest drive (respecting one-way streets) or walk (ignoring them).
+    // A* finds the usual drive (respecting one-way streets, and preferring the main roads most drivers use over
+    // cutting through residential lanes: each road's driveCost weights its length) or the shortest walk.
     public sealed class RoadGraph
     {
         readonly List<Vector3> _pos = new List<Vector3>();
-        readonly List<List<(int to, float cost, bool forwardOnly)>> _edges = new List<List<(int, float, bool)>>();
+        readonly List<List<(int to, float cost, bool forwardOnly, float drive)>> _edges = new List<List<(int, float, bool, float)>>();
         readonly Dictionary<long, int> _byKey = new Dictionary<long, int>();
         readonly Dictionary<long, List<int>> _cells = new Dictionary<long, List<int>>();
         const float Cell = 20f;
@@ -22,7 +23,7 @@ namespace KR.Gameplay.World
         // Direction of the road at a node (towards its first neighbour), flat.
         public Vector3 Direction(int node)
         {
-            foreach (var (to, _, _) in _edges[node])
+            foreach (var (to, _, _, _) in _edges[node])
             {
                 var d = _pos[to] - _pos[node];
                 d.y = 0f;
@@ -42,15 +43,17 @@ namespace KR.Gameplay.World
                 if (path.points == null || path.points.Length < 2)
                     continue;
                 int prev = -1;
+                float drive = path.driveCost > 0f ? path.driveCost : 1f;
+                _minDrive = Mathf.Min(_minDrive, drive);
                 for (int i = 0; i < path.points.Length; i++)
                 {
                     int id = Node(path.points[i]);
                     if (prev >= 0 && prev != id)
                     {
                         float d = Vector3.Distance(_pos[prev], _pos[id]);
-                        _edges[prev].Add((id, d, false));
+                        _edges[prev].Add((id, d, false, drive));
                         // A one-way road can be walked against the traffic but not driven.
-                        _edges[id].Add((prev, d, path.oneway));
+                        _edges[id].Add((prev, d, path.oneway, drive));
                     }
                     prev = id;
                 }
@@ -62,10 +65,12 @@ namespace KR.Gameplay.World
                     if (n != e)
                     {
                         float d = Vector3.Distance(_pos[e], _pos[n]);
-                        _edges[e].Add((n, d, false));
-                        _edges[n].Add((e, d, false));
+                        _edges[e].Add((n, d, false, 1f));
+                        _edges[n].Add((e, d, false, 1f));
                     }
         }
+
+        float _minDrive = 1f;
 
         static long Key(Vector3 p) => ((long)Mathf.RoundToInt(p.x) << 32) ^ (uint)Mathf.RoundToInt(p.z);
         static long CellKey(int x, int z) => ((long)x << 32) ^ (uint)z;
@@ -78,7 +83,7 @@ namespace KR.Gameplay.World
             id = _pos.Count;
             _byKey[k] = id;
             _pos.Add(p);
-            _edges.Add(new List<(int, float, bool)>());
+            _edges.Add(new List<(int, float, bool, float)>());
             long c = CellKey(Mathf.FloorToInt(p.x / Cell), Mathf.FloorToInt(p.z / Cell));
             if (!_cells.TryGetValue(c, out var list))
                 _cells[c] = list = new List<int>();
@@ -152,16 +157,17 @@ namespace KR.Gameplay.World
                 if (!closed.Add(n))
                     continue;
                 float gn = g[n];
-                foreach (var (m, cost, forwardOnly) in _edges[n])
+                foreach (var (m, cost, forwardOnly, drive) in _edges[n])
                 {
                     if (driving && forwardOnly)
                         continue;
-                    float gm = gn + cost;
+                    float gm = gn + (driving ? cost * drive : cost);
                     if (g.TryGetValue(m, out float old) && old <= gm)
                         continue;
                     g[m] = gm;
                     back[m] = n;
-                    Push(open, (gm + Vector3.Distance(_pos[m], goal), m));
+                    // The straight-line estimate never overstates the remaining cost (cheapest road class).
+                    Push(open, (gm + Vector3.Distance(_pos[m], goal) * (driving ? _minDrive : 1f), m));
                 }
             }
             if (from != to && !back.ContainsKey(to))

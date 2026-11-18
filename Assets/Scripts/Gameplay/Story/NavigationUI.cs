@@ -35,27 +35,43 @@ namespace KR.Gameplay.Story
             if (nav == null || rig == null)
                 return;
             _director = FindFirstObjectByType<StoryDirector>();
-            if (dashMount != null)
-                _carScreen = CarScreen(dashMount);
-            _mini = ScreenMap("Minimap", new Vector2(320f, 320f), new Vector2(1f, 0f), new Vector2(-20f, 60f), MapView.Mode.HeadingUp, 450f, 0, false);
+            if (rig.Car != null)
+                _carScreen = CarScreen(rig.Car);
+            else if (dashMount != null)
+                _carScreen = CarScreen(null);
+            // Live directions on foot: the minimap carries the turn-by-turn bar too.
+            _mini = ScreenMap("Minimap", new Vector2(380f, 400f), new Vector2(1f, 0f), new Vector2(-20f, 60f), MapView.Mode.HeadingUp, 450f, 20, false);
             _bigScreen = ScreenMap("Full map", new Vector2(980f, 700f), new Vector2(0.5f, 0.5f), Vector2.zero, MapView.Mode.NorthUp, 0f, 24, true);
             _bigScreen.SetActive(false);
         }
 
-        // The vehicle screen: map on the left, all the driving information on the right.
-        GameObject CarScreen(Transform mount)
+        // The vehicle screen: map on the left, all the driving information on the right. It stands at the foot of the
+        // windscreen straight ahead of the driver, like a head-up display (owner decision 2026-11-18: off the
+        // dashboard, where it was half hidden), tilted to face the driver's eyes, see-through at the edges.
+        GameObject CarScreen(DrivableCar car)
         {
             var go = new GameObject("Vehicle screen", typeof(RectTransform));
-            go.transform.SetParent(mount, false);
             var canvas = go.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
             var rt = (RectTransform)go.transform;
             rt.sizeDelta = new Vector2(1100f, 600f);
-            rt.localScale = Vector3.one * 0.00036f;      // about 0.40 m x 0.22 m
+            if (car != null)
+            {
+                go.transform.SetParent(car.transform, false);
+                Vector3 eye = car.EyePoint;
+                Vector3 at = eye + car.transform.forward * 0.62f - car.transform.up * 0.16f;
+                go.transform.SetPositionAndRotation(at, Quaternion.LookRotation(at - eye, car.transform.up));
+                go.transform.localScale = Vector3.one * (0.27f / 1100f) / Mathf.Max(0.0001f, car.transform.lossyScale.x);   // 0.27 m wide
+            }
+            else
+            {
+                go.transform.SetParent(dashMount, false);
+                rt.localScale = Vector3.one * 0.00036f;
+            }
 
             var bg = new GameObject("Bezel", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Image>();
             bg.transform.SetParent(go.transform, false);
-            bg.color = new Color(0.01f, 0.01f, 0.012f, 1f);
+            bg.color = new Color(0.01f, 0.01f, 0.012f, 0.72f);
             Fill(bg.rectTransform, 0f, 0f, 1f, 1f, 0f);
 
             var mapArea = new GameObject("Map", typeof(RectTransform)).GetComponent<RectTransform>();

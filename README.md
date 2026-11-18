@@ -33,7 +33,7 @@ You play an ALU student racing deadlines through Rush Week: visit a friend, drin
 | Buttons | X start milestone / talk / select, Y seatbelt | A get in / out of the car (out only in P), B handbrake |
 | Menu ☰ | Info panel: Status, Journal, Progress, Photos, Settings (pauses the game) | |
 
-Desktop (Editor testing): WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it, C camera and click to shoot, M full map, N destination.
+Desktop (Editor testing): WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it, C camera and click to shoot, M full map, N destination list (arrows pick a category and a place, Enter sets it; directions show on the minimap and as a line on the ground).
 
 ## Requirements
 

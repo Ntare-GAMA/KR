@@ -5,10 +5,10 @@ using UnityEngine;
 
 namespace KR.Gameplay.Story
 {
-    // Satnav for the city. The destination is the current milestone's place; N / right grip cycles through every
-    // place in the story (home, campus, market, ...) and back to "follow the milestone". The route follows the real
-    // road network (one-way streets respected while driving) and is recalculated when you leave it. It also gives
-    // turn-by-turn directions.
+    // Satnav for the city. The destination is the current milestone's place unless you pick one: N / right grip opens
+    // the destination list (DestinationPicker) with the story's places and every named place in OpenStreetMap
+    // (cafes, pharmacies, banks, schools...). The route follows every real street (one-way streets respected while
+    // driving), is recalculated when you leave it, and gives live turn-by-turn directions on foot and in the car.
     public sealed class Navigator : MonoBehaviour
     {
         [SerializeField] StoryDirector director;
@@ -16,9 +16,15 @@ namespace KR.Gameplay.Story
         [SerializeField] RoadNetworkTraffic roads;
         [SerializeField] float offRoute = 30f;
         [SerializeField] float arriveRadius = 25f;
+        [SerializeField, Tooltip("All streets (walking and driving routes, street names). Falls back to the traffic paths.")]
+        StreetNetwork streets;
+        [SerializeField] PlaceCatalog catalog;
 
         RoadGraph _graph;
         readonly List<(string name, Vector3 pos)> _places = new List<(string, Vector3)>();
+        readonly List<string> _groups = new List<string>();
+        float _streetTimer;
+        bool _arrivedSaid;
         int _choice = -1;                 // -1 = follow the current milestone
         readonly List<Vector3> _route = new List<Vector3>();
         int _progress;                    // index of the route point the player has reached
@@ -35,6 +41,8 @@ namespace KR.Gameplay.Story
         public float Remaining { get; private set; }
         public IReadOnlyList<(string name, Vector3 pos)> Places => _places;
         public int Choice => _choice;
+        public string GroupOf(int i) => i >= 0 && i < _groups.Count ? _groups[i] : "story";
+        public string StreetName { get; private set; }
         public bool OnTour => _tour.Count > 0;
         public string TourLabel => _tour.Count > 0 ? $"Tour stop {_tourIndex + 1}/{_tour.Count}: {_tour[_tourIndex].name}" : null;
 
@@ -80,24 +88,45 @@ namespace KR.Gameplay.Story
             roads = vehicles;
         }
 
+        public void SetDirectory(PlaceCatalog places, StreetNetwork network)
+        {
+            catalog = places;
+            streets = network;
+        }
+
         void Start()
         {
-            _graph = roads != null ? new RoadGraph(roads.Paths) : null;
+            _graph = streets != null && streets.streets.Length > 0 ? new RoadGraph(streets.Paths())
+                   : roads != null ? new RoadGraph(roads.Paths) : null;
             if (rig != null)
-                _places.Add(("Home", rig.Home));
+                Add("Home", rig.Home, "story");
             var week = director != null ? director.Week : null;
             if (week != null && week.milestones != null)
                 foreach (var m in week.milestones)
                     if (m != null && !string.IsNullOrEmpty(m.placeName) && !_places.Exists(p => p.name == m.placeName))
-                        _places.Add((m.placeName, m.position));
+                        Add(m.placeName, m.position, "story");
+            if (catalog != null && catalog.directory != null)
+                foreach (var e in catalog.directory)
+                    if (!string.IsNullOrEmpty(e.name))
+                        Add(e.name, e.position, e.group);
+        }
+
+        void Add(string name, Vector3 pos, string group)
+        {
+            _places.Add((name, pos));
+            _groups.Add(string.IsNullOrEmpty(group) ? "other" : group);
         }
 
         void Update()
         {
             if (_graph == null || _graph.Count == 0 || rig == null)
                 return;
-            if (RigInput.DestinationPressed)
-                NextDestination();
+            _streetTimer -= Time.deltaTime;
+            if (_streetTimer <= 0f)
+            {
+                _streetTimer = 0.5f;
+                StreetName = streets != null ? streets.NameAt(PlayerPosition) : null;
+            }
 
             // What to navigate to: the chosen place, or the milestone in play.
             string name = null;
@@ -139,6 +168,7 @@ namespace KR.Gameplay.Story
                 _target = target;
                 DestinationName = name;
                 _drivingRoute = driving;
+                _arrivedSaid = false;
                 Plan();
             }
             if (_target == null)
@@ -150,7 +180,7 @@ namespace KR.Gameplay.Story
             _replan -= Time.deltaTime;
         }
 
-        void NextDestination()
+        public void NextDestination()
         {
             _choice = _choice + 1 >= _places.Count ? -1 : _choice + 1;
             string label = _choice < 0
@@ -207,9 +237,15 @@ namespace KR.Gameplay.Story
             for (int i = _progress + 1; i < _route.Count - 1; i++)
                 remaining += Flat(_route[i], _route[i + 1]);
             Remaining = remaining;
-            if (remaining < arriveRadius)
+            // A place you picked yourself (a cafe, a pharmacy) is reached at its door; milestones keep their wider radius.
+            if (remaining < (_choice >= 0 && _tour.Count == 0 ? 8f : arriveRadius))
             {
                 Instruction = $"You have arrived at {DestinationName}.";
+                if (!_arrivedSaid)
+                {
+                    _arrivedSaid = true;
+                    rig.Toast(Instruction, 4f);
+                }
                 return;
             }
             Instruction = NextTurn(p);

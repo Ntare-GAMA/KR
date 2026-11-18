@@ -182,7 +182,9 @@ namespace KR.Gameplay.Story
             }
 
             if (_bar != null)
-                _bar.text = _nav.Instruction ?? (_nav.Places.Count > 0 ? "No destination. N / right grip: choose a place." : "");
+                _bar.text = _nav.Instruction ?? (string.IsNullOrEmpty(_nav.StreetName)
+                    ? "No destination. N: choose a place."
+                    : $"On {_nav.StreetName}. N: choose a place.");
         }
 
         static void Place(RectTransform r, Vector2 uv)
