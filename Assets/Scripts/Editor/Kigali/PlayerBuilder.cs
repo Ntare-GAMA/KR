@@ -614,6 +614,8 @@ namespace KR.Editor.Kigali
                     buildings++;
                 }
 
+            // Parked cars are scattered as "trees" (for their cull distance) but must be solid all over, not a thin trunk.
+            var vehicles = new HashSet<GameObject>(c.Cat != null ? c.Cat.Vehicles : new GameObject[0]);
             if (c.Scatter != null)
                 foreach (var (prefab, m, category) in c.Scatter.Placed)
                 {
@@ -627,7 +629,7 @@ namespace KR.Editor.Kigali
                     if (height < 0.45f)
                         continue;   // manholes, kerb details, litter
                     var foot = m.MultiplyPoint3x4(new Vector3(b.center.x, b.min.y, b.center.z));
-                    if (category == ScatterCollector.Category.Tree)
+                    if (category == ScatterCollector.Category.Tree && !vehicles.Contains(prefab))
                         Upright(foot, 0f, 0.5f, 0.5f, foot.y - 0.3f, foot.y + Mathf.Min(height, 4f));
                     else if (category == ScatterCollector.Category.Lamp)
                         Upright(foot, 0f, 0.3f, 0.3f, foot.y - 0.3f, foot.y + height);
