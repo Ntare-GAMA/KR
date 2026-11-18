@@ -1,0 +1,178 @@
+{
+  "convention_centre": [
+    {
+      "osm": "way/436905503",
+      "name": "Kigali Convention Centre",
+      "lat": -1.955285884090909,
+      "lon": 30.093168379545453,
+      "tags": {
+        "amenity": "conference_centre"
+      }
+    },
+    {
+      "osm": "way/454634582",
+      "name": "Convention Centre",
+      "lat": -1.9546351149999999,
+      "lon": 30.093901484999996,
+      "tags": {
+        "building": "government"
+      }
+    }
+  ],
+  "amahoro_stadium": [
+    {
+      "osm": "node/5859567270",
+      "name": "Amahoro Ava Hejuru Cooperative",
+      "lat": -1.9742736,
+      "lon": 30.0770156,
+      "tags": {}
+    },
+    {
+      "osm": "node/6267369590",
+      "name": "Amahoro",
+      "lat": -1.941479,
+      "lon": 30.0445964,
+      "tags": {
+        "amenity": "restaurant"
+      }
+    },
+    {
+      "osm": "way/106506349",
+      "name": "Amahoro Street",
+      "lat": -1.9443667666666666,
+      "lon": 30.131109600000002,
+      "tags": {
+        "highway": "residential"
+      }
+    },
+    {
+      "osm": "way/1231375013",
+      "name": "Amahoro National Stadium",
+      "lat": -1.95498456,
+      "lon": 30.114398916,
+      "tags": {
+        "leisure": "stadium"
+      }
+    }
+  ],
+  "arena": [
+    {
+      "osm": "node/12950467295",
+      "name": "Alliance Arena Clinic",
+      "lat": -1.9348929,
+      "lon": 30.2391328,
+      "tags": {
+        "amenity": "hospital"
+      }
+    },
+    {
+      "osm": "way/715821982",
+      "name": "BK Arena",
+      "lat": -1.9531809750000002,
+      "lon": 30.11563634166667,
+      "tags": {
+        "leisure": "stadium",
+        "building": "yes"
+      }
+    }
+  ],
+  "nyabugogo": [
+    {
+      "osm": "node/5456792311",
+      "name": "Nyabugogo",
+      "lat": -1.9417528,
+      "lon": 30.0449109,
+      "tags": {
+        "highway": "bus_stop"
+      }
+    },
+    {
+      "osm": "node/5834448092",
+      "name": "Nyabugogo Police Post",
+      "lat": -1.9401546,
+      "lon": 30.044559,
+      "tags": {
+        "amenity": "police"
+      }
+    },
+    {
+      "osm": "node/6267363162",
+      "name": "Cantine Nyabugogo",
+      "lat": -1.9405785,
+      "lon": 30.0440193,
+      "tags": {
+        "amenity": "cafe"
+      }
+    },
+    {
+      "osm": "node/11255597737",
+      "name": "Nyabugogo International and Long Distance Buses",
+      "lat": -1.9406927,
+      "lon": 30.0441012,
+      "tags": {
+        "amenity": "bus_station"
+      }
+    },
+    {
+      "osm": "way/25489483",
+      "name": "Nyabugogo",
+      "lat": -1.9470930348258706,
+      "lon": 30.01738571044776,
+      "tags": {}
+    },
+    {
+      "osm": "way/165915964",
+      "name": "Nyabugogo Boulevard",
+      "lat": -1.9427594,
+      "lon": 30.04163208,
+      "tags": {
+        "highway": "trunk"
+      }
+    },
+    {
+      "osm": "way/253125007",
+      "name": "Nyabugogo Bus Station",
+      "lat": -1.9409737588235296,
+      "lon": 30.044658364705885,
+      "tags": {
+        "amenity": "bus_station"
+      }
+    },
+    {
+      "osm": "way/360263085",
+      "name": "Nyabugogo",
+      "lat": -1.8697846293755498,
+      "lon": 30.078986704573442,
+      "tags": {}
+    },
+    {
+      "osm": "way/673014586",
+      "name": "Nyabugogo Boulevard",
+      "lat": -1.9427733799999998,
+      "lon": 30.04173482,
+      "tags": {
+        "highway": "trunk"
+      }
+    },
+    {
+      "osm": "way/675587347",
+      "name": "Nyabugogo Boulevard",
+      "lat": -1.9426808666666666,
+      "lon": 30.0423601,
+      "tags": {
+        "highway": "trunk"
+      }
+    }
+  ],
+  "city_tower": [
+    {
+      "osm": "way/157598393",
+      "name": "Kigali City Tower",
+      "lat": -1.9439036333333333,
+      "lon": 30.059397408333336,
+      "tags": {
+        "building": "yes"
+      }
+    }
+  ]
+}

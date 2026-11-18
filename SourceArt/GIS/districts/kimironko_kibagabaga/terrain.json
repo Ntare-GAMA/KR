@@ -1,0 +1,49 @@
+{
+  "district": "kimironko_kibagabaga",
+  "levels": "Story Mode",
+  "centre_lat": -1.94,
+  "centre_lon": 30.132,
+  "bounds": {
+    "south": -1.9716530106534988,
+    "north": -1.908346989346501,
+    "west": 30.100541077429476,
+    "east": 30.163458922570527
+  },
+  "unity_terrain": {
+    "heightmap_resolution": 1025,
+    "width_m": 7000,
+    "length_m": 7000,
+    "height_m": 388.41,
+    "byte_order": "Windows",
+    "depth": "16 bit",
+    "flip_vertically": false
+  },
+  "elevation_min_m": 1361.94,
+  "elevation_max_m": 1750.35,
+  "metres_per_heightmap_sample": 6.84,
+  "counts": {
+    "roads": 2596,
+    "buildings": 43878
+  },
+  "hubs": [
+    {
+      "name": "Kimironko",
+      "x": 2910.1,
+      "z": 2458.7
+    },
+    {
+      "name": "Kibagabaga",
+      "x": 1309.5,
+      "z": 4446.2
+    },
+    {
+      "name": "ALU campus",
+      "x": 5656.8,
+      "z": 4577.1
+    }
+  ],
+  "sources": [
+    "Copernicus DEM GLO-30 (ESA/EU; DLR e.V., Airbus) TODO: verify exact attribution text",
+    "\u00a9 OpenStreetMap contributors (ODbL)"
+  ]
+}

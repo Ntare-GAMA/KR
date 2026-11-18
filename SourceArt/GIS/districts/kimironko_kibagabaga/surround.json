@@ -1,0 +1,12 @@
+{
+  "resolution": 3073,
+  "size_m": 21000,
+  "origin_x": -7000,
+  "origin_z": -7000,
+  "elevation_min_m": 1336.061,
+  "elevation_span_m": 551.769,
+  "district_elevation_min_m": 1361.94,
+  "sources": [
+    "Copernicus DEM GLO-30 (ESA/EU; DLR e.V., Airbus) TODO: verify exact attribution text"
+  ]
+}
