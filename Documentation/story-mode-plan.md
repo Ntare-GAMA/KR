@@ -180,7 +180,7 @@ All business and institution names here are placeholders to be renamed.
 - **Content** (`Assets/World/Story/`, built by `StoryModeBuilder`): Monday to Wednesday milestones placed at real OSM positions:
   - home in Kibagabaga;
   - ALU campus;
-  - Mama Ineza's house about 350 m from home;
+  - Maman Fils's house about 350 m from home;
   - Kimironko Market.
 
   Also 9 road rules and 7 draft knowledge cards.

@@ -25,5 +25,11 @@ namespace KR.Gameplay.Story
         public string knowledgeCardId;
         [TextArea] public string[] arrivalLines;
         public string speaker;
+        [Header("Mission type")]
+        [Tooltip("Arrive: reach the place (and stay). ParkInBay: park in P inside the marked bay. Talk: finish the conversation " +
+                 "(and its quiz). Photo: photograph the place.")]
+        public MissionKind kind = MissionKind.Arrive;
+        [Tooltip("Talk missions: the conversation id in Resources/Story/story_script.json.")] public string conversationId;
+        [Tooltip("ParkInBay missions: the direction the parked car must face (degrees).")] public float bayYaw;
     }
 }

@@ -13,21 +13,23 @@ MonoBehaviour:
   m_Name: mon_3_tea
   m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.MilestoneDefinition
   id: mon_3_tea
-  title: Tea with Mama Ineza
+  title: Tea with Maman Fils
   brief: Your friend's mother lives in Kibagabaga and has asked you for tea. Arriving
     late is rude, and so is leaving before the tea is finished.
   placeName: Kibagabaga
   startAtPoint: 0
   startPoint: {x: 0, y: 0, z: 0}
-  position: {x: 1373.96, y: 129.88786, z: 4616.5435}
+  position: {x: 1377.1536, y: 129.87732, z: 4619.714}
   radius: 20
   day: 0
   opensAtHour: 15
-  parSeconds: 961
-  dwellSeconds: 40
-  dwellLabel: Drinking tea with Mama Ineza...
-  dwellAnimation: Act_Eat
+  parSeconds: 1022
+  dwellSeconds: 0
+  dwellLabel: 
+  dwellAnimation: 
   knowledgeCardId: card_greetings
-  arrivalLines:
-  - Mwaramutse! Come in, sit down, the icyayi is ready.
-  speaker: Mama Ineza
+  arrivalLines: []
+  speaker: 
+  kind: 2
+  conversationId: mf_tea
+  bayYaw: 0

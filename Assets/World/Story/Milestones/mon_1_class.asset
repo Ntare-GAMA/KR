@@ -15,8 +15,7 @@ MonoBehaviour:
   id: mon_1_class
   title: Make the 9:00 class
   brief: Your first class at ALU starts at 9:00 and you are still at home in Kibagabaga.
-    Morning traffic builds up fast; walking, a moto or the bus all work, but the
-    clock is already running.
+    Morning traffic builds up fast; walk or drive, but the clock is already running.
   placeName: ALU campus
   startAtPoint: 1
   startPoint: {x: 1700.239, y: 105.40636, z: 4492.2515}
@@ -29,5 +28,9 @@ MonoBehaviour:
   dwellLabel: 
   dwellAnimation: 
   knowledgeCardId: card_drive_right
-  arrivalLines: []
-  speaker: 
+  arrivalLines:
+  - You made it! Sit with us, the lecture is starting.
+  speaker: Aline
+  kind: 0
+  conversationId: 
+  bayYaw: 0

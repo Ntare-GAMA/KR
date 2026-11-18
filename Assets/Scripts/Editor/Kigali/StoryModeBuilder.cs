@@ -111,22 +111,61 @@ namespace KR.Editor.Kigali
                 return m;
             }
 
-            Add("mon_1_class", 0, "Make the 9:00 class", "Your first class at ALU starts at 9:00 and you are still at home in Kibagabaga. Morning traffic builds up fast; walking, a moto or the bus all work, but the clock is already running.",
-                "ALU campus", campusGate, 45f, 0f, null, null, "card_drive_right", 7.5f);
+            // Characters stand at the roadside near their places (fictional people; lines in story_script.json).
+            Vector3 roadNearHome = RoadPointNear(vehicles, terrain, home, 650f);
+            Vector3 officerAt = Roadside(vehicles, terrain, roadNearHome, 4.5f);
+            Vector3 mamanAt = Roadside(vehicles, terrain, mama, 4.5f);
+            Vector3 alineAt = Roadside(vehicles, terrain, campusGate, 5f);
+            Vector3 librarianAt = Roadside(vehicles, terrain, RoadPointNear(vehicles, terrain, campusGate, 25f), 5f);
+            Vector3 vendorAt = Roadside(vehicles, terrain, RoadPointNear(vehicles, terrain, market, 20f), 5f);
+            // Parking test: a marked bay at the kerb about 60 m from the campus gate, along the road.
+            Vector3 bayRoad = RoadPointNear(vehicles, terrain, campusGate, 60f);
+            Vector3 bayDir = RoadDirection(vehicles, bayRoad);
+            Vector3 bayAt = OnGround(terrain, bayRoad + Vector3.Cross(Vector3.up, bayDir) * 3.2f);
+            float bayYaw = Quaternion.LookRotation(bayDir).eulerAngles.y;
+
+            MilestoneDefinition Talk(MilestoneDefinition m, string conversation)
+            {
+                m.kind = MissionKind.Talk;
+                m.conversationId = conversation;
+                m.parSeconds += 90f;            // time to talk
+                EditorUtility.SetDirty(m);
+                return m;
+            }
+
+            // Rush Week. Monday: first class, the library, tea with Maman Fils. Tuesday: a road lesson with Officer
+            // Mukamana, the parking test, the market, the group meeting. Wednesday: the poster photo, submission and
+            // thanking Maman Fils. Story script: Documentation/story-script.md.
+            Add("mon_1_class", 0, "Make the 9:00 class", "Your first class at ALU starts at 9:00 and you are still at home in Kibagabaga. Morning traffic builds up fast; walk or drive, but the clock is already running.",
+                "ALU campus", campusGate, 45f, 0f, null, null, "card_drive_right", 7.5f, "Aline", "You made it! Sit with us, the lecture is starting.");
             milestones[0].startAtPoint = true;
             milestones[0].startPoint = home;
             EditorUtility.SetDirty(milestones[0]);
-            Add("mon_2_read", 0, "Read for your summative", "Find a quiet spot on campus and read the chapter your group needs before lunch.",
-                "ALU campus", campus, 70f, 45f, "Reading...", "Act_School", "card_study", 9f);
-            Add("mon_3_tea", 0, "Tea with Mama Ineza", "Your friend's mother lives in Kibagabaga and has asked you for tea. Arriving late is rude, and so is leaving before the tea is finished.",
-                "Kibagabaga", mama, 20f, 40f, "Drinking tea with Mama Ineza...", "Act_Eat", "card_greetings", 15f,
-                "Mama Ineza", "Mwaramutse! Come in, sit down, the icyayi is ready.");
-            Add("tue_1_market", 1, "Kimironko Market run", "Your group project needs fabric and materials. The market is busiest around midday and closes in the evening.",
-                "Kimironko Market", market, 40f, 25f, "Buying materials...", "Act_Market", "card_market", 10f);
-            Add("tue_2_group", 1, "Group meeting on campus", "Meet your group on campus to put the summative together.",
-                "ALU campus", campus, 70f, 30f, "Working with your group...", "Act_School", "card_refuse_stop", 14f);
-            Add("wed_1_submit", 2, "Submit before the deadline", "The summative closes this afternoon. Get to campus and submit it with time to spare.",
-                "ALU campus", campus, 70f, 15f, "Submitting...", "Act_School", "card_officer", 13f);
+            Talk(Add("mon_2_library", 0, "Find a book for the summative", "Your group needs the reading list for the summative. Ask Jean-Paul at the campus library which books to start with.",
+                "ALU campus", librarianAt, 20f, 0f, null, null, "card_study", 9f), "jp_library");
+            Talk(Add("mon_3_tea", 0, "Tea with Maman Fils", "Your friend's mother lives in Kibagabaga and has asked you for tea. Arriving late is rude, and so is leaving before the tea is finished.",
+                "Kibagabaga", mamanAt, 20f, 0f, null, null, "card_greetings", 15f), "mf_tea");
+            Talk(Add("tue_1_lesson", 1, "A road lesson with Officer Mukamana", "Officer Mukamana runs a short road-safety talk for new drivers near Kibagabaga. Listen, then answer her three questions (you need two right).",
+                "Kibagabaga", officerAt, 20f, 0f, null, null, "card_officer", 7.5f), "off_lesson");
+            var park = Add("tue_2_parking", 1, "The parking test", "Drive to the marked bay near the campus gate, stop inside it facing along the road, and shift to P.",
+                "ALU car park", bayAt, 25f, 0f, null, null, "card_refuse_stop", 8.5f);
+            park.kind = MissionKind.ParkInBay;
+            park.bayYaw = bayYaw;
+            park.parSeconds += 60f;
+            EditorUtility.SetDirty(park);
+            Talk(Add("tue_3_market", 1, "Fabric from Mzee Gakuba", "Your group's poster needs fabric for the display. Mzee Gakuba sells it at Kimironko Market; he closes his stall early today.",
+                "Kimironko Market", vendorAt, 20f, 0f, null, null, "card_market", 10f), "gk_market");
+            Add("tue_4_group", 1, "Group meeting on campus", "Meet your group on campus and put the summative together.",
+                "ALU campus", campus, 70f, 30f, "Working with your group...", "Act_School", "card_cell", 14f);
+            var photo = Add("wed_1_photo", 2, "A photo for the poster", "The poster needs a photo of the campus. Stand back so the buildings fill the middle of the frame, then take the shot.",
+                "ALU campus", campus, 70f, 0f, null, null, null, 8f);
+            photo.kind = MissionKind.Photo;
+            photo.parSeconds += 60f;
+            EditorUtility.SetDirty(photo);
+            Add("wed_2_submit", 2, "Submit before the deadline", "The summative closes this afternoon. Get to campus and submit it with time to spare.",
+                "ALU campus", campus, 70f, 15f, "Submitting...", "Act_School", null, 13f);
+            Talk(Add("wed_3_thanks", 2, "Thank Maman Fils", "The summative is in. Stop by Maman Fils's house to tell her how it went and thank her for the tea.",
+                "Kibagabaga", mamanAt, 20f, 0f, null, null, null, 16f), "mf_thanks");
 
             var week = EditorAssetUtil.LoadOrCreate<StoryWeek>($"{Out}/RushWeek.asset");
             week.title = "Rush Week";
@@ -176,10 +215,29 @@ namespace KR.Editor.Kigali
 
             int posts = PlacePolice(vehicles, terrain, new[] { market, campusGate, hospital });
 
+            // Conversations, places, photos and teleport walking.
+            var talk = host.AddComponent<ConversationRunner>();
+            talk.Configure(director, rig);
+            var catalog = BuildPlaces(places, terrain, home, campus, market, mamanAt);
+            var discoveries = host.AddComponent<Discoveries>();
+            discoveries.Configure(catalog, director, navigator);
+            var cameraBody = EditorAssetUtil.LitMaterial(Out, "PhotoCamera", new Color(0.08f, 0.08f, 0.09f), 0.6f);
+            host.AddComponent<PhotoCamera>().Configure(rig, director, cameraBody);
+            host.AddComponent<StoryWiring>();
+            host.AddComponent<Teleporter>().Configure(rig, RibbonMaterial());
+            int npcs = PlaceCharacters(host.transform, terrain, rig != null ? rig.Player.transform.position : home,
+                (officerAt, "officer", "Officer Mukamana", "off_chat", PcPeople.Activity.Idle, true),
+                (mamanAt, "maman_fils", "Maman Fils", "mf_chat", PcPeople.Activity.Talk, true),
+                (alineAt, "aline", "Aline", "al_chat", PcPeople.Activity.Talk, true),
+                (librarianAt, "jean_paul", "Jean-Paul", "jp_chat", PcPeople.Activity.Idle, false),
+                (vendorAt, "gakuba", "Mzee Gakuba", "gk_chat", PcPeople.Activity.Vendor, false));
+            ParkingBay(host.transform, bayAt, bayYaw);
+            Debug.Log($"[StoryMode] {npcs} characters, {catalog.places.Length} places to discover ({catalog.tour.Length} on the Kimironko tour), parking bay at {bayAt:F0}.");
+
             EditorSceneManager.MarkSceneDirty(scene);
             EditorSceneManager.SaveScene(scene);
             Debug.Log($"[StoryMode] Added Rush Week to {ScenePath}: {milestones.Count} milestones, {week.rules.Length} rules, {cards.Length} cards, " +
-                      $"{posts} police posts. Home {home}, campus {campusGate}, market {market}, Mama Ineza {mama}.");
+                      $"{posts} police posts. Home {home}, campus {campusGate}, market {market}, Maman Fils {mama}.");
         }
 
         // Glowing route ribbon: unlit, see-through cyan, drawn over the road.
@@ -223,6 +281,159 @@ namespace KR.Editor.Kigali
                     }
                 }
             return OnGround(terrain, best);
+        }
+
+        // A point beside the road (to the right of its direction), on the ground.
+        static Vector3 Roadside(RoadNetworkTraffic vehicles, Terrain terrain, Vector3 roadPoint, float offset)
+        {
+            var dir = RoadDirection(vehicles, roadPoint);
+            return OnGround(terrain, roadPoint + Vector3.Cross(Vector3.up, dir) * offset);
+        }
+
+        static Vector3 RoadDirection(RoadNetworkTraffic vehicles, Vector3 at)
+        {
+            Vector3 best = Vector3.forward;
+            float bestD = float.MaxValue;
+            if (vehicles != null && vehicles.Paths != null)
+                foreach (var path in vehicles.Paths)
+                    for (int i = 1; i < path.points.Length; i++)
+                    {
+                        float d = Flat((path.points[i - 1] + path.points[i]) * 0.5f, at);
+                        if (d < bestD)
+                        {
+                            bestD = d;
+                            best = path.points[i] - path.points[i - 1];
+                        }
+                    }
+            best.y = 0f;
+            return best.sqrMagnitude > 0.01f ? best.normalized : Vector3.forward;
+        }
+
+        // The characters you can talk to: real animated people from the pedestrian set, with an Npc marker.
+        static int PlaceCharacters(Transform parent, Terrain terrain, Vector3 faceTowards,
+                                   params (Vector3 at, string id, string name, string chat, PcPeople.Activity role, bool female)[] people)
+        {
+            var cat = PcShowcaseBuilder.LoadCatalog();
+            var women = cat.Pedestrians.Where(m => m != null && m.name.ToLowerInvariant().Contains("woman")).ToArray();
+            var men = cat.Pedestrians.Where(m => m != null && !m.name.ToLowerInvariant().Contains("woman")).ToArray();
+            PcPeople.Begin("Assets/World/PC/kimironko_kibagabaga/People");
+            var host = new GameObject("Characters").transform;
+            host.SetParent(parent, false);
+            var rng = new System.Random(77);
+            int n = 0;
+            foreach (var p in people)
+            {
+                var pool = p.female && women.Length > 0 ? women : men.Length > 0 ? men : cat.Pedestrians;
+                if (pool.Length == 0)
+                    break;
+                var model = pool[n % pool.Length];
+                var to = faceTowards - p.at;
+                float yaw = Mathf.Atan2(to.x, to.z) * Mathf.Rad2Deg;
+                var holder = PcPeople.Spawn(model, host, p.at, yaw, p.role, rng, p.name, brain: true);
+                holder.AddComponent<Npc>().Configure(p.id, p.name, p.chat, holder.GetComponent<PersonAnimator>());
+                n++;
+            }
+            return n;
+        }
+
+        // White lines of a parking bay, 2.6 m x 5.5 m.
+        static void ParkingBay(Transform parent, Vector3 at, float yaw)
+        {
+            var paint = EditorAssetUtil.LitMaterial(Out, "BayPaint", new Color(0.95f, 0.95f, 0.92f), 0.3f);
+            var bay = new GameObject("Parking test bay").transform;
+            bay.SetParent(parent, false);
+            bay.SetPositionAndRotation(at + Vector3.up * 0.03f, Quaternion.Euler(0f, yaw, 0f));
+            void Line(Vector3 local, Vector3 size)
+            {
+                var g = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                UnityEngine.Object.DestroyImmediate(g.GetComponent<Collider>());
+                g.name = "Line";
+                g.transform.SetParent(bay, false);
+                g.transform.localPosition = local;
+                g.transform.localScale = size;
+                g.GetComponent<Renderer>().sharedMaterial = paint;
+                g.GetComponent<Renderer>().shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            }
+            Line(new Vector3(-1.3f, 0f, 0f), new Vector3(0.12f, 0.02f, 5.5f));
+            Line(new Vector3(1.3f, 0f, 0f), new Vector3(0.12f, 0.02f, 5.5f));
+            Line(new Vector3(0f, 0f, 2.75f), new Vector3(2.72f, 0.02f, 0.12f));
+            Line(new Vector3(0f, 0f, -2.75f), new Vector3(2.72f, 0.02f, 0.12f));
+        }
+
+        // Places to discover: public places from the OSM extract near each sector centre (markets, parks, schools,
+        // universities, hospitals, bus stations, sports grounds, places of worship), plus the story's own places.
+        // Private businesses (restaurants, bars, hotels, shops) are left out. Card text is left empty for a person
+        // to write and review.
+        static PlaceCatalog BuildPlaces(Place[] places, Terrain terrain, Vector3 home, Vector3 campus, Vector3 market, Vector3 maman)
+        {
+            var sectors = new (string name, Vector3 centre, float radius)[]
+            {
+                ("Kimironko", new Vector3(2910f, 0f, 2459f), 850f),
+                ("Kibagabaga", new Vector3(1310f, 0f, 4446f), 750f),
+                ("ALU campus", new Vector3(5657f, 0f, 4577f), 400f),
+            };
+            var kinds = new Dictionary<string, string>
+            {
+                ["market"] = "market", ["park"] = "park", ["school"] = "school", ["university"] = "university",
+                ["hospital"] = "health centre", ["bus_station"] = "bus station", ["stadium"] = "sports ground",
+                ["sports_centre"] = "sports ground", ["pitch"] = "sports ground", ["worship"] = "place of worship",
+            };
+            var list = new List<PlaceRecord>();
+            var used = new HashSet<string>();
+            void AddPlace(string id, string name, string category, Vector3 at, float radius)
+            {
+                string sector = null;
+                foreach (var s in sectors)
+                    if (Flat(at, s.centre) < s.radius)
+                        sector = s.name;
+                if (sector == null || !used.Add(id))
+                    return;
+                list.Add(new PlaceRecord { id = id, name = name, category = category, sector = sector,
+                                           position = OnGround(terrain, at), radius = radius, xp = 50 });
+            }
+            AddPlace("alu_campus", "African Leadership University", "university", campus, 70f);
+            AddPlace("kimironko_market", "Kimironko Market", "market", market, 45f);
+            AddPlace("maman_fils", "Maman Fils's house", "home", maman, 20f);
+            foreach (var p in places)
+            {
+                if (string.IsNullOrWhiteSpace(p.name) || p.pts == null || p.pts.Length < 2 || !kinds.TryGetValue(p.kind, out var category))
+                    continue;
+                float sx = 0f, sz = 0f;
+                int n = p.pts.Length / 2;
+                for (int i = 0; i < n; i++)
+                {
+                    sx += p.pts[i * 2];
+                    sz += p.pts[i * 2 + 1];
+                }
+                string id = new string(p.name.ToLowerInvariant().Select(ch => char.IsLetterOrDigit(ch) ? ch : '_').ToArray());
+                AddPlace(id, p.name.Trim(), category, new Vector3(sx / n, 0f, sz / n), 35f);
+            }
+            var catalog = EditorAssetUtil.LoadOrCreate<PlaceCatalog>($"{Out}/Places.asset");
+            // Keep any card text already written for a place.
+            var old = catalog.places != null ? catalog.places.ToDictionary(x => x.id, x => x) : new Dictionary<string, PlaceRecord>();
+            foreach (var p in list)
+                if (old.TryGetValue(p.id, out var o))
+                {
+                    p.cardText = o.cardText;
+                    p.cardSource = o.cardSource;
+                    p.reviewStatus = o.reviewStatus;
+                }
+            catalog.places = list.OrderBy(x => x.sector).ThenBy(x => x.name).ToArray();
+            // Kimironko tour: the market, then the nearest unvisited Kimironko place each time (up to six stops).
+            var stops = new List<PlaceRecord>();
+            var left = catalog.places.Where(x => x.sector == "Kimironko").ToList();
+            var at0 = left.FirstOrDefault(x => x.id == "kimironko_market");
+            while (at0 != null && stops.Count < 6)
+            {
+                stops.Add(at0);
+                left.Remove(at0);
+                var from = at0.position;
+                at0 = left.OrderBy(x => Flat(x.position, from)).FirstOrDefault();
+            }
+            catalog.tour = stops.Select(x => x.id).ToArray();
+            EditorUtility.SetDirty(catalog);
+            AssetDatabase.SaveAssets();
+            return catalog;
         }
 
         static Transform Beacon(Transform parent)

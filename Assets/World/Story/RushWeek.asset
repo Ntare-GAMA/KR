@@ -22,11 +22,15 @@ MonoBehaviour:
   - Saturday
   milestones:
   - {fileID: 11400000, guid: aa7d8be25aa84364abf7e98c0cd1b592, type: 2}
-  - {fileID: 11400000, guid: 06d02ec15d9d0784e8e894109785f6a2, type: 2}
+  - {fileID: 11400000, guid: c7dc618d11f9fe142b4e11784a9f57dd, type: 2}
   - {fileID: 11400000, guid: 48d7235d706f0cf439acb602dfb9ee29, type: 2}
-  - {fileID: 11400000, guid: 26b7f724649dac14c881a6a9efa8b53e, type: 2}
-  - {fileID: 11400000, guid: f53d595031299de4ab88b6276ed588ee, type: 2}
-  - {fileID: 11400000, guid: 6144f6a6968005248adca92734a1751e, type: 2}
+  - {fileID: 11400000, guid: a035a0175a3388549af9ecee42f78aae, type: 2}
+  - {fileID: 11400000, guid: 192805b6906077e48bea8b2523c57280, type: 2}
+  - {fileID: 11400000, guid: 478a5f1420375804d94abb83516ac816, type: 2}
+  - {fileID: 11400000, guid: eb1489c6892edba48a8e1ddde12c6a22, type: 2}
+  - {fileID: 11400000, guid: abc685b874d8df146b8a4e2fd933ca81, type: 2}
+  - {fileID: 11400000, guid: fb334e90532fad5448dc0bb44d1920be, type: 2}
+  - {fileID: 11400000, guid: 4b11a7235e58a774d87fb01eb7778d76, type: 2}
   rules:
   - id: 0
     title: Wrong side of the road

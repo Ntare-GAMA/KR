@@ -44,6 +44,14 @@ namespace KR.Editor.Batch
 
         // Renders of the player's car (-captureDir <folder>): outside, and the driver's view from the eye point,
         // to check the car's orientation, seat height and the view over the bonnet without a headset.
+        // Opens the Story scene in the Editor and presses Play (desktop mode when no headset is connected).
+        // Command line, without -batchmode: Unity -projectPath <KR> -executeMethod KR.Editor.Batch.BatchTasks.PlayStory
+        public static void PlayStory()
+        {
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(StoryModeBuilder.ScenePath);
+            EditorApplication.delayCall += () => EditorApplication.isPlaying = true;
+        }
+
         public static void CaptureCar() => Run(() =>
         {
             var args = Environment.GetCommandLineArgs();

@@ -334,7 +334,7 @@ namespace KR.Editor.Kigali
                                .Select(g => AssetDatabase.LoadAssetAtPath<GameObject>(AssetDatabase.GUIDToAssetPath(g)))
                                .Where(m => m != null).OrderBy(m => m.name);
 
-        static Catalog LoadCatalog()
+        internal static Catalog LoadCatalog()
         {
             var street = AssetCatalog.Load();
             string sp = SimplePoly;

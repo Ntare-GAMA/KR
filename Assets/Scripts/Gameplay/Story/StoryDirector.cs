@@ -96,6 +96,149 @@ namespace KR.Gameplay.Story
             Save();
             if (weather != null)
                 weather.BeginSession(_save.sessions);
+            ApplyComfort();
+        }
+
+        // ---------- progression: XP, badges, discoveries, flags (every reward has a unique key) ----------
+
+        public int Xp => _save.xp;
+        public int Level => Badges.LevelFor(_save.xp);
+        public IReadOnlyList<string> BadgesEarned => _save.badges;
+        public IReadOnlyList<PhotoRecord> Photos => _save.photos;
+        public ComfortSave ComfortSettings => _save.comfort;
+        public bool IsDiscovered(string placeId) => _save.discovered.Contains(placeId);
+        public bool HasFlag(string flag) => _save.flags.Contains(flag);
+        public event Action<string> BadgeEarned;
+
+        // Gives XP once per key; false if this reward was already given.
+        public bool Reward(string key, int xp, string label)
+        {
+            if (string.IsNullOrEmpty(key) || _save.rewardKeys.Contains(key))
+                return false;
+            int before = Level;
+            _save.rewardKeys = _save.rewardKeys.Append(key).ToArray();
+            _save.xp += xp;
+            Notify(Level > before ? $"{label}  +{xp} XP. Level {Level}!" : $"{label}  +{xp} XP", 4f);
+            Save();
+            return true;
+        }
+
+        public void Badge(string id)
+        {
+            if (_save.badges.Contains(id))
+                return;
+            _save.badges = _save.badges.Append(id).ToArray();
+            foreach (var b in Badges.All)
+                if (b.id == id)
+                    Notify($"Badge: {b.title}! {b.how}", 6f);
+            Save();
+            BadgeEarned?.Invoke(id);
+        }
+
+        public void SetFlag(string flag)
+        {
+            if (string.IsNullOrEmpty(flag) || _save.flags.Contains(flag))
+                return;
+            _save.flags = _save.flags.Append(flag).ToArray();
+            Save();
+        }
+
+        public void Discover(PlaceRecord place)
+        {
+            if (place == null || IsDiscovered(place.id))
+                return;
+            _save.discovered = _save.discovered.Append(place.id).ToArray();
+            Save();
+            Reward("discovery:" + place.id, place.xp, $"Discovered: {place.name}");
+            Badge("first_discovery");
+        }
+
+        public void AddPhoto(PhotoRecord photo)
+        {
+            _save.photos = _save.photos.Append(photo).ToArray();
+            Save();
+            Badge("first_photo");
+        }
+
+        // Pushes the saved comfort choices to the player and saves them.
+        public void ApplyComfort()
+        {
+            var c = _save.comfort ??= new ComfortSave();
+            Comfort.TurnMode = (Comfort.Turn)Mathf.Clamp(c.turn, 0, 2);
+            Comfort.VignetteStrength = c.vignette == 0 ? 0f : c.vignette == 1 ? 0.5f : 0.85f;
+            Comfort.Teleport = c.teleport;
+            Comfort.LargeText = c.largeText;
+            Comfort.Seated = c.seated;
+            Save();
+        }
+
+        public void SaveNow() => Save();
+
+        // ---------- mission results from other systems ----------
+
+        bool _talkDone, _photoDone;
+
+        public void OnConversationFinished(string conversationId, int quizCorrect, int quizTotal)
+        {
+            Reward("talk:" + conversationId, 30, "Conversation");
+            bool passed = quizTotal == 0 || quizCorrect * 3 >= quizTotal * 2;
+            if (quizTotal > 0)
+            {
+                if (quizCorrect == quizTotal)
+                    Badge("road_scholar");
+                if (passed)
+                    Reward("quiz:" + conversationId, 20 * quizCorrect, $"Quiz {quizCorrect}/{quizTotal}");
+                else
+                    Notify($"Quiz {quizCorrect}/{quizTotal}: talk again to retry (you need 2 of 3).", 6f);
+            }
+            var m = Current;
+            if (m != null && m.kind == MissionKind.Talk && m.conversationId == conversationId && passed &&
+                (State == Phase.Rushing || State == Phase.Dwelling))
+                _talkDone = true;
+        }
+
+        public void OnPhotoTaken(PhotoRecord photo, Camera lens)
+        {
+            AddPhoto(photo);
+            var m = Current;
+            if (m == null || m.kind != MissionKind.Photo || (State != Phase.Rushing && State != Phase.Dwelling) || lens == null)
+                return;
+            // The place must be near and in the middle of the frame.
+            Vector3 target = m.position + Vector3.up * 4f;
+            Vector3 vp = lens.WorldToViewportPoint(target);
+            bool framed = vp.z > 0f && vp.x > 0.15f && vp.x < 0.85f && vp.y > 0.1f && vp.y < 0.9f;
+            bool near = Flat(lens.transform.position, m.position) < 150f;
+            if (framed && near)
+                _photoDone = true;
+            else
+                Notify(near ? $"Not quite: get {m.placeName} in the middle of the frame." : $"Get closer to {m.placeName} first.", 4f);
+        }
+
+        // Parked in P inside the bay, facing either way along it.
+        bool BayParked(MilestoneDefinition m)
+        {
+            var car = rig != null ? rig.Car : null;
+            if (car == null || !car.Driven || !car.Parked)
+                return false;
+            float d = Flat(car.transform.position, m.position);
+            float yaw = Mathf.Abs(Mathf.DeltaAngle(car.transform.eulerAngles.y, m.bayYaw));
+            return d < 2.5f && (yaw < 20f || yaw > 160f);
+        }
+
+        void OnApplicationPause(bool paused)
+        {
+            if (paused)
+                PersistRun();
+        }
+
+        void OnApplicationQuit() => PersistRun();
+
+        void PersistRun()
+        {
+            _save.inRun = State == Phase.Rushing || State == Phase.Dwelling || State == Phase.PoliceStop;
+            _save.runElapsed = Elapsed;
+            _save.runPenalty = Penalty;
+            Save();
         }
 
         void OnEnable()
@@ -114,8 +257,9 @@ namespace KR.Gameplay.Story
 
         void Update()
         {
-            bool confirm = RigInput.ConfirmPressed;
-            if (RigInput.BeltPressed && rules != null)
+            bool free = !GamePause.Paused && (rig == null || !rig.Busy) && (_talk == null || !_talk.WantsConfirm);
+            bool confirm = free && RigInput.ConfirmPressed;
+            if (free && RigInput.BeltPressed && rules != null)
                 Notify(rules.SeatbeltOn ? "Seatbelt off." : "Seatbelt on.", 2f, () => rules.SeatbeltOn = !rules.SeatbeltOn);
             float dt = Time.deltaTime;
             var m = Current;
@@ -128,7 +272,16 @@ namespace KR.Gameplay.Story
                     if (week == null || player == null)
                         return;
                     if (InControl)
+                    {
                         State = m == null ? Phase.WeekDone : Phase.Briefing;
+                        if (m != null && _save.inRun)
+                        {
+                            Begin();
+                            Elapsed = _save.runElapsed;
+                            Penalty = _save.runPenalty;
+                            Notify($"Picking up where you left off: {m.title}.", 5f);
+                        }
+                    }
                     break;
 
                 case Phase.Briefing:
@@ -143,6 +296,18 @@ namespace KR.Gameplay.Story
                     Elapsed += dt;
                     Record(dt);
                     Distance = Flat(player.position, m.position);
+                    _persistTimer -= dt;
+                    if (_persistTimer <= 0f)
+                    {
+                        _persistTimer = 10f;
+                        PersistRun();
+                    }
+                    if (m.kind != MissionKind.Arrive)
+                    {
+                        if (m.kind == MissionKind.ParkInBay ? BayParked(m) : m.kind == MissionKind.Talk ? _talkDone : _photoDone)
+                            Complete();
+                        break;
+                    }
                     bool inside = Distance <= m.radius;
                     if (!inside)
                     {
@@ -186,8 +351,14 @@ namespace KR.Gameplay.Story
             }
         }
 
+        float _persistTimer;
+        ConversationRunner _talk;
+
+        void Start() => _talk = FindFirstObjectByType<ConversationRunner>();
+
         void Begin()
         {
+            _talkDone = _photoDone = false;
             Elapsed = Penalty = 0f;
             _dwell = 0f;
             _dwellAnim = false;
@@ -223,8 +394,14 @@ namespace KR.Gameplay.Story
             _save.next++;
             if (Current != null)
                 _save.day = Current.day;
+            _save.inRun = false;
             Save();
             State = Phase.Results;
+            Reward("milestone:" + m.id, 100 + 25 * LastStars, $"{m.title} done");
+            if (m.kind == MissionKind.ParkInBay)
+                Badge("perfect_park");
+            if (Current == null && _save.finesFrw == 0)
+                Badge("clean_week");
         }
 
         // ---------- road rules and police ----------
@@ -253,6 +430,8 @@ namespace KR.Gameplay.Story
             {
                 _save.fullLicence = true;
                 Save();
+                Badge("full_licence");
+                Reward("licence", 200, "Full licence");
                 Notify($"Full licence! You drove {licenceMetres / 1000f:0.#} km without breaking a rule. From now on police fines apply.", 8f);
             }
         }
@@ -353,6 +532,7 @@ namespace KR.Gameplay.Story
             StopDwellAnimation();
             StopMessage = null;
             Notify($"Milestone failed: {rule.title}. {rule.explanation}", 8f);
+            _save.inRun = false;
             Save();
             State = Phase.Briefing;
         }
@@ -500,8 +680,19 @@ namespace KR.Gameplay.Story
             }
             catch (Exception e)
             {
-                Debug.LogWarning($"[Story] Save unreadable, starting fresh: {e.Message}");
-                _save = new StorySave();
+                Debug.LogWarning($"[Story] Save unreadable ({e.Message}); trying the backup.");
+                _save = null;
+                try
+                {
+                    if (File.Exists(SavePath + ".bak"))
+                        _save = JsonUtility.FromJson<StorySave>(File.ReadAllText(SavePath + ".bak"));
+                }
+                catch (Exception)
+                {
+                    _save = null;
+                }
+                Notify(_save != null ? "Your save was damaged; the last good copy was restored." : "Your save was damaged and could not be restored.", 8f);
+                _save ??= new StorySave();
             }
         }
 
@@ -522,7 +713,7 @@ namespace KR.Gameplay.Story
             string tmp = path + ".tmp";
             File.WriteAllText(tmp, json);
             if (File.Exists(path))
-                File.Replace(tmp, path, null);
+                File.Replace(tmp, path, path + ".bak");   // the previous good save becomes the backup
             else
                 File.Move(tmp, path);
         }

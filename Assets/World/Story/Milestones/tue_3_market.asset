@@ -1,0 +1,35 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9c81d4d2ce7ff8f4f8f4fca678a64711, type: 3}
+  m_Name: tue_3_market
+  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.MilestoneDefinition
+  id: tue_3_market
+  title: Fabric from Mzee Gakuba
+  brief: Your group's poster needs fabric for the display. Mzee Gakuba sells it at
+    Kimironko Market; he closes his stall early today.
+  placeName: Kimironko Market
+  startAtPoint: 0
+  startPoint: {x: 0, y: 0, z: 0}
+  position: {x: 2891.3508, y: 148.6082, z: 2393.532}
+  radius: 20
+  day: 1
+  opensAtHour: 10
+  parSeconds: 865
+  dwellSeconds: 0
+  dwellLabel: 
+  dwellAnimation: 
+  knowledgeCardId: card_market
+  arrivalLines: []
+  speaker: 
+  kind: 2
+  conversationId: gk_market
+  bayYaw: 0
