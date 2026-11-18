@@ -17,6 +17,9 @@ namespace KR.Editor.Batch
         // Rush Week content, police posts and Story Mode wiring on top of the Kimironko scene.
         public static void AddStoryMode() => Run(StoryModeBuilder.Build);
 
+        // Where streets have steps, gaps, floating edges or impossible grades (Temp/road_report.txt).
+        public static void RoadReport() => Run(KR.Editor.Kigali.RoadReport.Run);
+
         // Windows player of the Story Mode scene (PC only), written to <project>/Builds/StoryPC.
         public static void BuildStoryWindows() => Run(() =>
         {

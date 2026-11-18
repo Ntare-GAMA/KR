@@ -92,6 +92,12 @@ namespace KR.Editor.Kigali
             }
             if (!EditorSceneManager.SaveCurrentModifiedScenesIfUserWantsTo())
                 return;
+            // Hand edits to road markings, signs and names live in the scene; save them before it is replaced.
+            if (File.Exists(scenePath))
+            {
+                EditorSceneManager.OpenScene(scenePath, OpenSceneMode.Single);
+                EditableLayer.Keep();
+            }
 
             try
             {
@@ -169,6 +175,7 @@ namespace KR.Editor.Kigali
                 int buildingCount = PlaceBuildings(buildings, terrain, cat, scatter, rng, life, grid, FoundationPrefab(outDir), gardens);
 
                 Progress("Street life", 0.4f);
+                _clearance = new RoadClearance(roads);
                 DressRoads(roads, terrain, cat, scatter, rng, lamps, busStops, footpaths, grid);
                 var signals = BuildSignals(junctions, terrain, cat, scatter, rng, root, outDir);
                 PlaceStopSigns(junctions, terrain, cat, scatter, rng, root);
@@ -391,6 +398,9 @@ namespace KR.Editor.Kigali
                              ?? Named(ModularStreets, "Traffic_light_EU_comp").FirstOrDefault()
                              ?? Models("Traffic Light").FirstOrDefault(),
             };
+            // Colourless car bodies get paint; houses are modest, clean bungalows (CleanCity).
+            c.Vehicles = CleanCity.PaintVehicles(c.Vehicles, $"{Out}/Vehicles");
+            c.Houses = CleanCity.ModestHouses($"{Out}/Houses");
             Debug.Log("[PcShowcase] Catalog: " + string.Join(", ", typeof(Catalog).GetFields()
                 .Where(f => f.FieldType == typeof(GameObject[]))
                 .Select(f => $"{f.Name} {((GameObject[])f.GetValue(c)).Length}")) +
@@ -681,15 +691,22 @@ namespace KR.Editor.Kigali
                         at = default;
                         return false;
                     }
-                    Vector3 Side(Vector3 p, float offset, float extraLift) => Ground(terrain, p + right * offset, extraLift);
+                    // Beside this road, but never on any carriageway (another street meeting or bending close by).
+                    Vector3 Side(Vector3 p, float offset, float extraLift)
+                    {
+                        var q = p + right * offset;
+                        _clearance?.Push(ref q, right * (offset < 0f ? -1f : 1f), 0.35f, 3f);
+                        return Ground(terrain, q, extraLift);
+                    }
 
                     // Street lamps every ~32 m; on two-way main roads they alternate sides.
                     while (Due("lamp", footpaths ? 30f : 50f, footpaths ? 34f : 60f, out var p))
                         if (lampPrefab != null)
                         {
                             float side = major && !oneway && (lampLeft = !lampLeft) ? -1f : 1f;
-                            var m = scatter.Fit(lampPrefab, Side(p, side * (half + (footpaths ? 0.6f : 0.8f)), footpaths ? kerbTop : 0f),
-                                                roadYaw + (side < 0 ? 180f : 0f), 9f, 12f);
+                            // The pole stands at the kerb edge and the arm reaches over the road, whatever the model's pivot.
+                            var m = PoleFit(scatter, lampPrefab, Side(p, side * (half + (footpaths ? 0.6f : 0.8f)), footpaths ? kerbTop : 0f),
+                                            -right * side, 9f, 12f);
                             scatter.Add(lampPrefab, m, Category.Lamp);
                             AddLampHeads(lampPrefab, m, scatter, lamps);
                         }
@@ -791,14 +808,96 @@ namespace KR.Editor.Kigali
                             if (car == null || rng.NextDouble() > 0.55)
                                 continue;
                             float side = rng.NextDouble() < 0.5 ? 1f : -1f;
-                            var pos = Ground(terrain, p + right * side * (half + 1.1f), lift);
-                            scatter.Add(car, scatter.FitLength(car, pos, roadYaw + (rng.NextDouble() < 0.5 ? 0f : 180f), car.name.Contains("Bus") ? 10f : 4.4f), Category.Tree);
+                            var spot = p + right * side * (half + 1.1f);
+                            _clearance?.Push(ref spot, right * side, 1.0f, 2f);
+                            float carLength = car.name.Contains("Bus") ? 10f : 4.4f, carWidth = car.name.Contains("Bus") ? 2.5f : 1.9f;
+                            float carYaw = roadYaw + (rng.NextDouble() < 0.5 ? 0f : 180f);
+                            // Sit on all four corners: tilt with the ground, and skip spots too steep to park on
+                            // (an untilted car on a slope had one side in the air).
+                            if (!ParkedOnGround(terrain, spot, carYaw, carLength, carWidth, lift, out var pos, out var tilt))
+                                continue;
+                            var fit = scatter.FitLength(car, pos, carYaw, carLength);
+                            scatter.Add(car, Matrix4x4.TRS(pos, tilt, Vector3.one) * Matrix4x4.TRS(-pos, Quaternion.identity, Vector3.one) * fit, Category.Tree);
                             grid.Mark(pos, 2f);
                         }
                     }
                     walked += len;
                 }
             }
+        }
+
+        static RoadClearance _clearance;
+
+        // Ground height at the four corners of a parked vehicle: its centre at their average, and the tilt that
+        // matches front-back and side-to-side slope. False where the ground is too uneven to park.
+        static bool ParkedOnGround(Terrain terrain, Vector3 centre, float yaw, float length, float width, float lift,
+                                   out Vector3 pos, out Quaternion tilt)
+        {
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            Vector3 f = rot * Vector3.forward * (length * 0.45f), r = rot * Vector3.right * (width * 0.5f);
+            float H(Vector3 q) => terrain.SampleHeight(q) + terrain.transform.position.y;
+            float fl = H(centre + f - r), fr = H(centre + f + r), bl = H(centre - f - r), br = H(centre - f + r);
+            float lo = Mathf.Min(Mathf.Min(fl, fr), Mathf.Min(bl, br)), hi = Mathf.Max(Mathf.Max(fl, fr), Mathf.Max(bl, br));
+            pos = new Vector3(centre.x, (fl + fr + bl + br) * 0.25f + lift, centre.z);
+            tilt = Quaternion.identity;
+            if (hi - lo > Mathf.Max(0.6f, length * 0.12f))
+                return false;
+            float pitch = Mathf.Atan2((fl + fr - bl - br) * 0.5f, length * 0.9f) * Mathf.Rad2Deg;
+            float roll = Mathf.Atan2((fr + br - fl - bl) * 0.5f, width) * Mathf.Rad2Deg;
+            // Pitch about the car's right axis (nose up = negative X rotation), roll about its forward axis.
+            tilt = Quaternion.AngleAxis(-pitch, rot * Vector3.right) * Quaternion.AngleAxis(roll, rot * Vector3.forward);
+            return true;
+        }
+        static readonly Dictionary<GameObject, (Vector2 pole, Vector2 arm)> PoleCache = new Dictionary<GameObject, (Vector2, Vector2)>();
+
+        // Where a lamp model's pole meets the ground and which way its arm points (prefab space, xz), from its vertices:
+        // the pole is the lowest part, the arm the highest.
+        static (Vector2 pole, Vector2 arm) PoleGeometry(GameObject prefab)
+        {
+            if (PoleCache.TryGetValue(prefab, out var cached))
+                return cached;
+            var temp = (GameObject)PrefabUtility.InstantiatePrefab(prefab);
+            temp.transform.SetPositionAndRotation(Vector3.zero, Quaternion.identity);
+            temp.transform.localScale = Vector3.one;
+            var verts = new List<Vector3>();
+            foreach (var mf in temp.GetComponentsInChildren<MeshFilter>())
+                if (mf.sharedMesh != null && mf.sharedMesh.isReadable)
+                    foreach (var v in mf.sharedMesh.vertices)
+                        verts.Add(mf.transform.TransformPoint(v));
+            // Meshes without CPU access: fall back to the middle of the model (the old behaviour).
+            var rs = temp.GetComponentsInChildren<Renderer>();
+            var centre = rs.Length > 0 ? rs.Select(r => r.bounds).Aggregate((x, y) => { x.Encapsulate(y); return x; }).center : Vector3.zero;
+            Object.DestroyImmediate(temp);
+            var result = (new Vector2(centre.x, centre.z), Vector2.zero);
+            if (verts.Count > 0)
+            {
+                float lo = verts.Min(v => v.y), hi = verts.Max(v => v.y), h = Mathf.Max(0.01f, hi - lo);
+                var bottom = verts.Where(v => v.y < lo + h * 0.1f).ToList();
+                var top = verts.Where(v => v.y > hi - h * 0.15f).ToList();
+                var pole = new Vector2(bottom.Average(v => v.x), bottom.Average(v => v.z));
+                var head = new Vector2(top.Average(v => v.x), top.Average(v => v.z));
+                result = (pole, head - pole);
+            }
+            PoleCache[prefab] = result;
+            return result;
+        }
+
+        // Uniform scale to a height (capped by footprint), the pole on basePos, the arm turned towards the road.
+        static Matrix4x4 PoleFit(ScatterCollector scatter, GameObject prefab, Vector3 basePos, Vector3 towardsRoad, float height, float maxFootprint)
+        {
+            var b = scatter.PrefabBounds(prefab);
+            float scale = b.size.y > 0.01f ? height / b.size.y : 1f;
+            float footprint = Mathf.Max(b.size.x, b.size.z) * scale;
+            if (footprint > maxFootprint)
+                scale *= maxFootprint / footprint;
+            var (pole, arm) = PoleGeometry(prefab);
+            float want = Mathf.Atan2(towardsRoad.x, towardsRoad.z) * Mathf.Rad2Deg;
+            // A post-top lamp (no real arm) keeps facing along the road's side.
+            float yaw = arm.magnitude * scale > 0.4f ? want - Mathf.Atan2(arm.x, arm.y) * Mathf.Rad2Deg : want;
+            var rot = Quaternion.Euler(0f, yaw, 0f);
+            Vector3 p = basePos - rot * (new Vector3(pole.x, 0f, pole.y) * scale);
+            p.y = basePos.y - b.min.y * scale;
+            return Matrix4x4.TRS(p, rot, Vector3.one * scale);
         }
 
         // Lamp heads sit at the top of the pole, at both arm ends for wide (double-arm) lamps.

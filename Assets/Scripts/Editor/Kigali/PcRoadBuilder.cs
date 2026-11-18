@@ -21,6 +21,11 @@ namespace KR.Editor.Kigali
     //   - Every junction (three or more arms) gets one asphalt plate; carriageways, markings, kerbs and
     //     footpaths stop exactly at its edge instead of overlapping each other.
     //   - On bends tighter than the road is wide, the inner edge is held instead of folding back.
+    //   - Where streets meet or cross, the lower-class street's height profile is pinned to the other's, so the
+    //     carved ground (and the road on it) has no step at the junction; steps there made some roads
+    //     impossible to drive onto.
+    //   - Every road and junction plate has a skirt down into the ground along its outer edges, so the raised
+    //     surface never shows a gap underneath (it read as roads floating in mid-air).
     // Meshes are grouped per material and per 1 km chunk.
     // TODO: verify marking colours and widths against Rwanda Transport Development Agency standards.
     internal static class PcRoadBuilder
@@ -104,6 +109,13 @@ namespace KR.Editor.Kigali
                     strips[(mat, chunk)] = s = new Strip();
                 return s;
             }
+            var skirts = new Dictionary<(Material, int), Strip>();
+            Strip K(Material mat, int chunk)
+            {
+                if (!skirts.TryGetValue((mat, chunk), out var s))
+                    skirts[(mat, chunk)] = s = new Strip();
+                return s;
+            }
 
             foreach (var way in ways)
             {
@@ -120,7 +132,11 @@ namespace KR.Editor.Kigali
                 Add(cobbled ? m.Cobble : m.Asphalt, line, -half, half, lift);
 
                 if (!WithFootpaths.Contains(way.Highway))
+                {
+                    AddSkirt(K, cobbled ? m.Cobble : m.Asphalt, line, -half, lift, terrain, index);
+                    AddSkirt(K, cobbled ? m.Cobble : m.Asphalt, line, half, lift, terrain, index);
                     continue;
+                }
                 float ml = lift + Paint;
                 Add(m.White, line, half - 0.45f, half - 0.3f, ml);
                 Add(m.White, line, -half + 0.3f, -half + 0.45f, ml);
@@ -157,32 +173,23 @@ namespace KR.Editor.Kigali
                     Add(m.Grass, line, -half - 2.3f, -half - 0.3f, lift + 0.08f);
                 else
                     Add(m.Pavers, line, -half - 2.8f, -half - 0.3f, lift + 0.10f);
+                AddSkirt(K, m.Pavers, line, half + 2.8f, lift + 0.10f, terrain, index);
+                AddSkirt(K, oneway ? m.Grass : m.Pavers, line, oneway ? -half - 2.3f : -half - 2.8f, oneway ? lift + 0.08f : lift + 0.10f, terrain, index);
             }
 
             foreach (var plate in plates)
-                AddPlate(S(m.Asphalt, ChunkOf(new Vector3(plate.Centre.x, 0f, plate.Centre.y), terrain)), plate, terrain);
-
-            // Crossings sit on the junction plates (paint above the plate), so they are not clipped.
-            foreach (var j in junctions)
             {
-                if (!j.Signalised)
-                    continue;
-                int chunk = ChunkOf(j.Position, terrain);
-                float half = j.Width * 0.5f;
-                float y = PlateLift + Paint;
-                for (int i = 0; i < j.Directions.Count && i < 4; i++)
-                {
-                    var d = j.Directions[i];
-                    // Zebra: 0.5 m bars along the road, 0.5 m gaps, 3 m deep.
-                    for (float x = -half + 0.5f; x + 0.5f <= half - 0.4f; x += 1f)
-                        AddStrip(S, m.White, Samples(new List<Vector3> { j.Position + d * 5.5f, j.Position + d * 8.5f }), x, x + 0.5f, y, terrain, null, 1f, chunk);
-                    // Stop line across the approaching lanes (driver's right = this line's negative side).
-                    AddStrip(S, m.White, Samples(new List<Vector3> { j.Position + d * StopLineAt, j.Position + d * (StopLineAt + 0.4f) }),
-                             -half + 0.3f, 0f, y, terrain, null, 1f, chunk);
-                }
+                int chunk = ChunkOf(new Vector3(plate.Centre.x, 0f, plate.Centre.y), terrain);
+                AddPlate(S(m.Asphalt, chunk), plate, terrain);
+                PlateSkirt(K(m.Asphalt, chunk), plate, terrain);
             }
 
+            // Zebra crossings and stop lines: hand-editable (every bar its own object), kept across builds.
+            EditableLayer.Use("Road markings (zebra crossings, stop lines)", root,
+                              meshPath => Markings(junctions, terrain, m.White, meshPath));
+
             WriteMeshes(strips, root, outDir, district);
+            WriteMeshes(skirts, root, outDir, district, false);
             Debug.Log($"[Roads] {roads.Length} OSM ways merged into {ways.Count} streets; {plates.Count} junction plates.");
         }
 
@@ -342,6 +349,124 @@ namespace KR.Editor.Kigali
 
         static float Reach(Way w) => w.Width * 0.5f + (WithFootpaths.Contains(w.Highway) ? 3.1f : 0.6f);
 
+        // ---------- Editable markings ----------
+
+        // One object per signalised junction, with one per zebra crossing (each bar its own object) and stop line.
+        // Paint sits on the junction plate, so it follows the ground there.
+        static GameObject Markings(IEnumerable<Junction> junctions, Terrain terrain, Material paint, string meshPath)
+        {
+            var root = new GameObject("Road markings");
+            var store = new PcCityLife.MeshStore(meshPath);
+            int count = 0;
+            GameObject Piece(Transform parent, string name, Vector3 a, Vector3 b, float left, float right)
+            {
+                var strip = new Strip();
+                Emit(strip, Samples(new List<Vector3> { a, b }), left, right, PlateLift + Paint, terrain, 1f);
+                var mesh = new Mesh();
+                mesh.SetVertices(strip.V);
+                mesh.SetUVs(0, strip.UV);
+                mesh.SetTriangles(strip.T, 0);
+                var centre = EditableLayer.Recentre(mesh);
+                mesh.RecalculateNormals();
+                store.Add(mesh, $"Marking_{count++}");
+                var go = new GameObject(name);
+                go.transform.SetParent(parent, false);
+                go.transform.position = centre;
+                go.AddComponent<MeshFilter>().sharedMesh = mesh;
+                var mr = go.AddComponent<MeshRenderer>();
+                mr.sharedMaterial = paint;
+                mr.shadowCastingMode = ShadowCastingMode.Off;
+                go.isStatic = true;
+                return go;
+            }
+            foreach (var j in junctions)
+            {
+                if (!j.Signalised)
+                    continue;
+                var jt = new GameObject($"Junction at ({j.Position.x:0}, {j.Position.z:0})").transform;
+                jt.SetParent(root.transform, false);
+                float half = j.Width * 0.5f;
+                for (int i = 0; i < j.Directions.Count && i < 4; i++)
+                {
+                    var d = j.Directions[i];
+                    // Zebra: 0.5 m bars along the road, 0.5 m gaps, 3 m deep.
+                    var zebra = new GameObject($"Zebra crossing {i + 1}").transform;
+                    zebra.SetParent(jt, false);
+                    int bar = 0;
+                    for (float x = -half + 0.5f; x + 0.5f <= half - 0.4f; x += 1f)
+                        Piece(zebra, $"Bar {++bar}", j.Position + d * 5.5f, j.Position + d * 8.5f, x, x + 0.5f);
+                    // Stop line across the approaching lanes (driver's right = this line's negative side).
+                    Piece(jt, $"Stop line {i + 1}", j.Position + d * StopLineAt, j.Position + d * (StopLineAt + 0.4f), -half + 0.3f, 0f);
+                }
+            }
+            AssetDatabase.SaveAssets();
+            return root;
+        }
+
+        // ---------- Skirts ----------
+
+        const float SkirtDepth = 0.9f;
+
+        // A vertical strip under one edge of a road (lateral offset), from the surface down into the ground, cut where
+        // it enters a junction plate. Two-sided, so it is solid from any side.
+        static void AddSkirt(System.Func<Material, int, Strip> strips, Material mat, List<Sample> line, float offset, float lift,
+                             Terrain terrain, PlateIndex plates)
+        {
+            var run = new List<Vector3>();
+            void Flush()
+            {
+                if (run.Count >= 2)
+                    EmitWall(strips(mat, ChunkOf(run[0], terrain)), run, lift, terrain);
+                run.Clear();
+            }
+            foreach (var q in line)
+            {
+                var p = q.P + q.Side * offset;
+                if (plates != null && plates.Inside(p))
+                {
+                    Flush();
+                    continue;
+                }
+                run.Add(p);
+            }
+            Flush();
+        }
+
+        static void PlateSkirt(Strip s, Plate plate, Terrain terrain)
+        {
+            if (plate.Hull == null || plate.Hull.Length < 3)
+                return;
+            var ring = new List<Vector3>();
+            foreach (var h in plate.Hull)
+                ring.Add(new Vector3(h.x, 0f, h.y));
+            ring.Add(ring[0]);
+            var dense = Resample3(ring, BuildSpacing);
+            EmitWall(s, dense, PlateLift, terrain);
+        }
+
+        static void EmitWall(Strip s, List<Vector3> pts, float lift, Terrain terrain)
+        {
+            int start = s.V.Count;
+            float u = 0f;
+            for (int i = 0; i < pts.Count; i++)
+            {
+                var p = pts[i];
+                if (i > 0)
+                    u += Vector3.Distance(new Vector3(pts[i - 1].x, 0f, pts[i - 1].z), new Vector3(p.x, 0f, p.z));
+                float ground = terrain.SampleHeight(p);
+                s.V.Add(new Vector3(p.x, ground + lift, p.z));
+                s.V.Add(new Vector3(p.x, ground - SkirtDepth, p.z));
+                s.UV.Add(new Vector2(u, lift));
+                s.UV.Add(new Vector2(u, -SkirtDepth));
+            }
+            for (int i = 0; i + 1 < pts.Count; i++)
+            {
+                int a = start + i * 2, b = a + 1, c = a + 3, d = a + 2;
+                s.T.Add(a); s.T.Add(b); s.T.Add(c); s.T.Add(a); s.T.Add(c); s.T.Add(d);
+                s.T.Add(a); s.T.Add(c); s.T.Add(b); s.T.Add(a); s.T.Add(d); s.T.Add(c);
+            }
+        }
+
         // ---------- Terrain ----------
 
         // Heightmap cells under (and just beside) a road take the road's smoothed profile; a blend band of one
@@ -359,23 +484,8 @@ namespace KR.Editor.Kigali
             for (int i = 0; i < score.Length; i++)
                 score[i] = float.MaxValue;
 
-            foreach (var way in ways)
+            foreach (var (way, line, profile) in PinnedProfiles(ways, data, size))
             {
-                var line = Resample3(way.Pts, BuildSpacing);
-                var raw = new float[line.Count];
-                for (int i = 0; i < line.Count; i++)
-                    raw[i] = data.GetInterpolatedHeight(line[i].x / size.x, line[i].z / size.z);
-                // Moving average over about 30 m: removes bumps, keeps the climb.
-                var profile = new float[line.Count];
-                const int w = 4;
-                for (int i = 0; i < line.Count; i++)
-                {
-                    float sum = 0f;
-                    int n = 0;
-                    for (int k = Mathf.Max(0, i - w); k <= Mathf.Min(line.Count - 1, i + w); k++, n++)
-                        sum += raw[k];
-                    profile[i] = sum / n;
-                }
 
                 float reach = Reach(way), outer = reach + blend;
                 for (int i = 0; i + 1 < line.Count; i++)
@@ -414,6 +524,124 @@ namespace KR.Editor.Kigali
                 }
             data.SetHeights(0, 0, heights);
             EditorUtility.SetDirty(data);
+        }
+
+        static int Rank(string highway) =>
+            highway.StartsWith("trunk") ? 6 : highway.StartsWith("primary") ? 5 : highway.StartsWith("secondary") ? 4 :
+            highway.StartsWith("tertiary") ? 3 : highway == "residential" || highway == "unclassified" ? 2 : 1;
+
+        // Smoothed height profile of every street (moving average over about 30 m: removes bumps, keeps the climb),
+        // then pinned wherever it runs inside a street already done (higher classes first; inside = within that
+        // street's carriageway and footpaths): there the profile takes the other street's height, with the
+        // correction spread linearly between contacts and fading out over PinFade metres beyond the outermost ones.
+        // Side streets often end at the edge of a main road rather than on its centreline, so the whole width counts.
+        const float PinFade = 40f;
+
+        static List<(Way way, List<Vector3> line, float[] profile)> PinnedProfiles(List<Way> ways, TerrainData data, Vector3 size)
+        {
+            var order = new List<Way>(ways);
+            order.Sort((a, b) => Rank(b.Highway).CompareTo(Rank(a.Highway)));
+            var done = new List<(Way way, List<Vector3> line, float[] profile)>();
+            var cells = new Dictionary<long, List<(int line, int i)>>();
+            const float cell = 20f;
+            long CellKey(float x, float z) => ((long)Mathf.FloorToInt(x / cell) << 32) ^ (uint)Mathf.FloorToInt(z / cell);
+
+            foreach (var way in order)
+            {
+                var line = Resample3(way.Pts, BuildSpacing);
+                var raw = new float[line.Count];
+                for (int i = 0; i < line.Count; i++)
+                    raw[i] = data.GetInterpolatedHeight(line[i].x / size.x, line[i].z / size.z);
+                var profile = new float[line.Count];
+                const int w = 4;
+                for (int i = 0; i < line.Count; i++)
+                {
+                    float sum = 0f;
+                    int n = 0;
+                    for (int k = Mathf.Max(0, i - w); k <= Mathf.Min(line.Count - 1, i + w); k++, n++)
+                        sum += raw[k];
+                    profile[i] = sum / n;
+                }
+
+                // Contacts with streets already pinned: (index, distance along, height there).
+                var along = new float[line.Count];
+                for (int i = 1; i < line.Count; i++)
+                    along[i] = along[i - 1] + Vector2.Distance(new Vector2(line[i - 1].x, line[i - 1].z), new Vector2(line[i].x, line[i].z));
+                var contacts = new List<(int i, float delta)>();
+                for (int i = 0; i < line.Count; i++)
+                    if (Height(line[i], out float h))
+                        contacts.Add((i, h - profile[i]));
+                if (contacts.Count > 0)
+                {
+                    for (int i = 0; i < line.Count; i++)
+                    {
+                        float delta;
+                        if (i <= contacts[0].i)
+                            delta = contacts[0].delta * Mathf.Clamp01(1f - (along[contacts[0].i] - along[i]) / PinFade);
+                        else if (i >= contacts[contacts.Count - 1].i)
+                        {
+                            var c = contacts[contacts.Count - 1];
+                            delta = c.delta * Mathf.Clamp01(1f - (along[i] - along[c.i]) / PinFade);
+                        }
+                        else
+                        {
+                            int k = 0;
+                            while (contacts[k + 1].i < i)
+                                k++;
+                            var a = contacts[k];
+                            var b = contacts[k + 1];
+                            float t = (along[i] - along[a.i]) / Mathf.Max(0.01f, along[b.i] - along[a.i]);
+                            delta = Mathf.Lerp(a.delta, b.delta, t);
+                        }
+                        profile[i] += delta;
+                    }
+                }
+
+                int index = done.Count;
+                done.Add((way, line, profile));
+                for (int i = 0; i < line.Count; i++)
+                {
+                    long key = CellKey(line[i].x, line[i].z);
+                    if (!cells.TryGetValue(key, out var list))
+                        cells[key] = list = new List<(int, int)>();
+                    list.Add((index, i));
+                }
+            }
+            return done;
+
+            // Height of the nearest already pinned street whose paved width (plus half a metre) covers p, if any.
+            bool Height(Vector3 p, out float h)
+            {
+                h = 0f;
+                float best = float.MaxValue;
+                bool found = false;
+                int cx = Mathf.FloorToInt(p.x / cell), cz = Mathf.FloorToInt(p.z / cell);
+                var flat = new Vector2(p.x, p.z);
+                for (int dx = -1; dx <= 1; dx++)
+                    for (int dz = -1; dz <= 1; dz++)
+                    {
+                        if (!cells.TryGetValue(((long)(cx + dx) << 32) ^ (uint)(cz + dz), out var list))
+                            continue;
+                        foreach (var (li, i) in list)
+                        {
+                            var (otherWay, other, prof) = done[li];
+                            if (i + 1 >= other.Count)
+                                continue;
+                            Vector2 a = new Vector2(other[i].x, other[i].z), b = new Vector2(other[i + 1].x, other[i + 1].z);
+                            var ab = b - a;
+                            float t = Mathf.Clamp01(Vector2.Dot(flat - a, ab) / Mathf.Max(ab.sqrMagnitude, 1e-6f));
+                            float d = (a + ab * t - flat).sqrMagnitude;
+                            float reach = Reach(otherWay) + 0.5f;
+                            if (d < reach * reach && d < best)
+                            {
+                                best = d;
+                                h = Mathf.Lerp(prof[i], prof[i + 1], t);
+                                found = true;
+                            }
+                        }
+                    }
+                return found;
+            }
         }
 
         // ---------- Junction plates ----------
@@ -791,11 +1019,13 @@ namespace KR.Editor.Kigali
             return y;
         }
 
-        static void WriteMeshes(Dictionary<(Material, int), Strip> strips, Transform root, string outDir, string district)
+        public const string SkirtGroupName = "Road edges (skirts into the ground; no collision)";
+
+        static void WriteMeshes(Dictionary<(Material, int), Strip> strips, Transform root, string outDir, string district, bool surfaces = true)
         {
-            var group = new GameObject(GroupName).transform;
+            var group = new GameObject(surfaces ? GroupName : SkirtGroupName).transform;
             group.SetParent(root, false);
-            string path = $"{outDir}/{district}_Roads.asset";
+            string path = surfaces ? $"{outDir}/{district}_Roads.asset" : $"{outDir}/{district}_RoadEdges.asset";
             AssetDatabase.DeleteAsset(path);
             Mesh container = null;
             foreach (var kv in strips)
@@ -827,7 +1057,7 @@ namespace KR.Editor.Kigali
                 mr.shadowCastingMode = ShadowCastingMode.Off;
                 // Road surfaces sit ~0.3 m above the terrain: people and cars must stand on them, not on the
                 // terrain underneath. Paint is a few millimetres thick and needs no collider.
-                if (!material.name.StartsWith("Paint"))
+                if (surfaces && !material.name.StartsWith("Paint"))
                     go.AddComponent<MeshCollider>().sharedMesh = mesh;
             }
             AssetDatabase.SaveAssets();
