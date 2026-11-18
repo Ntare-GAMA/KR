@@ -5,6 +5,7 @@ using UnityEngine.UI;
 namespace KR.Gameplay.Story
 {
     // The satnav route on a map: a thick polyline in the map's own space (points given as 0..1 across the map).
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class RouteLine : MaskableGraphic
     {
         readonly List<Vector2> _uv = new List<Vector2>();

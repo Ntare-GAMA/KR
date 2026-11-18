@@ -157,6 +157,14 @@ namespace KR.Gameplay.World
 
         void Awake()
         {
+            // A group with no paths or vehicles has nothing to do; say which one once and switch it off.
+            if (paths == null || paths.Length == 0 || cars == null)
+            {
+                Debug.LogWarning($"[Traffic] '{name}' has no paths or vehicles; disabled.");
+                paths ??= new RoadPath[0];
+                cars ??= new Car[0];
+                enabled = false;
+            }
             _cumulative = new float[paths.Length][];
             _carsOnPath = new List<int>[paths.Length];
             for (int p = 0; p < paths.Length; p++)
@@ -221,7 +229,7 @@ namespace KR.Gameplay.World
                     _lift[p] = Mathf.Clamp(paths[p].points[0].y - Height(paths[p].points[0]), 0f, 1f);
             _half = new Vector2[n];
             for (int i = 0; i < n; i++)
-                _half[i] = AddCollider(cars[i].body);
+                _half[i] = cars[i].body != null ? AddCollider(cars[i].body) : Vector2.one;
         }
 
         float Height(Vector3 p) => _terrain.SampleHeight(p) + _terrain.transform.position.y;
@@ -277,7 +285,7 @@ namespace KR.Gameplay.World
         void Update()
         {
             float dt = Time.deltaTime;
-            if (dt <= 0f)
+            if (dt <= 0f || _cumulative == null)
                 return;
             var cam = Camera.main;
             _cam = cam != null ? cam.transform.position : Vector3.zero;
@@ -288,6 +296,12 @@ namespace KR.Gameplay.World
             for (int i = 0; i < cars.Length; i++)
             {
                 var b = cars[i].body;
+                if (b == null)
+                {
+                    _pos[i] = new Vector3(float.MaxValue, 0f, float.MaxValue);
+                    _fwd[i] = Vector3.forward;
+                    continue;
+                }
                 _pos[i] = b.position;
                 var f = b.forward;
                 f.y = 0f;
@@ -470,7 +484,8 @@ namespace KR.Gameplay.World
                     rot = Quaternion.LookRotation(forward, Vector3.Cross(forward, right));
                 }
             }
-            car.body.SetPositionAndRotation(pos, rot);
+            if (car.body != null)
+                car.body.SetPositionAndRotation(pos, rot);
         }
     }
 }

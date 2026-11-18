@@ -47,7 +47,7 @@ namespace KR.Gameplay.Story
 
         static T Child<T>(Transform parent, string name) where T : Component
         {
-            var go = new GameObject(name, typeof(RectTransform));
+            var go = new GameObject(name, typeof(RectTransform), typeof(CanvasRenderer));
             go.transform.SetParent(parent, false);
             return go.AddComponent<T>();
         }

@@ -53,7 +53,7 @@ namespace KR.Gameplay.Story
             rt.sizeDelta = new Vector2(1100f, 600f);
             rt.localScale = Vector3.one * 0.00036f;      // about 0.40 m x 0.22 m
 
-            var bg = new GameObject("Bezel", typeof(RectTransform)).AddComponent<Image>();
+            var bg = new GameObject("Bezel", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Image>();
             bg.transform.SetParent(go.transform, false);
             bg.color = new Color(0.01f, 0.01f, 0.012f, 1f);
             Fill(bg.rectTransform, 0f, 0f, 1f, 1f, 0f);
@@ -63,7 +63,7 @@ namespace KR.Gameplay.Story
             Fill(mapArea, 0f, 0f, 0.46f, 1f, 12f);
             MapView.Create(mapArea, nav, MapView.Mode.HeadingUp, 380f, 0, false);
 
-            _carText = new GameObject("Info", typeof(RectTransform)).AddComponent<Text>();
+            _carText = new GameObject("Info", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Text>();
             _carText.transform.SetParent(go.transform, false);
             _carText.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
             _carText.fontSize = 30;
@@ -120,7 +120,10 @@ namespace KR.Gameplay.Story
             Show(_mini, !vr && !driving && !_bigOpen);
             Show(_bigScreen, !vr && !driving && _bigOpen);
             if (driving && _carText != null)
+            {
+                _carText.fontSize = Comfort.LargeText ? 36 : 30;
                 _carText.text = StoryInfo.Compose(_director, rig, nav, true);
+            }
         }
 
         static void Show(GameObject go, bool on)

@@ -30,6 +30,12 @@ namespace KR.Gameplay.World
 
         void Update()
         {
+            if (screen == null)
+            {
+                Debug.LogWarning($"[Screen] '{name}' has no screen renderer; disabled.");
+                enabled = false;
+                return;
+            }
             float t = Time.time * 0.25f;
             int i = Mathf.FloorToInt(t) % Palette.Length;
             Color c = Color.Lerp(Palette[i], Palette[(i + 1) % Palette.Length], Mathf.SmoothStep(0f, 1f, Mathf.Repeat(t, 1f)));

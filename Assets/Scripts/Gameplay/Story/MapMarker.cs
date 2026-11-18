@@ -4,6 +4,7 @@ using UnityEngine.UI;
 namespace KR.Gameplay.Story
 {
     // Map symbols drawn as simple shapes (no sprites needed): the player's arrow and the destination pin.
+    [RequireComponent(typeof(CanvasRenderer))]
     public sealed class MapMarker : MaskableGraphic
     {
         public enum Shape { Arrow, Diamond }

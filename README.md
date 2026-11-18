@@ -18,19 +18,22 @@ You play an ALU student racing deadlines through Rush Week: visit a friend, drin
 - **Satnav:** a city map drawn from OSM, a route planner on the real road network (one-way streets respected) and turn-by-turn directions.
 - **In the car, one screen:** the dashboard screen holds everything (map, directions, speed and limit, gear, seatbelt, lights, the milestone clock, the coach). Nothing else floats in view.
 - **Walking, nothing in your face:** the info panel opens over your left hand only when you press the left ☰ button; buzzes tell you when there is news.
+- **Rush Week story:** ten missions over three days (arrive, talk, a parking test, a road-rule quiz, a poster photo) with five characters: Maman Fils, Aline, Jean-Paul, Officer Mukamana and Mzee Gakuba. Script: [`Documentation/story-script.md`](Documentation/story-script.md).
+- **Discover, collect, level up:** public places in each sector go into your journal; XP (each reward given once), levels, badges, a photo gallery on the headset, and a guided Kimironko tour.
+- **Comfort and safety:** snap or smooth turning, vignette strength, teleport walking, large text, seated play, recentre; the game pauses with the panel open or the headset off, saves on sleep, keeps a backup save and resumes a mission after a restart.
 
 ## Controls (Meta Quest Touch controllers)
 
 | | Left controller | Right controller |
 |---|---|---|
-| Thumbstick | Walk; steer in the car | Snap turn |
-| Thumbstick click | Run; headlights in the car | Gear D / R (when stopped) |
-| Trigger | Brake | Accelerate |
-| Grip | (closes the hand) | Next satnav destination |
-| Buttons | X start milestone, Y seatbelt | A get in / out of the car, B handbrake |
-| Menu ☰ | Info panel (walking) | |
+| Thumbstick | Walk (or aim a teleport); steer in the car; menus and replies | Snap or smooth turn |
+| Thumbstick click | Run; headlights in the car | Gear P / D / R (when stopped) |
+| Trigger | Brake | Accelerate; camera shutter when walking |
+| Grip | (closes the hand) | Hold to raise the photo camera (walking) |
+| Buttons | X start milestone / talk / select, Y seatbelt | A get in / out of the car (out only in P), B handbrake |
+| Menu ☰ | Info panel: Status, Journal, Progress, Photos, Settings (pauses the game) | |
 
-Desktop (Editor testing): WASD walk/drive, mouse look, E car, Enter start, B seatbelt, R gear, L lights, Space handbrake, Tab info, M full map, N destination.
+Desktop (Editor testing): WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it, C camera and click to shoot, M full map, N destination.
 
 ## Requirements
 

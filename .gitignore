@@ -45,3 +45,8 @@ crashlytics-build.properties
 
 # Local working brief (kept out of the repository)
 CLAUDE.md
+
+# Business documents (kept locally, never in the repo)
+Documentation/MTN Proposal/
+*MTN*Proposal*
+KigaliRush_Implementation_Brief*.md
