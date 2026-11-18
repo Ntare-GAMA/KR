@@ -1,0 +1,252 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c3f11ec90f1c59747b111f2fcaaf40dc, type: 3}
+  m_Name: Places
+  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.PlaceCatalog
+  places:
+  - id: alu_campus
+    name: African Leadership University
+    category: university
+    sector: ALU campus
+    position: {x: 5836.825, y: 192.16455, z: 4515.904}
+    radius: 70
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: african_leadership_university
+    name: African Leadership University
+    category: university
+    sector: ALU campus
+    position: {x: 5836.825, y: 192.16455, z: 4515.904}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: ibitaro_by_akarere_bya_kibagabaga
+    name: Ibitaro by'akarere bya Kibagabaga
+    category: health centre
+    sector: Kibagabaga
+    position: {x: 1265.19, y: 134.36623, z: 4521.01}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: international_school_of_kigali
+    name: International School of Kigali
+    category: school
+    sector: Kibagabaga
+    position: {x: 997.54, y: 110.057556, z: 4656.38}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: kibagabaga_anglican_church
+    name: Kibagabaga Anglican Church
+    category: place of worship
+    sector: Kibagabaga
+    position: {x: 1478.7937, y: 130.06929, z: 4381.2163}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: kibagabaga_hospital
+    name: kibagabaga hospital
+    category: health centre
+    sector: Kibagabaga
+    position: {x: 1267.72, y: 134.00879, z: 4542.37}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: kigali_christian_school
+    name: Kigali Christian School
+    category: school
+    sector: Kibagabaga
+    position: {x: 1803.4445, y: 115.9923, z: 4425.998}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: maman_fils
+    name: Maman Fils's house
+    category: home
+    sector: Kibagabaga
+    position: {x: 1377.1536, y: 129.87732, z: 4619.714}
+    radius: 20
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: 7th_day_adventist_kibagabaga
+    name: 7th Day Adventist Kibagabaga
+    category: place of worship
+    sector: Kimironko
+    position: {x: 2682.6174, y: 110.49489, z: 3219.71}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: catholic_church
+    name: Catholic Church
+    category: place of worship
+    sector: Kimironko
+    position: {x: 2390.73, y: 148.9959, z: 2137.73}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: college_of_medicine_and_health_science
+    name: College Of medicine And Health Science
+    category: university
+    sector: Kimironko
+    position: {x: 2270.5415, y: 157.49133, z: 2411.7532}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: "\xE9cole_catholique_remera_1"
+    name: "\xC9cole Catholique Remera 1"
+    category: school
+    sector: Kimironko
+    position: {x: 2213.5923, y: 152.56946, z: 2018.285}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: foursquare_church
+    name: Foursquare Church
+    category: place of worship
+    sector: Kimironko
+    position: {x: 3202.4243, y: 147.95258, z: 3119.6025}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: galien_clinic
+    name: Galien Clinic
+    category: health centre
+    sector: Kimironko
+    position: {x: 2790.73, y: 145.14787, z: 2528.25}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: inyamibwa_hp_health_services
+    name: Inyamibwa Hp Health Services
+    category: health centre
+    sector: Kimironko
+    position: {x: 2954.33, y: 146.75029, z: 2412.7}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: kigali_ivf_and_fertility_clinic
+    name: Kigali Ivf And Fertility Clinic
+    category: health centre
+    sector: Kimironko
+    position: {x: 2605.47, y: 151.01447, z: 2307.4}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: kimironko_market
+    name: Kimironko Market
+    category: market
+    sector: Kimironko
+    position: {x: 2850.905, y: 149.78488, z: 2414.4175}
+    radius: 45
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: kimironko_taxi_park
+    name: Kimironko Taxi Park
+    category: bus station
+    sector: Kimironko
+    position: {x: 2782.0022, y: 149.39499, z: 2447.7456}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: omega_hospital
+    name: Omega Hospital
+    category: health centre
+    sector: Kimironko
+    position: {x: 3028.56, y: 147.15402, z: 2707.52}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: rapha_medical_clinic
+    name: Rapha Medical Clinic
+    category: health centre
+    sector: Kimironko
+    position: {x: 2690.99, y: 150.15167, z: 2408.16}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: rigina_pacis
+    name: Rigina Pacis
+    category: place of worship
+    sector: Kimironko
+    position: {x: 2421.58, y: 153.73631, z: 2254.1}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: the_salvation_army
+    name: The Salvation Army
+    category: place of worship
+    sector: Kimironko
+    position: {x: 2911.0745, y: 123.817406, z: 2893.3372}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  - id: ubuzima_polyclinic
+    name: Ubuzima Polyclinic
+    category: health centre
+    sector: Kimironko
+    position: {x: 2571.61, y: 144.3889, z: 2497.27}
+    radius: 35
+    xp: 50
+    cardText: 
+    cardSource: 
+    reviewStatus: draft
+  tour:
+  - kimironko_market
+  - kimironko_taxi_park
+  - galien_clinic
+  - rapha_medical_clinic
+  - kigali_ivf_and_fertility_clinic
+  - rigina_pacis

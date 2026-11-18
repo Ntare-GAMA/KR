@@ -34,6 +34,32 @@ namespace KR.Gameplay.Story
         public string Instruction { get; private set; }
         public float Remaining { get; private set; }
         public IReadOnlyList<(string name, Vector3 pos)> Places => _places;
+        public int Choice => _choice;
+        public bool OnTour => _tour.Count > 0;
+        public string TourLabel => _tour.Count > 0 ? $"Tour stop {_tourIndex + 1}/{_tour.Count}: {_tour[_tourIndex].name}" : null;
+
+        // -1 follows the milestone; otherwise a place from Places. Ends any tour.
+        public void ChooseDestination(int index)
+        {
+            _tour.Clear();
+            _choice = Mathf.Clamp(index, -1, _places.Count - 1);
+            if (rig != null)
+                rig.Toast(_choice < 0 ? "Satnav: following the milestone." : $"Satnav: going to {_places[_choice].name}.", 3f);
+        }
+
+        // A guided route through several places, in order (the Kimironko tour).
+        readonly List<(string name, Vector3 pos)> _tour = new List<(string, Vector3)>();
+        int _tourIndex;
+        public System.Action TourFinished;
+
+        public void StartTour(IEnumerable<(string name, Vector3 pos)> stops)
+        {
+            _tour.Clear();
+            _tour.AddRange(stops);
+            _tourIndex = 0;
+            if (_tour.Count > 0 && rig != null)
+                rig.Toast($"Kimironko tour: {_tour.Count} stops. First: {_tour[0].name}.", 4f);
+        }
         public Vector3 PlayerPosition => rig == null ? transform.position
             : rig.CurrentMode == PlayerRig.Mode.Driving && rig.Car != null ? rig.Car.transform.position : rig.Player.transform.position;
         public float PlayerHeading
@@ -76,7 +102,28 @@ namespace KR.Gameplay.Story
             // What to navigate to: the chosen place, or the milestone in play.
             string name = null;
             Vector3? target = null;
-            if (_choice >= 0 && _choice < _places.Count)
+            if (_tour.Count > 0)
+            {
+                var stop = _tour[_tourIndex];
+                if (Flat(PlayerPosition, stop.pos) < arriveRadius + 10f)
+                {
+                    _tourIndex++;
+                    if (_tourIndex >= _tour.Count)
+                    {
+                        _tour.Clear();
+                        rig.Toast("Tour complete!", 4f);
+                        TourFinished?.Invoke();
+                    }
+                    else
+                        rig.Toast($"Next stop: {_tour[_tourIndex].name}.", 4f);
+                }
+            }
+            if (_tour.Count > 0)
+            {
+                name = _tour[_tourIndex].name;
+                target = _tour[_tourIndex].pos;
+            }
+            else if (_choice >= 0 && _choice < _places.Count)
             {
                 name = _places[_choice].name;
                 target = _places[_choice].pos;
