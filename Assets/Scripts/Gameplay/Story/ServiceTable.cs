@@ -13,6 +13,7 @@ namespace KR.Gameplay.Story
         static readonly List<ServiceTable> All = new List<ServiceTable>();
 
         public IReadOnlyList<Transform> Tops => tops;
+        public static IReadOnlyList<ServiceTable> Tables => All;
 
         public void Configure(Npc server, Transform[] tableTops)
         {

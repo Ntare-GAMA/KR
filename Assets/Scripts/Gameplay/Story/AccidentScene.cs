@@ -8,7 +8,7 @@ namespace KR.Gameplay.Story
     // and comes to you upset, the cars stuck behind start hooting and their drivers shout, and traffic queues.
     // Stop, shift to P, get out and talk to the driver (the "acc_driver" conversation) to settle it; they drive
     // off afterwards. Driving away instead leaves the scene of a crash (flag "left_crash", and the officer hears
-    // of it). Horns are synthesised here, so no recorded sound is needed.
+    // of it). Horns use the recorded clip when given (SetHorn), otherwise one synthesised here.
     public sealed class AccidentScene : MonoBehaviour
     {
         [SerializeField] PlayerRig rig;
@@ -28,15 +28,18 @@ namespace KR.Gameplay.Story
         static readonly string[] QueueLines = { "Move the cars aside!", "Come on, we're late!", "Pull over, please!", "What's going on up there?" };
 
         int _hit = -1;
-        float _nextLine, _nextHoot, _settledAt;
+        float _nextLine, _nextHoot, _settledAt, _sirenAt;
         bool _talked;
         Vector3 _scene;
+        [SerializeField] AudioClip hornClip;   // recorded horn; synthesised when missing
         AudioClip _horn;
         AudioSource[] _horns;
         SpeechBubble _driverBubble, _queueBubble;
         PersonAnimator _driverAnim;
 
         public bool Active => _hit >= 0;
+
+        public void SetHorn(AudioClip clip) => hornClip = clip;
 
         public void Configure(PlayerRig playerRig, RoadNetworkTraffic vehicles, StoryDirector story, ConversationRunner conversations, Npc otherDriver)
         {
@@ -57,7 +60,7 @@ namespace KR.Gameplay.Story
             rig.Car.gameObject.AddComponent<CollisionRelay>().Hit += OnHit;
             if (runner != null)
                 runner.Finished += OnTalked;
-            _horn = HornClip();
+            _horn = hornClip != null ? hornClip : HornClip();
             _horns = new AudioSource[3];
             for (int i = 0; i < _horns.Length; i++)
             {
@@ -102,6 +105,7 @@ namespace KR.Gameplay.Story
             _nextLine = Time.time + 1.5f;
             _nextHoot = Time.time + Random.Range(3f, 6f);
             director?.SetFlag("crash");
+            _sirenAt = Time.time + Random.Range(7f, 12f);
 
             // The driver gets out on their side (left-hand drive) and faces your car.
             if (driver != null)
@@ -112,6 +116,7 @@ namespace KR.Gameplay.Story
                 driver.transform.SetPositionAndRotation(at, Quaternion.LookRotation(Flat(rig.Car.transform.position - at)));
                 driver.gameObject.SetActive(true);
                 _driverAnim?.SetTalking(true, rig.Car.transform.position);
+                SoundBank.Play("car_door", at + Vector3.up, 0.9f);
             }
             rig.Toast("You hit another car. Stop, shift to P and get out to talk to the driver.", 6f);
         }
@@ -144,6 +149,13 @@ namespace KR.Gameplay.Story
                     _driverBubble.Say(driver.transform, 2.25f, DriverLines[Random.Range(0, DriverLines.Length)]);
                     _nextLine = now + Random.Range(4f, 7f);
                 }
+            }
+            // A siren somewhere off down the road, once, a little while after the crash.
+            if (_sirenAt > 0f && now >= _sirenAt)
+            {
+                _sirenAt = 0f;
+                var away = _scene + Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward * 60f;
+                SoundBank.Play("siren", away, 0.7f, true, 160f);
             }
             // The queue behind loses patience.
             if (now >= _nextHoot)

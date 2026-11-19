@@ -57,7 +57,7 @@ namespace KR.Editor.Kigali
         static System.Random _rng;
         static Font _font;
         static int _people;
-        static GameObject _table, _chair, _cup, _plate, _bottle;
+        static GameObject _table, _chair, _cup, _plate, _bottle, _terraceSet, _picnic, _stool;
         const string TablePath = "Assets/ModularLowpolyStreetsFree/Prefabs/Other/Cafe_table_1.prefab";
         const string ChairPath = "Assets/ModularLowpolyStreetsFree/Prefabs/Other/Cafe_chair_1.prefab";
 
@@ -94,6 +94,10 @@ namespace KR.Editor.Kigali
             PcPeople.Begin("Assets/World/PC/kimironko_kibagabaga/People");
             _table = AssetDatabase.LoadAssetAtPath<GameObject>(TablePath);
             _chair = AssetDatabase.LoadAssetAtPath<GameObject>(ChairPath);
+            // Sourced Poly Haven furniture: a table-and-chairs set for terraces, picnic tables and stools for the campus.
+            _terraceSet = SourcedAssets.Furniture("outdoor_table_chair_set_01");
+            _picnic = SourcedAssets.Furniture("wooden_picnic_table");
+            _stool = SourcedAssets.Furniture("folding_wooden_stool");
             (_cup, _plate, _bottle) = CleanCity.Tableware($"{Out}/Tableware");
             Physics.SyncTransforms();
 
@@ -172,6 +176,18 @@ namespace KR.Editor.Kigali
             driverNpc.Configure("other_driver", "The other driver", "acc_driver", driver.GetComponent<PersonAnimator>(), null, 3.2f);
             var accident = c.Host.gameObject.AddComponent<AccidentScene>();
             accident.Configure(c.Rig, c.Vehicles, c.Director, c.Runner, driverNpc);
+            accident.SetHorn(SourcedAssets.Sound("horn"));
+
+            // All the short sounds (plates, sips, whistles, sirens...), and cafe chatter at the nearest terrace.
+            var bank = new GameObject("Sound bank (sourced sounds)");
+            bank.transform.SetParent(c.Host, false);
+            bank.AddComponent<SoundBank>().Configure(SourcedAssets.BankEntries());
+            bank.AddComponent<TerraceAmbience>();
+
+            // Engines of the nearest traffic and the street-noise bed.
+            if (c.Vehicles != null)
+                c.Host.gameObject.AddComponent<TrafficVoices>().Configure(c.Vehicles, c.Rig, SourcedAssets.Sound("engine_run"),
+                    SourcedAssets.Sound("bus_idle"), SourcedAssets.Sound("moto"), SourcedAssets.Sound("traffic"));
 
             // Orders at cafes: one cup, plate and bottle in the scene, moved to the table when served.
             var ware = Group(root, "Served items (reused)");
@@ -184,6 +200,9 @@ namespace KR.Editor.Kigali
             }
             c.Host.gameObject.AddComponent<ServiceOrders>().Configure(c.Rig, c.Runner, c.Director, Item(_cup), Item(_plate), Item(_bottle));
             c.Host.gameObject.AddComponent<DestinationBeacon>().Configure(c.Nav, c.Rig, c.RouteMaterial);
+            // The dining room every cafe and restaurant opens into.
+            RestaurantInterior.Build(root, c.Rig, c.Runner, c.Director, _women, _rng, (_cup, _plate, _bottle))
+                ?.SetDoorSound(SourcedAssets.Sound("sliding_door"));
 
             // Satnav: every street and every named place; the destination list; live guidance on foot.
             c.Nav.SetDirectory(c.Catalog, streets);
@@ -421,7 +440,12 @@ namespace KR.Editor.Kigali
             var npc = staff.AddComponent<Npc>();
             npc.Configure($"staff:{n.osm}", $"{s.title} at {n.name}", s.conversation, staff.GetComponent<PersonAnimator>(), n.name);
             if (n.group == "food")
+            {
                 Terrace(host, f, npc);
+                // Ask to eat inside: you come back out here.
+                if (n.kind != "bar")
+                    host.gameObject.AddComponent<RestaurantDoor>().Configure(npc, n.name, OnSurface(f.Door + f.Out * 1.6f), Yaw(f.Out));
+            }
             // Customers: one or two at the door, talking to each other.
             int customers = n.group == "food" || n.group == "shop" ? _rng.Next(1, 3) : _rng.Next(0, 2);
             for (int i = 0; i < customers; i++)
@@ -438,7 +462,7 @@ namespace KR.Editor.Kigali
         // orders to them). Spots in the way of the road or a wall are skipped.
         static void Terrace(Transform host, Front f, Npc staff)
         {
-            if (_table == null)
+            if (_table == null && _terraceSet == null)
                 return;
             var tops = new List<Transform>();
             foreach (float side in new[] { -1.8f, 1.8f })
@@ -447,11 +471,14 @@ namespace KR.Editor.Kigali
                 if (!Free(at) || !_clear.Clear(at, 1.3f))
                     continue;
                 at = OnSurface(at);
-                var table = (GameObject)PrefabUtility.InstantiatePrefab(_table);
+                var table = (GameObject)PrefabUtility.InstantiatePrefab(_terraceSet != null ? _terraceSet : _table);
                 table.name = "Terrace table";
                 table.transform.SetParent(host, false);
-                table.transform.SetPositionAndRotation(at, Quaternion.LookRotation(f.Out));
-                if (_chair != null)
+                // The set (table between two chairs, 1.8 m long) runs along the frontage, not out into the road.
+                table.transform.SetPositionAndRotation(at, Quaternion.LookRotation(_terraceSet != null ? f.Along : f.Out));
+                if (_terraceSet != null)
+                    Solid(table);
+                else if (_chair != null)
                     foreach (float c in new[] { -0.75f, 0.75f })
                     {
                         var chair = (GameObject)PrefabUtility.InstantiatePrefab(_chair);
@@ -460,7 +487,8 @@ namespace KR.Editor.Kigali
                         var cp = at + f.Along * c;
                         chair.transform.SetPositionAndRotation(cp, Quaternion.LookRotation(at - cp));
                     }
-                var b = EditorAssetUtil.RendererBounds(table);
+                var b = _terraceSet != null ? SourcedAssets.TableBounds(table) : EditorAssetUtil.RendererBounds(table);
+                at = new Vector3(b.center.x, at.y, b.center.z);
                 var top = new GameObject("Table top").transform;
                 top.SetParent(table.transform, true);
                 top.position = new Vector3(at.x, b.max.y + 0.002f, at.z) + f.Out * 0.15f;
@@ -562,6 +590,7 @@ namespace KR.Editor.Kigali
                         continue;
                     var officer = Officer(parent, OnGround(at), Yaw(j.centre - at), Activity.Wave, "Traffic officer", vest, cap);
                     officer.AddComponent<PolicePost>().Configure(PolicePost.Kind.Officer, 80f);
+                    officer.AddComponent<PoliceWhistle>();
                     officer.AddComponent<Npc>().Configure($"police:{count}", "Traffic officer", "police_chat", officer.GetComponent<PersonAnimator>());
                     count++;
                 }
@@ -763,6 +792,28 @@ namespace KR.Editor.Kigali
                 s.AddComponent<StreetWalker>().Configure(route, 1.25f, new Vector2(5f, 20f));
                 people++;
             }
+            // Picnic tables (a stool or two beside some) on the spots left over.
+            if (_picnic != null)
+                for (int i = groups + 16, made = 0; i < spots.Count - 2 && made < 6; i++, made++)
+                {
+                    var p = OnSurface(spots[i]);
+                    float yaw = (float)_rng.NextDouble() * 360f;
+                    var t = (GameObject)PrefabUtility.InstantiatePrefab(_picnic);
+                    t.name = "Picnic table";
+                    t.transform.SetParent(parent, false);
+                    t.transform.SetPositionAndRotation(p, Quaternion.Euler(0f, yaw, 0f));
+                    Solid(t);
+                    if (_stool != null && _rng.NextDouble() < 0.6)
+                    {
+                        var s = (GameObject)PrefabUtility.InstantiatePrefab(_stool);
+                        s.name = "Stool";
+                        s.transform.SetParent(t.transform, false);
+                        s.transform.localPosition = new Vector3(1.6f, 0f, 0.3f);
+                        s.transform.localRotation = Quaternion.Euler(0f, (float)_rng.NextDouble() * 360f, 0f);
+                        Solid(s);
+                    }
+                }
+
             // Front desk and canteen.
             if (spots.Count > 0)
             {
@@ -839,6 +890,19 @@ namespace KR.Editor.Kigali
         static Vector3 OnGround(Vector3 p) => new Vector3(p.x, Ground(p), p.z);
         static float Surface(Vector3 p) => PcRoadBuilder.SurfaceHeight(_terrain, p);
         static Vector3 OnSurface(Vector3 p) => new Vector3(p.x, Surface(p), p.z);
+
+        // A box collider round a placed model (in its own space), so you bump into it rather than walk through.
+        static void Solid(GameObject go)
+        {
+            var rot = go.transform.rotation;
+            go.transform.rotation = Quaternion.identity;
+            var b = EditorAssetUtil.RendererBounds(go);
+            go.transform.rotation = rot;
+            var box = go.AddComponent<BoxCollider>();
+            var s = go.transform.lossyScale;
+            box.center = go.transform.InverseTransformPoint(rot * (b.center - go.transform.position) + go.transform.position);
+            box.size = new Vector3(b.size.x / Mathf.Max(1e-4f, s.x), b.size.y / Mathf.Max(1e-4f, s.y), b.size.z / Mathf.Max(1e-4f, s.z));
+        }
 
         static Vector3 Closest(Vector3 p, Vector3 a, Vector3 b)
         {

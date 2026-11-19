@@ -1,4 +1,5 @@
 using KR.Gameplay.Player;
+using KR.Gameplay.World;
 using UnityEngine;
 
 namespace KR.Gameplay.Story
@@ -59,6 +60,9 @@ namespace KR.Gameplay.Story
 
         void OnFlag(string flag, Npc npc)
         {
+            // Orders taken inside the dining room are served there (Restaurant), not on the terrace.
+            if (npc != null && npc.Id == "waitress")
+                return;
             if (flag != null && flag.StartsWith("order_"))
             {
                 _order = flag.Substring(6);
@@ -85,6 +89,7 @@ namespace KR.Gameplay.Story
                 _served.SetActive(false);
             item.transform.SetPositionAndRotation(top.position, Quaternion.Euler(0f, Random.Range(0f, 360f), 0f));
             item.SetActive(true);
+            SoundBank.Play(order == "plate" ? "plate_down" : order == "tea" ? "pour" : "bottle_open", top.position, 0.9f);
             _served = item;
             _servedOrder = order;
             _consumeUntil = 0f;
@@ -119,6 +124,7 @@ namespace KR.Gameplay.Story
             if (RigInput.ConfirmPressed && (runner == null || !runner.WantsConfirm))
             {
                 _consumeUntil = Time.time + 1.2f;
+                SoundBank.Play(_servedOrder == "plate" ? "bite" : "sip", _served.transform.position, 0.8f, false);
                 _prompt.Hide();
                 rig.Toast(_servedOrder == "plate" ? "You eat. Delicious!" : "You drink. Just what you needed.", 3f);
                 director?.SetFlag("ate_out");
