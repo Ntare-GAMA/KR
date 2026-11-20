@@ -23,10 +23,12 @@ namespace KR.Editor.Batch
         // Windows player of the Story Mode scene (PC only), written to <project>/Builds/StoryPC.
         public static void BuildStoryWindows() => Run(() =>
         {
+            UnityEditor.PlayerSettings.productName = QuestBoot.AppName;
             string exe = System.IO.Path.GetFullPath(System.IO.Path.Combine(Application.dataPath, "..", "Builds", "StoryPC", "KigaliRushStory.exe"));
             var report = UnityEditor.BuildPipeline.BuildPlayer(new UnityEditor.BuildPlayerOptions
             {
-                scenes = new[] { StoryModeBuilder.ScenePath },
+                // Same start as the headset: the KR loading card, the main menu, then the city.
+                scenes = QuestBoot.Scenes,
                 locationPathName = exe,
                 target = UnityEditor.BuildTarget.StandaloneWindows64,
                 options = UnityEditor.BuildOptions.None,
@@ -36,6 +38,9 @@ namespace KR.Editor.Batch
             if (sum.result != UnityEditor.Build.Reporting.BuildResult.Succeeded)
                 Debug.LogError("[Build] Windows build failed.");
         });
+
+        // Meta Quest APK of the Story Mode scene (Builds/Quest); install with adb install -r.
+        public static void BuildStoryQuest() => Run(() => QuestBuild.Build(false));
 
         // Preview renders of the ALU campus in the Story scene (-captureDir <folder>).
         public static void CaptureAluCampus() => Run(() =>
@@ -100,6 +105,71 @@ namespace KR.Editor.Batch
             RenderTexture.active = null;
             Debug.Log($"[Capture] {shots.Length} car renders in {folder}. Eye {eye:F2}, hip {(car.HipPoint != null ? car.HipPoint.position.ToString("F2") : "none")}, " +
                       $"grips {(car.LeftGrip != null ? car.LeftGrip.position.ToString("F2") : "none")} / {(car.RightGrip != null ? car.RightGrip.position.ToString("F2") : "none")}.");
+        });
+
+        // Stills for the main menu (-captureDir <folder>): a few views of places in each sector and of the car,
+        // rendered from the Story scene. Pick the best and copy them to Assets/Resources/UI/Stills.
+        public static void CaptureMenuStills() => Run(() =>
+        {
+            var args = Environment.GetCommandLineArgs();
+            int i = Array.IndexOf(args, "-captureDir");
+            string folder = i >= 0 && i + 1 < args.Length ? args[i + 1] : "Temp/MenuStills";
+            System.IO.Directory.CreateDirectory(folder);
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(StoryModeBuilder.ScenePath, UnityEditor.SceneManagement.OpenSceneMode.Single);
+            var cam = Camera.main;
+            var places = UnityEngine.Object.FindFirstObjectByType<KR.Gameplay.Story.Discoveries>(FindObjectsInactive.Include);
+            if (cam == null || places == null || places.Catalog == null)
+            {
+                Debug.LogError("[Stills] No camera or place catalog in the Story scene.");
+                return;
+            }
+            cam.farClipPlane = Mathf.Max(cam.farClipPlane, 3000f);
+            cam.fieldOfView = 55f;
+            var shots = new System.Collections.Generic.List<(string, Vector3, Vector3)>();
+            float Ground(Vector3 p) => Physics.Raycast(p + Vector3.up * 300f, Vector3.down, out var hit, 600f) ? hit.point.y : p.y;
+            foreach (var sector in new[] { "Kimironko", "Kibagabaga", "ALU campus" })
+            {
+                int n = 0;
+                foreach (var p in places.Catalog.places)
+                {
+                    if (p.sector != sector || n >= 3)
+                        continue;
+                    n++;
+                    for (int a = 0; a < 3; a++)
+                    {
+                        var dir = Quaternion.Euler(0f, 40f + a * 120f, 0f) * Vector3.forward;
+                        var pos = p.position + dir * 26f;
+                        pos.y = Ground(pos) + 3.5f + a * 3f;
+                        var look = p.position;
+                        look.y = Ground(p.position) + 3f;
+                        shots.Add(($"{sector} {n} {p.name} {a}", pos, look));
+                    }
+                }
+            }
+            var car = UnityEngine.Object.FindFirstObjectByType<KR.Gameplay.Player.DrivableCar>(FindObjectsInactive.Include);
+            if (car != null)
+            {
+                var t = car.transform;
+                shots.Add(("Car front", t.position + t.forward * 6f - t.right * 3.5f + Vector3.up * 1.2f, t.position + Vector3.up * 0.8f));
+                shots.Add(("Car street", t.position - t.forward * 9f + t.right * 2f + Vector3.up * 2.2f, t.position + t.forward * 20f + Vector3.up * 2f));
+            }
+            const int w = 1600, h = 900;
+            var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGBHalf);
+            var tex = new Texture2D(w, h, TextureFormat.RGB24, false);
+            foreach (var (name, pos, look) in shots)
+            {
+                cam.transform.SetPositionAndRotation(pos, Quaternion.LookRotation(look - pos));
+                cam.targetTexture = rt;
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, w, h), 0, 0);
+                tex.Apply();
+                string file = string.Concat(name.Split(System.IO.Path.GetInvalidFileNameChars()));
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(folder, file + ".png"), tex.EncodeToPNG());
+            }
+            cam.targetTexture = null;
+            RenderTexture.active = null;
+            Debug.Log($"[Stills] {shots.Count} stills in {folder}.");
         });
 
         static void Run(Action task)
