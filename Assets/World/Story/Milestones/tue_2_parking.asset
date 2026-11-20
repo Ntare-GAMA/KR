@@ -1,35 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c81d4d2ce7ff8f4f8f4fca678a64711, type: 3}
-  m_Name: tue_2_parking
-  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.MilestoneDefinition
-  id: tue_2_parking
-  title: The parking test
-  brief: Drive to the marked bay near the campus gate, stop inside it facing along
-    the road, and shift to P.
-  placeName: ALU car park
-  startAtPoint: 0
-  startPoint: {x: 0, y: 0, z: 0}
-  position: {x: 5812.9834, y: 219.03236, z: 4679.6777}
-  radius: 25
-  day: 1
-  opensAtHour: 8.5
-  parSeconds: 1035
-  dwellSeconds: 0
-  dwellLabel: 
-  dwellAnimation: 
-  knowledgeCardId: card_refuse_stop
-  arrivalLines: []
-  speaker: 
-  kind: 1
-  conversationId: 
-  bayYaw: 97.21744
+version https://git-lfs.github.com/spec/v1
+oid sha256:072f0983b3643cc58061e0cba5011ae44de7315218c95a6d17e24627ab7cf42a
+size 970

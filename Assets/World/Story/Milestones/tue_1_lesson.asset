@@ -1,35 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c81d4d2ce7ff8f4f8f4fca678a64711, type: 3}
-  m_Name: tue_1_lesson
-  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.MilestoneDefinition
-  id: tue_1_lesson
-  title: A road lesson with Officer Mukamana
-  brief: Officer Mukamana runs a short road-safety talk for new drivers near Kibagabaga.
-    Listen, then answer her three questions (you need two right).
-  placeName: Kibagabaga
-  startAtPoint: 0
-  startPoint: {x: 0, y: 0, z: 0}
-  position: {x: 1084.6498, y: 112.50142, z: 4271.874}
-  radius: 20
-  day: 1
-  opensAtHour: 7.5
-  parSeconds: 238
-  dwellSeconds: 0
-  dwellLabel: 
-  dwellAnimation: 
-  knowledgeCardId: card_officer
-  arrivalLines: []
-  speaker: 
-  kind: 2
-  conversationId: off_lesson
-  bayYaw: 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:0bddb90d6d86c091699340ee125807b7cee1a5dd9038438bef888fcd4fa4c535
+size 1024

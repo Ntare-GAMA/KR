@@ -1,35 +1,3 @@
-%YAML 1.1
-%TAG !u! tag:unity3d.com,2011:
---- !u!114 &11400000
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 0}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 9c81d4d2ce7ff8f4f8f4fca678a64711, type: 3}
-  m_Name: wed_3_thanks
-  m_EditorClassIdentifier: KR.Gameplay::KR.Gameplay.Story.MilestoneDefinition
-  id: wed_3_thanks
-  title: Thank Maman Fils
-  brief: The summative is in. Stop by Maman Fils's house to tell her how it went
-    and thank her for the tea.
-  placeName: Kibagabaga
-  startAtPoint: 0
-  startPoint: {x: 0, y: 0, z: 0}
-  position: {x: 1377.1536, y: 129.87732, z: 4619.714}
-  radius: 20
-  day: 2
-  opensAtHour: 16
-  parSeconds: 1010
-  dwellSeconds: 0
-  dwellLabel: 
-  dwellAnimation: 
-  knowledgeCardId: 
-  arrivalLines: []
-  speaker: 
-  kind: 2
-  conversationId: mf_thanks
-  bayYaw: 0
+version https://git-lfs.github.com/spec/v1
+oid sha256:eaf17604a6fc7eec95d2d289628e21595c96c24ede552141d33e573ab7f1b454
+size 949
