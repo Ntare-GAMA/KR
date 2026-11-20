@@ -40,7 +40,7 @@ namespace KR.Editor.XR
         static void Player()
         {
             var android = NamedBuildTarget.Android;
-            PlayerSettings.productName = "Kigali Rush VR";
+            PlayerSettings.productName = "KR";
             PlayerSettings.SetApplicationIdentifier(android, PackageName);
             PlayerSettings.SetScriptingBackend(android, ScriptingImplementation.IL2CPP);
             PlayerSettings.Android.targetArchitectures = AndroidArchitecture.ARM64;
