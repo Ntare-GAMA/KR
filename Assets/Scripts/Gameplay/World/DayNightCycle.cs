@@ -24,6 +24,8 @@ namespace KR.Gameplay.World
 
         [SerializeField] Light sun;
         [SerializeField] InstancedScatter scatter;
+        [SerializeField, Tooltip("City objects placed as GameObjects (editable): their window and sign materials glow at night.")]
+        Transform[] cityRoots;
         [SerializeField] StreetLightPool streetLights;
         [SerializeField] Transform traffic;
         [SerializeField] SkyKey[] skies;
@@ -117,6 +119,8 @@ namespace KR.Gameplay.World
                     if (m != null && seen.Add(m))
                         Register(m);
             }
+            if (cityRoots != null)
+                GlowCity();
             if (traffic != null)
                 CloneTrafficMaterials();
             _ready = true;
@@ -153,6 +157,42 @@ namespace KR.Gameplay.World
             if (n.Contains("road_signs") || n.Contains("roadsign") || n.Contains("trafficprops") || n.Contains("traffic sign"))
                 return Glow.Sign;
             return Glow.None;
+        }
+
+        public void ConfigureCity(Transform[] roots) => cityRoots = roots;
+
+        // Each glowing material (windows, signs) is copied once and the copy shared by every renderer that used it,
+        // so night lighting never touches the material assets.
+        void GlowCity()
+        {
+            var clones = new Dictionary<Material, Material>();
+            foreach (var root in cityRoots)
+            {
+                if (root == null)
+                    continue;
+                foreach (var r in root.GetComponentsInChildren<Renderer>(true))
+                {
+                    var mats = r.sharedMaterials;
+                    bool changed = false;
+                    for (int i = 0; i < mats.Length; i++)
+                    {
+                        var m = mats[i];
+                        if (m == null || Classify(m.name) == Glow.None)
+                            continue;
+                        if (!clones.TryGetValue(m, out var copy))
+                        {
+                            copy = new Material(m) { name = m.name };
+                            clones[m] = copy;
+                            _ownedClones.Add(copy);
+                            Register(copy);
+                        }
+                        mats[i] = copy;
+                        changed = true;
+                    }
+                    if (changed)
+                        r.sharedMaterials = mats;
+                }
+            }
         }
 
         void Register(Material m)

@@ -53,7 +53,7 @@ namespace KR.Editor.Kigali
         const float ViewDistance = 950f;
         const float FogDensity = 0.0019f;
 
-        static readonly string[] ExtraBuiltInFolders = { "Assets/SimplePoly City - Low Poly Assets", ModularStreets };
+        static readonly string[] ExtraBuiltInFolders = { "Assets/SimplePoly City - Low Poly Assets", ModularStreets, "Assets/Food Pack Mixed", "Assets/RPG Food & Drinks Pack" };
         static readonly string[] ExcludedVehicleNames = { "Military", "Monster", "Air Plane", "Futuristic", "Wheel", "Spoiler" };
 
         static Vector3[] _hubs;
@@ -203,15 +203,16 @@ namespace KR.Editor.Kigali
                 Progress("City map", 0.73f);
                 CityMapBaker.Bake(roads, buildings, outDir, root);
 
-                Progress("Writing instanced city", 0.74f);
-                var cityHost = new GameObject("City (instanced: buildings, trees, street furniture, parked cars)");
-                cityHost.transform.SetParent(root, false);
-                var instanced = scatter.Write(cityHost, $"{outDir}/{district}_instances.bytes");
-
                 Progress("Ground: lawns, terraces, verges, flower beds", 0.78f);
                 var masks = PcGreenery.Paint(terrain, buildings, places, life.Markets, gardens, roads, _hubs, outDir);
                 Progress("Conifers", 0.8f);
                 var trunks = PcGreenery.PlantConifers(terrain, grid, roads, places, masks, _hubs, rng);
+
+                // Every building, tree, lamp, parked car and piece of street furniture as an object you can select
+                // and edit (CityObjects), each with its own collider.
+                Progress("City objects (editable)", 0.81f);
+                var cityRoots = CityObjects.Build(scatter, cat, terrain, root, DetailLayer, out int cityObjects);
+                InstancedScatter instanced = null;
 
                 Progress("Traffic", 0.82f);
                 var traffic = BuildTraffic(roads, terrain, root, cat, rng, outDir, junctions, signals, out int trackBus, out int trackCar);
@@ -226,6 +227,8 @@ namespace KR.Editor.Kigali
                 Progress("Lights, day and night, story", 0.93f);
                 SetupAtmosphere(terrain, centre, outDir, district, out var sun, out var cam, out var volume);
                 cam.gameObject.AddComponent<LayerCullDistances>().Configure(DetailLayer, 220f);
+                cam.gameObject.AddComponent<LayerCullDistances>().Configure(CityObjects.TreeLayer, 350f);
+                cam.gameObject.AddComponent<LayerCullDistances>().Configure(CityObjects.HouseLayer, 600f);
 
                 var lampHost = new GameObject("Street lamp lights (pooled)");
                 var pool = lampHost.AddComponent<StreetLightPool>();
@@ -235,13 +238,14 @@ namespace KR.Editor.Kigali
 
                 var cycle = new GameObject("Day/Night Cycle").AddComponent<DayNightCycle>();
                 cycle.Configure(sun, instanced, pool, traffic != null ? traffic.transform : null, SkyTimeline(), 7.5f);
+                cycle.ConfigureCity(cityRoots);
                 PcGreenery.AddWeather(terrain, cycle, outDir);
 
                 Progress("Player", 0.96f);
                 PlayerBuilder.Build(new PlayerBuilder.Context
                 {
                     Terrain = terrain, Root = root, OutDir = outDir, Cat = cat, Rng = rng,
-                    Hubs = _hubs, HubNames = _hubNames, Roads = roads, Solids = Solids, Scatter = scatter, TreeTrunks = trunks,
+                    Hubs = _hubs, HubNames = _hubNames, Roads = roads, Solids = Solids, Scatter = scatter, TreeTrunks = trunks, ObjectColliders = true,
                     Camera = cam,
                 });
 
@@ -389,7 +393,8 @@ namespace KR.Editor.Kigali
                 WashingLines = Models("Washing Line"),
                 BusStopSigns = Models("Bus stop sign"),
                 Atms = Models("ATM"),
-                Pedestrians = Models("Animated Woman", "Animated Woman-9kF7eTDbhO", "Man", "Adventurer"),
+                // Women: the City Pack women (Mixamo-rigged). Men: the Floreswa low-poly men (Rigify, mapped to Humanoid).
+                Pedestrians = Join(Models("Animated Woman", "Animated Woman-9kF7eTDbhO"), Prefabs("Assets/Floreswa/Prefabs", n => n.StartsWith("male"))),
                 Boxes = Models("Box"),
                 TrashBags = Models("trah bag grey"),
                 Stadium = Named($"{sp}/Buildings", "Building_Stadium").FirstOrDefault(),
@@ -707,8 +712,8 @@ namespace KR.Editor.Kigali
                             // The pole stands at the kerb edge and the arm reaches over the road, whatever the model's pivot.
                             var m = PoleFit(scatter, lampPrefab, Side(p, side * (half + (footpaths ? 0.6f : 0.8f)), footpaths ? kerbTop : 0f),
                                             -right * side, 9f, 12f);
-                            scatter.Add(lampPrefab, m, Category.Lamp);
-                            AddLampHeads(lampPrefab, m, scatter, lamps);
+                            int lamp = scatter.Add(lampPrefab, m, Category.Lamp);
+                            AddLampHeads(lampPrefab, m, scatter, lamps, lamp);
                         }
                     // No manhole covers or road works on the carriageway: Kigali's roads are kept clean, and props
                     // laid on the asphalt showed as patches.
@@ -852,7 +857,7 @@ namespace KR.Editor.Kigali
 
         // Where a lamp model's pole meets the ground and which way its arm points (prefab space, xz), from its vertices:
         // the pole is the lowest part, the arm the highest.
-        static (Vector2 pole, Vector2 arm) PoleGeometry(GameObject prefab)
+        internal static (Vector2 pole, Vector2 arm) PoleGeometry(GameObject prefab)
         {
             if (PoleCache.TryGetValue(prefab, out var cached))
                 return cached;
@@ -901,20 +906,29 @@ namespace KR.Editor.Kigali
         }
 
         // Lamp heads sit at the top of the pole, at both arm ends for wide (double-arm) lamps.
-        static void AddLampHeads(GameObject prefab, Matrix4x4 m, ScatterCollector scatter, List<Vector3> lamps)
+        // Each head is also a LampHead marker attached to its lamp, so the light follows the lamp when it is moved.
+        static void AddLampHeads(GameObject prefab, Matrix4x4 m, ScatterCollector scatter, List<Vector3> lamps, int placed = -1)
         {
             var b = scatter.PrefabBounds(prefab);
             float top = b.max.y - 0.4f;
+            void Head(Vector3 local)
+            {
+                var p = m.MultiplyPoint3x4(local);
+                lamps.Add(p);
+                if (placed < 0)
+                    return;
+                var marker = new GameObject("Lamp head", typeof(LampHead));
+                marker.transform.position = p;
+                scatter.Attach(placed, marker.transform);
+            }
             if (b.size.x > 1.5f || b.size.z > 1.5f)
             {
                 bool alongX = b.size.x >= b.size.z;
-                var e1 = alongX ? new Vector3(b.min.x + 0.3f, top, b.center.z) : new Vector3(b.center.x, top, b.min.z + 0.3f);
-                var e2 = alongX ? new Vector3(b.max.x - 0.3f, top, b.center.z) : new Vector3(b.center.x, top, b.max.z - 0.3f);
-                lamps.Add(m.MultiplyPoint3x4(e1));
-                lamps.Add(m.MultiplyPoint3x4(e2));
+                Head(alongX ? new Vector3(b.min.x + 0.3f, top, b.center.z) : new Vector3(b.center.x, top, b.min.z + 0.3f));
+                Head(alongX ? new Vector3(b.max.x - 0.3f, top, b.center.z) : new Vector3(b.center.x, top, b.max.z - 0.3f));
             }
             else
-                lamps.Add(m.MultiplyPoint3x4(new Vector3(b.center.x, top, b.center.z)));
+                Head(new Vector3(b.center.x, top, b.center.z));
         }
 
         // Parked motorcycles (moto-taxi stand) with the odd bicycle, nose to the kerb.
@@ -964,8 +978,7 @@ namespace KR.Editor.Kigali
                     var approachRight = new Vector3(-d.z, 0f, d.x);   // right of a driver heading into the junction
                     var pos = Ground(terrain, j.Position + d * (PcRoadBuilder.StopLineAt + 0.6f) + approachRight * (j.Width * 0.5f + 0.9f), 0.42f);
                     float yaw = Mathf.Atan2(d.x, d.z) * Mathf.Rad2Deg + SignalYawOffset;
-                    if (cat.SignalMain != null)
-                        scatter.Add(cat.SignalMain, scatter.Fit(cat.SignalMain, pos, yaw, 4.6f, 3f), Category.Lamp);
+                    int pole = cat.SignalMain != null ? scatter.Add(cat.SignalMain, scatter.Fit(cat.SignalMain, pos, yaw, 4.6f, 3f), Category.Lamp) : -1;
 
                     // The head faces +d, towards the drivers approaching along -d.
                     var head = new GameObject($"Signal head J{j.SignalIndex}").transform;
@@ -997,6 +1010,14 @@ namespace KR.Editor.Kigali
                     }
                     lamps.Add(new TrafficSignalSystem.Lamp { head = head.gameObject, red = lenses[0], amber = lenses[1], green = lenses[2],
                                                              junction = j.SignalIndex, phase = Phase(j, d) });
+                    // The head rides on its pole (moving the pole by hand moves the head); the system finds it at start.
+                    var sh = head.gameObject.AddComponent<SignalHead>();
+                    sh.red = lenses[0];
+                    sh.amber = lenses[1];
+                    sh.green = lenses[2];
+                    sh.junction = j.SignalIndex;
+                    sh.phase = Phase(j, d);
+                    scatter.Attach(pole, head);
                 }
             }
             system.Configure(offsets.ToArray(), lamps.ToArray(), lampMats, offMat);

@@ -36,7 +36,9 @@ namespace KR.Editor.Kigali
             var instance = (GameObject)PrefabUtility.InstantiatePrefab(prefab, parent.gameObject.scene);
             instance.transform.SetParent(parent, false);
             // Independent objects: clicking a bar selects that bar, not the whole layer.
-            PrefabUtility.UnpackPrefabInstance(instance, PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+            // Only the layer itself is unpacked: a tree or lamp inside keeps its link to its model, so one click
+            // selects that whole tree or lamp.
+            PrefabUtility.UnpackPrefabInstance(instance, PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
             return instance;
         }
 
@@ -56,7 +58,7 @@ namespace KR.Editor.Kigali
                         continue;
                     var go = t.gameObject;
                     if (PrefabUtility.IsPartOfPrefabInstance(go))
-                        PrefabUtility.UnpackPrefabInstance(PrefabUtility.GetOutermostPrefabInstanceRoot(go), PrefabUnpackMode.Completely, InteractionMode.AutomatedAction);
+                        PrefabUtility.UnpackPrefabInstance(PrefabUtility.GetOutermostPrefabInstanceRoot(go), PrefabUnpackMode.OutermostRoot, InteractionMode.AutomatedAction);
                     var parent = go.transform.parent;
                     go.transform.SetParent(null, true);
                     PrefabUtility.SaveAsPrefabAsset(go, path);
@@ -88,7 +90,7 @@ namespace KR.Editor.Kigali
                 foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
                     if (t.name == name && PrefabUtility.IsOutermostPrefabInstanceRoot(t.gameObject))
                     {
-                        PrefabUtility.UnpackPrefabInstance(t.gameObject, PrefabUnpackMode.Completely, InteractionMode.UserAction);
+                        PrefabUtility.UnpackPrefabInstance(t.gameObject, PrefabUnpackMode.OutermostRoot, InteractionMode.UserAction);
                         n++;
                     }
             }

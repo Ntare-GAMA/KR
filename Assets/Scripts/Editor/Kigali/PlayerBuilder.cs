@@ -20,6 +20,8 @@ namespace KR.Editor.Kigali
             public Transform Root;
             public string OutDir;
             public PcShowcaseBuilder.Catalog Cat;
+            // City objects carry their own colliders (CityObjects); no merged collision shells for them then.
+            public bool ObjectColliders;
             public System.Random Rng;
             public Vector3[] Hubs;
             public string[] HubNames;
@@ -327,7 +329,7 @@ namespace KR.Editor.Kigali
             cabin.sharedMaterial = slide;
 
             var rb = holder.gameObject.AddComponent<Rigidbody>();
-            rb.mass = 1350f;
+            rb.mass = 1500f;   // a mid-size saloon (CarImpacts.PlayerCarMass sets it at runtime too)
             rb.linearDamping = 0.02f;
             rb.angularDamping = 0.6f;
             rb.centerOfMass = new Vector3(body.center.x, body.min.y + 0.42f, body.center.z + 0.05f);
@@ -362,6 +364,9 @@ namespace KR.Editor.Kigali
                 EditorUtility.SetDirty(m);
             }
             holder.gameObject.AddComponent<CarLights>().Configure(car, beam, heads, Mat("TailLight"), Mat("ReverseLight"));
+            holder.gameObject.AddComponent<CarAudio>().Configure(SourcedAssets.Sound("engine_start"), SourcedAssets.Sound("engine_idle"),
+                SourcedAssets.Sound("engine_rev"), SourcedAssets.Sound("horn"), SourcedAssets.Sound("door_open"),
+                SourcedAssets.Sound("door_close"), SourcedAssets.Sound("skid"), SourcedAssets.Sound("crash"), SourcedAssets.Sound("door_slam"));
             Debug.Log($"[Player] Car lights: {heads.Length} headlamp materials, tail {(Mat("TailLight") != null)}, reverse {(Mat("ReverseLight") != null)}.");
             holder.SetPositionAndRotation(Ground(c, p) + Vector3.up * 0.25f, Quaternion.Euler(0f, yaw, 0f));
             return car;
@@ -491,6 +496,7 @@ namespace KR.Editor.Kigali
             cc.slopeLimit = 55f;
             var motor = go.AddComponent<PlayerMotor>();
             motor.Configure(settings, null, c.Camera.transform, 1 << groundLayer);
+            go.AddComponent<Footsteps>().Configure(SourcedAssets.Sound("footsteps"));
             go.layer = 2;    // Ignore Raycast
             go.SetActive(false);
             return motor;
@@ -607,7 +613,7 @@ namespace KR.Editor.Kigali
             }
 
             int buildings = 0, props = 0;
-            foreach (var s in c.Solids)
+            foreach (var s in c.ObjectColliders ? new List<PcShowcaseBuilder.Solid>() : c.Solids)
                 if (Near(s.Centre))
                 {
                     Upright(s.Centre, s.Yaw, s.W, s.D, s.Bottom, s.Top);
@@ -616,7 +622,7 @@ namespace KR.Editor.Kigali
 
             // Parked cars are scattered as "trees" (for their cull distance) but must be solid all over, not a thin trunk.
             var vehicles = new HashSet<GameObject>(c.Cat != null ? c.Cat.Vehicles : new GameObject[0]);
-            if (c.Scatter != null)
+            if (c.Scatter != null && !c.ObjectColliders)
                 foreach (var (prefab, m, category) in c.Scatter.Placed)
                 {
                     if (category == ScatterCollector.Category.House || category == ScatterCollector.Category.Large)
@@ -646,7 +652,7 @@ namespace KR.Editor.Kigali
                     props++;
                 }
 
-            if (c.TreeTrunks != null)
+            if (c.TreeTrunks != null && !c.ObjectColliders)
                 foreach (var t in c.TreeTrunks)
                     if (Near(t))
                     {

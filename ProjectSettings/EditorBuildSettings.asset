@@ -6,6 +6,12 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/Scenes/Quest Boot.unity
+    guid: 3155fcbc075026d47a1a8dabe2df5e33
+  - enabled: 1
+    path: Assets/Scenes/Quest Menu.unity
+    guid: 72322b23048e34a4e945f987e4ed42ca
+  - enabled: 1
     path: Assets/Scenes/PC Only - Story Kimironko Kibagabaga.unity
     guid: cdee4b3341d5f1644aa03af716803501
   m_configObjects:

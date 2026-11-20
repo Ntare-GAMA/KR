@@ -26,6 +26,7 @@
 *.bytes filter=lfs diff=lfs merge=lfs -text
 *.docx filter=lfs diff=lfs merge=lfs -text
 # Generated worlds and scenes are too large for plain git (some files exceed 100 MB)
-KIGALI[[:space:]]Rush/Assets/World/**/*.asset filter=lfs diff=lfs merge=lfs -text
-KIGALI[[:space:]]Rush/Assets/World/**/*.unity filter=lfs diff=lfs merge=lfs -text
+Assets/World/**/*.asset filter=lfs diff=lfs merge=lfs -text
+Assets/Scenes/*.unity filter=lfs diff=lfs merge=lfs -text
+Assets/World/Editable/*.prefab filter=lfs diff=lfs merge=lfs -text
 KIGALI[[:space:]]Rush/Assets/Scenes/**/*.unity filter=lfs diff=lfs merge=lfs -text

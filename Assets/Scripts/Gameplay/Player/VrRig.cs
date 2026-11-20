@@ -162,6 +162,16 @@ namespace KR.Gameplay.Player
             transform.position += p - _lastPlayer;
             Vector3 fwd = Flat(head.transform.forward);
             Vector3 want = head.transform.position - fwd * eyeForward;
+            // Head far from the body: the scene has just started (the rig still stands where the scene's camera
+            // was) or the body was teleported. Bring the rig to the body; never drag the body to the head (that
+            // once lifted the player 1.5 km into the sky above the overview camera's spot).
+            if (Flat(want - p).sqrMagnitude > 1.5f * 1.5f)
+            {
+                var shift = Flat(p - want);
+                transform.position = new Vector3(transform.position.x + shift.x, p.y, transform.position.z + shift.z);
+                _lastPlayer = p;
+                return;
+            }
             player.MoveBy(Flat(want - p));
             p = player.transform.position;
             Vector3 residual = Flat(want - p);

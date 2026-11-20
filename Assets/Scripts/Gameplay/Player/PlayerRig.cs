@@ -24,6 +24,9 @@ namespace KR.Gameplay.Player
         public PlayerMotor Player => player;
         public DrivableCar Car => car;
         public Vector3 Home => home;
+        // Where you start: on the ground beside the car's driver door (worked out when the scene starts).
+        public Vector3 StartSpot { get; private set; }
+        public float StartYaw { get; private set; }
         public FirstPersonCamera DesktopCamera => firstPerson;
         public string Prompt { get; private set; }
         public IReadOnlyList<(string text, float until)> Toasts => _toasts;
@@ -48,7 +51,11 @@ namespace KR.Gameplay.Player
         {
             player.gameObject.SetActive(true);
             player.Frozen = false;
-            player.Teleport(home, homeYaw);
+            StartSpot = home;
+            StartYaw = homeYaw;
+            BesideCar();
+            player.Teleport(StartSpot, StartYaw);
+            StartCoroutine(ReportHeight());
             if (firstPerson != null)
                 firstPerson.enabled = true;
             RoadNetworkTraffic.Player = player.transform;
@@ -60,6 +67,49 @@ namespace KR.Gameplay.Player
                 if (lights != null)
                     lights.Message += m => Toast(m, 2f);
             }
+        }
+
+        // The spot next to the driver's door (the left side: Rwanda drives on the right), on the ground as the
+        // physics finds it here and now, facing the car. Falls back to the other side, then behind the car.
+        void BesideCar()
+        {
+            if (car == null)
+                return;
+            var t = car.transform;
+            var flatRight = Vector3.ProjectOnPlane(t.right, Vector3.up).normalized;
+            var flatFwd = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized;
+            var tries = new[] { -flatRight * 1.9f + flatFwd * 0.4f, flatRight * 1.9f + flatFwd * 0.4f, -flatFwd * 3.6f };
+            int mask = ~(1 << 2);
+            foreach (var offset in tries)
+            {
+                var spot = t.position + offset;
+                // Down from just above the car's roof: finds the road or yard, not a roof or a tree above it.
+                if (!Physics.Raycast(new Vector3(spot.x, t.position.y + 2.5f, spot.z), Vector3.down, out var hit, 8f, mask, QueryTriggerInteraction.Ignore))
+                    continue;
+                if (hit.collider.attachedRigidbody != null && hit.collider.attachedRigidbody.transform == t)
+                    continue;
+                var ground = hit.point;
+                // Room for a standing person (capsule from ankle to head height).
+                if (Physics.CheckCapsule(ground + Vector3.up * 0.4f, ground + Vector3.up * 1.6f, 0.3f, mask, QueryTriggerInteraction.Ignore))
+                    continue;
+                StartSpot = ground;
+                var look = t.position - ground;
+                look.y = 0f;
+                StartYaw = look.sqrMagnitude > 0.01f ? Quaternion.LookRotation(look).eulerAngles.y : homeYaw;
+                return;
+            }
+        }
+
+        // A line in the log a few seconds after you appear: feet, eyes and the ground under you, to check the
+        // start height on the headset (adb logcat -s Unity).
+        System.Collections.IEnumerator ReportHeight()
+        {
+            yield return new WaitForSecondsRealtime(4f);
+            var p = player.transform.position;
+            float ground = Physics.Raycast(p + Vector3.up * 1f, Vector3.down, out var hit, 50f, ~(1 << 2), QueryTriggerInteraction.Ignore) ? hit.point.y : float.NaN;
+            var cam = Camera.main;
+            Debug.Log($"[Start] feet {p:F2}, ground {ground:F2}, eyes {(cam != null ? cam.transform.position.ToString("F2") : "none")}, " +
+                      $"car {(car != null ? car.transform.position.ToString("F2") : "none")}, VR {VrRig.Active}, mode {CurrentMode}");
         }
 
         void Update()

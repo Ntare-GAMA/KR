@@ -95,13 +95,13 @@ namespace KR.Editor.Kigali
             return result;
         }
 
-        public void Add(GameObject prefab, Matrix4x4 matrix, Category category)
+        public int Add(GameObject prefab, Matrix4x4 matrix, Category category)
         {
             if (prefab == null)
-                return;
+                return -1;
             var pp = Get(prefab);
             if (pp.Parts.Count == 0)
-                return;
+                return -1;
             Vector3 pos = matrix.GetColumn(3);
             int cx = Mathf.Clamp((int)(pos.x / _chunkSize), 0, _chunksX - 1);
             int cz = Mathf.Clamp((int)(pos.z / _chunkSize), 0, _chunksZ - 1);
@@ -133,7 +133,23 @@ namespace KR.Editor.Kigali
             }
             Placed.Add((prefab, matrix, category));
             Count++;
+            return Placed.Count - 1;
         }
+
+        // Things that belong to a placed object and must move with it when it is edited by hand: a lamp's light
+        // points, a traffic signal's head. They become its children when the city is written as objects.
+        public readonly Dictionary<int, List<Transform>> Attached = new Dictionary<int, List<Transform>>();
+
+        public void Attach(int placed, Transform t)
+        {
+            if (placed < 0 || t == null)
+                return;
+            if (!Attached.TryGetValue(placed, out var list))
+                Attached[placed] = list = new List<Transform>();
+            list.Add(t);
+        }
+
+        public static (float cull, bool shadows) Settings(Category c) => CategorySettings[(int)c];
 
         // Uniform scale so the longest horizontal side equals length; models built along X are turned to face +Z.
         public Matrix4x4 FitLength(GameObject prefab, Vector3 pos, float yaw, float length)

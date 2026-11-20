@@ -36,6 +36,16 @@ namespace KR.Gameplay.World
 
         public void CancelWave() => _waveStart = -1f;
 
+        // Lamps placed as objects carry LampHead markers: light them wherever they now stand.
+        void Start()
+        {
+            if (LampHead.All.Count == 0)
+                return;
+            lamps = new Vector3[LampHead.All.Count];
+            for (int i = 0; i < lamps.Length; i++)
+                lamps[i] = LampHead.All[i].transform.position;
+        }
+
         void Awake()
         {
             _lights = new Light[poolSize];

@@ -16,31 +16,32 @@ namespace KR.Editor.Characters
     {
         const string AvatarDir = "Assets/Art/Characters/Avatars";
 
-        // Human bone -> bone names in the City Pack rigs (Quaternius first, then the Mixamo-style "Animated Woman").
+        // Human bone -> bone names in the City Pack rigs (Quaternius first, then the Mixamo-style "Animated Woman"),
+        // then Blender's Rigify "metarig" (the Floreswa low-poly people).
         static readonly (string human, string[] names, bool required)[] Map =
         {
-            ("Hips", new[] { "Hips" }, true),
-            ("Spine", new[] { "Abdomen", "Spine" }, true),
-            ("Chest", new[] { "Torso", "Spine1" }, false),
-            ("UpperChest", new[] { "Chest", "Spine2" }, false),
-            ("Neck", new[] { "Neck" }, false),
-            ("Head", new[] { "Head" }, true),
-            ("LeftShoulder", new[] { "Shoulder.L", "LeftShoulder" }, false),
-            ("LeftUpperArm", new[] { "UpperArm.L", "LeftArm" }, true),
-            ("LeftLowerArm", new[] { "LowerArm.L", "LeftForeArm" }, true),
-            ("LeftHand", new[] { "Wrist.L", "Palm.L", "LeftHand" }, true),
-            ("RightShoulder", new[] { "Shoulder.R", "RightShoulder" }, false),
-            ("RightUpperArm", new[] { "UpperArm.R", "RightArm" }, true),
-            ("RightLowerArm", new[] { "LowerArm.R", "RightForeArm" }, true),
-            ("RightHand", new[] { "Wrist.R", "Palm.R", "RightHand" }, true),
-            ("LeftUpperLeg", new[] { "UpperLeg.L", "LeftUpLeg" }, true),
-            ("LeftLowerLeg", new[] { "LowerLeg.L", "LeftLeg" }, true),
-            ("LeftFoot", new[] { "Foot.L", "LeftFoot" }, true),
-            ("LeftToes", new[] { "LeftToeBase" }, false),
-            ("RightUpperLeg", new[] { "UpperLeg.R", "RightUpLeg" }, true),
-            ("RightLowerLeg", new[] { "LowerLeg.R", "RightLeg" }, true),
-            ("RightFoot", new[] { "Foot.R", "RightFoot" }, true),
-            ("RightToes", new[] { "RightToeBase" }, false),
+            ("Hips", new[] { "Hips", "spine" }, true),
+            ("Spine", new[] { "Abdomen", "Spine", "spine.001" }, true),
+            ("Chest", new[] { "Torso", "Spine1", "spine.002" }, false),
+            ("UpperChest", new[] { "Chest", "Spine2", "spine.003" }, false),
+            ("Neck", new[] { "Neck", "spine.004" }, false),
+            ("Head", new[] { "Head", "spine.006", "spine.005" }, true),
+            ("LeftShoulder", new[] { "Shoulder.L", "LeftShoulder", "shoulder.L" }, false),
+            ("LeftUpperArm", new[] { "UpperArm.L", "LeftArm", "upper_arm.L" }, true),
+            ("LeftLowerArm", new[] { "LowerArm.L", "LeftForeArm", "forearm.L" }, true),
+            ("LeftHand", new[] { "Wrist.L", "Palm.L", "LeftHand", "hand.L" }, true),
+            ("RightShoulder", new[] { "Shoulder.R", "RightShoulder", "shoulder.R" }, false),
+            ("RightUpperArm", new[] { "UpperArm.R", "RightArm", "upper_arm.R" }, true),
+            ("RightLowerArm", new[] { "LowerArm.R", "RightForeArm", "forearm.R" }, true),
+            ("RightHand", new[] { "Wrist.R", "Palm.R", "RightHand", "hand.R" }, true),
+            ("LeftUpperLeg", new[] { "UpperLeg.L", "LeftUpLeg", "thigh.L" }, true),
+            ("LeftLowerLeg", new[] { "LowerLeg.L", "LeftLeg", "shin.L" }, true),
+            ("LeftFoot", new[] { "Foot.L", "LeftFoot", "foot.L" }, true),
+            ("LeftToes", new[] { "LeftToeBase", "toe.L" }, false),
+            ("RightUpperLeg", new[] { "UpperLeg.R", "RightUpLeg", "thigh.R" }, true),
+            ("RightLowerLeg", new[] { "LowerLeg.R", "RightLeg", "shin.R" }, true),
+            ("RightFoot", new[] { "Foot.R", "RightFoot", "foot.R" }, true),
+            ("RightToes", new[] { "RightToeBase", "toe.R" }, false),
         };
 
         static readonly Dictionary<GameObject, Avatar> Cache = new Dictionary<GameObject, Avatar>();

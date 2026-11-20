@@ -42,6 +42,18 @@ namespace KR.Gameplay.World
             offMaterial = off;
         }
 
+        // Heads placed as SignalHead components (on their poles, editable by hand) replace the built list.
+        void Awake()
+        {
+            var heads = FindObjectsByType<SignalHead>(FindObjectsInactive.Include, FindObjectsSortMode.None);
+            if (heads.Length == 0)
+                return;
+            lamps = new Lamp[heads.Length];
+            for (int i = 0; i < heads.Length; i++)
+                lamps[i] = new Lamp { head = heads[i].gameObject, red = heads[i].red, amber = heads[i].amber, green = heads[i].green,
+                                      junction = heads[i].junction, phase = heads[i].phase };
+        }
+
         public int State(int junction, int phase)
         {
             if (offsets == null || junction < 0 || junction >= offsets.Length)

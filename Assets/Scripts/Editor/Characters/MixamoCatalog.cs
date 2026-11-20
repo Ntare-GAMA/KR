@@ -100,6 +100,16 @@ namespace KR.Editor.Characters
         public static readonly Dictionary<Activity, Role> Roles = new Dictionary<Activity, Role>
         {
             // Pedestrians on the footpaths.
+            // A waiter or waitress: carries a tray as they walk, bows to greet, points to show you your table.
+            [Activity.Serve] = new Role
+            {
+                Idle = new[] { "Breathing Idle", "Standing Idle", "Female Standing Idle", "Weight Shift Idle" },
+                Move = new[] { "Holding An Object While Walking" },
+                Talk = Conversation,
+                Greet = new[] { "Quick Informal Bow", "Greeting While Standing" },
+                Actions = new[] { new[] { "Aj Pointing Gesture" }, new[] { "Quick Informal Bow" }, new[] { "Acknowledging Gesture", "Agreeing Yes" } },
+                ActionEvery = new Vector2(30f, 60f),
+            },
             [Activity.Walk] = new Role
             {
                 Idle = Standing, Move = Join(Walks, new[] { "Male Walking With Shopping Bag", "Holding An Object While Walking" }),

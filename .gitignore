@@ -6,6 +6,7 @@ SourceArt/GIS/*.pbf
 SourceArt/GIS/*.tif
 SourceArt/GIS/*.geojson
 SourceArt/Footage/
+SourceArt/Archives/
 # Raw Mixamo download library (re-downloadable; the curated set is imported into Assets/Art/Animations/Mixamo)
 SourceArt/Mixamo Animations/
 # Third-party stock and web photos used only as reference
@@ -50,3 +51,4 @@ CLAUDE.md
 Documentation/MTN Proposal/
 *MTN*Proposal*
 KigaliRush_Implementation_Brief*.md
+SourceArt/Audio/

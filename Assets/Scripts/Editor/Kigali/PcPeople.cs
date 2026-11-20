@@ -14,7 +14,7 @@ namespace KR.Editor.Kigali
     // PersonAnimator with clips for their role (Characters/MixamoCatalog); otherwise the closest clip in the model loops.
     internal static class PcPeople
     {
-        public enum Activity { Walk, Idle, Run, Dance, Work, Talk, Wave, Vendor, Shopper, Wait, Watch, Stroll, Cheer, Keeper }
+        public enum Activity { Walk, Idle, Run, Dance, Work, Talk, Wave, Vendor, Shopper, Wait, Watch, Stroll, Cheer, Keeper, Serve }
 
         // Fallback without Mixamo: clip name keywords per activity, in order of preference ("...|Walk").
         static readonly Dictionary<Activity, string[]> Keywords = new Dictionary<Activity, string[]>
@@ -33,6 +33,7 @@ namespace KR.Editor.Kigali
             [Activity.Stroll] = new[] { "Walk" },
             [Activity.Cheer] = new[] { "Yes", "Wave", "Idle" },
             [Activity.Keeper] = new[] { "Idle" },
+            [Activity.Serve] = new[] { "Idle" },
         };
         static readonly Color[] Tones = { new Color(0.36f, 0.22f, 0.14f), new Color(0.45f, 0.29f, 0.18f), new Color(0.27f, 0.16f, 0.10f) };
 

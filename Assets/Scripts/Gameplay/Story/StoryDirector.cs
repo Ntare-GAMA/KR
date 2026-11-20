@@ -366,7 +366,13 @@ namespace KR.Gameplay.Story
             _trackTimer = 0f;
             State = Phase.Rushing;
             if (Current.startAtPoint && motor != null)
-                motor.Teleport(Current.startPoint, 0f);
+            {
+                // The first milestone starts at home: that is now the spot beside your car.
+                if (rig != null && (Current.startPoint - rig.Home).sqrMagnitude < 4f)
+                    motor.Teleport(rig.StartSpot, rig.StartYaw);
+                else
+                    motor.Teleport(Current.startPoint, 0f);
+            }
             Result(Current.id).attempts++;
             _ghostBest = LoadGhost(Current.id);
             Notify($"GO! {Current.title}: par {Mmss(Current.parSeconds)}", 3f);
