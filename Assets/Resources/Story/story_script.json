@@ -430,6 +430,11 @@
      "text": "Muraho! Welcome to {place}. Table for one, or something to take away?",
      "choices": [
       {
+       "text": "I'd like to eat inside, please.",
+       "next": "inside",
+       "setFlag": "dine_in"
+      },
+      {
        "text": "A cup of African tea, please.",
        "next": "tea",
        "setFlag": "order_tea"
@@ -487,6 +492,11 @@
      "id": "bye",
      "speaker": "npc",
      "text": "No problem. Come back any time!"
+    },
+    {
+     "id": "inside",
+     "speaker": "npc",
+     "text": "Of course! Murakaza neza. Come in, my colleague will show you to a table."
     }
    ]
   },
@@ -1155,6 +1165,112 @@
      "speaker": "npc",
      "text": "Thank you. Next time keep your distance and watch the road. Drive safely.",
      "setFlag": "acc_details_exchanged"
+    }
+   ]
+  },
+  {
+   "id": "svc_dine",
+   "npc": "waitress",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Here is the menu. What would you like to eat?",
+     "choices": [
+      {
+       "text": "Goat brochettes with chips, please.",
+       "next": "drink",
+       "setFlag": "order_brochette"
+      },
+      {
+       "text": "The grilled tilapia, please.",
+       "next": "drink",
+       "setFlag": "order_fish"
+      },
+      {
+       "text": "Beef stew with rice, please.",
+       "next": "drink",
+       "setFlag": "order_stew"
+      },
+      {
+       "text": "A plate from the buffet: rice, beans and greens.",
+       "next": "drink",
+       "setFlag": "order_plate"
+      },
+      {
+       "text": "Just something to drink.",
+       "next": "drink"
+      },
+      {
+       "text": "I need a moment to decide.",
+       "next": "later"
+      }
+     ]
+    },
+    {
+     "id": "drink",
+     "speaker": "npc",
+     "text": "And to drink?",
+     "choices": [
+      {
+       "text": "African tea, please.",
+       "next": "ok",
+       "setFlag": "order_tea"
+      },
+      {
+       "text": "A fresh passion juice.",
+       "next": "ok",
+       "setFlag": "order_juice"
+      },
+      {
+       "text": "Just water, thank you.",
+       "next": "ok",
+       "setFlag": "order_water"
+      },
+      {
+       "text": "Nothing to drink, thanks.",
+       "next": "ok"
+      }
+     ]
+    },
+    {
+     "id": "ok",
+     "speaker": "npc",
+     "text": "Very good. It won't be long."
+    },
+    {
+     "id": "later",
+     "speaker": "npc",
+     "text": "Take your time."
+    }
+   ]
+  },
+  {
+   "id": "svc_dine_bill",
+   "npc": "waitress",
+   "start": "a",
+   "nodes": [
+    {
+     "id": "a",
+     "speaker": "npc",
+     "text": "Did you enjoy your meal?",
+     "choices": [
+      {
+       "text": "It was delicious, murakoze!",
+       "next": "thanks",
+       "setFlag": "praised_food"
+      },
+      {
+       "text": "Yes, thank you. Can I have the bill?",
+       "next": "thanks"
+      }
+     ]
+    },
+    {
+     "id": "thanks",
+     "speaker": "npc",
+     "text": "Here is your bill. Thank you for coming to eat with us, see you again!"
     }
    ]
   }
