@@ -19,7 +19,8 @@ namespace KR.Gameplay.Story
 
         StoryDirector _director;
         GameObject _carScreen, _mini, _bigScreen;
-        Text _carText;
+        Text _carText, _radioText;
+        Image _radioFill;
         bool _bigOpen;
 
         public void Configure(Navigator navigator, PlayerRig playerRig, Transform dashboardMount, Material ribbon)
@@ -88,9 +89,49 @@ namespace KR.Gameplay.Story
             _carText.alignment = TextAnchor.UpperLeft;
             _carText.horizontalOverflow = HorizontalWrapMode.Wrap;
             _carText.verticalOverflow = VerticalWrapMode.Truncate;
-            Fill(_carText.rectTransform, 0.46f, 0f, 1f, 1f, 16f);
+            Fill(_carText.rectTransform, 0.46f, 0.17f, 1f, 1f, 16f);
+            Radio(go.transform);
             go.SetActive(false);
             return go;
+        }
+
+        // Radio strip along the bottom of the info side: label and level, a bar, and how to change it.
+        void Radio(Transform screen)
+        {
+            var strip = new GameObject("Radio", typeof(RectTransform)).GetComponent<RectTransform>();
+            strip.SetParent(screen, false);
+            Fill(strip, 0.46f, 0f, 1f, 0.17f, 12f);
+            _radioText = new GameObject("Label", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Text>();
+            _radioText.transform.SetParent(strip, false);
+            _radioText.font = KR.Gameplay.UI.KrTheme.Font(KR.Gameplay.UI.KrTheme.Weight.SemiBold);
+            _radioText.fontSize = 30;
+            _radioText.supportRichText = true;
+            _radioText.alignment = TextAnchor.MiddleLeft;
+            _radioText.horizontalOverflow = HorizontalWrapMode.Overflow;
+            Fill(_radioText.rectTransform, 0f, 0f, 0.42f, 1f, 4f);
+            var bar = new GameObject("Bar", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Image>();
+            bar.transform.SetParent(strip, false);
+            bar.color = new Color(1f, 1f, 1f, 0.15f);
+            Fill(bar.rectTransform, 0.42f, 0.36f, 0.98f, 0.64f, 0f);
+            _radioFill = new GameObject("Fill", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Image>();
+            _radioFill.transform.SetParent(bar.transform, false);
+            _radioFill.type = Image.Type.Filled;
+            _radioFill.fillMethod = Image.FillMethod.Horizontal;
+            Fill(_radioFill.rectTransform, 0f, 0f, 1f, 1f, 0f);
+        }
+
+        void ShowRadio()
+        {
+            if (_radioText == null)
+                return;
+            var radio = CarRadio.Instance;
+            float v = CarRadio.Volume;
+            bool lit = radio != null && Time.unscaledTime - radio.ChangedAt < 2f;
+            string hint = VrRig.Active ? "right stick up/down" : "- / + keys";
+            _radioText.text = radio == null ? "<color=#888888>RADIO  —</color>"
+                : $"<b>RADIO</b>  {(v <= 0.001f ? "<color=#888888>OFF</color>" : $"{Mathf.RoundToInt(v * 100f)}%")}   <size=22><color=#999999>{hint}</color></size>";
+            _radioFill.fillAmount = v;
+            _radioFill.color = lit ? KR.Gameplay.UI.KrTheme.Accent : KR.Gameplay.UI.KrTheme.Red;
         }
 
         static void Fill(RectTransform r, float x0, float y0, float x1, float y1, float pad)
@@ -139,6 +180,7 @@ namespace KR.Gameplay.Story
             {
                 _carText.fontSize = Comfort.LargeText ? 36 : 30;
                 _carText.text = StoryInfo.Compose(_director, rig, nav, true);
+                ShowRadio();
             }
         }
 

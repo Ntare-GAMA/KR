@@ -11,13 +11,14 @@ namespace KR.Gameplay.Player
     //   Accelerate: W / right trigger    Brake: S / left trigger    Gear D/R: R / right stick click
     //   Steer: A,D / left stick    Handbrake: Space / B    Headlights: L / left stick click
     //   Info panel (walking): left menu button / Tab    Full map (desktop): M    Next destination: N / right grip
+    //   Car radio volume (driving): right stick up/down / - and +
     public static class RigInput
     {
         static int _frame = -1;
         static bool _use, _confirm, _belt, _wasUse, _wasConfirm, _wasBelt;
         static bool _gear, _lights, _map, _dest, _menu, _wasGear, _wasLights, _wasMap, _wasDest, _wasMenu;
-        static bool _shutter, _wasShutter, _navReady = true;
-        static int _navX, _navY;
+        static bool _shutter, _wasShutter, _navReady = true, _radioReady = true;
+        static int _navX, _navY, _radio;
 
         public static Vector2 Move
         {
@@ -118,6 +119,8 @@ namespace KR.Gameplay.Player
         // Menu navigation on the info panel and in conversations: left stick (arrows / W S A D on a desktop).
         public static int NavX { get { Refresh(); return _navX; } }
         public static int NavY { get { Refresh(); return _navY; } }
+        // Car radio volume while driving: right stick up/down, one step per push (- and + keys on a desktop).
+        public static int RadioStep { get { Refresh(); return _radio; } }
 
         // How closed each real hand is (grip and trigger squeezed), 0 to 1, for the hand models' fingers.
         public static float HandClosed(bool left)
@@ -129,6 +132,9 @@ namespace KR.Gameplay.Player
         public static bool UsePressed { get { Refresh(); return _use; } }
         public static bool ConfirmPressed { get { Refresh(); return _confirm; } }
         public static bool BeltPressed { get { Refresh(); return _belt; } }
+        // Horn (held): H, or the left grip while driving (both hands are on the wheel).
+        public static bool Horn =>
+            Keyboard.current != null && Keyboard.current.hKey.isPressed || Axis(XRController.leftHand, "grip") > 0.7f;
 
         // Edge detection once per frame, so several readers see the same press.
         static void Refresh()
@@ -184,6 +190,21 @@ namespace KR.Gameplay.Player
                 if (kb.rightArrowKey.wasPressedThisFrame) _navX = 1;
             }
             _wasDest = dest;
+
+            var right = Stick(XRController.rightHand);
+            _radio = 0;
+            if (Mathf.Abs(right.y) < 0.3f)
+                _radioReady = true;
+            else if (_radioReady && Mathf.Abs(right.y) > 0.7f && Mathf.Abs(right.y) > Mathf.Abs(right.x))
+            {
+                _radioReady = false;
+                _radio = right.y > 0f ? 1 : -1;
+            }
+            if (kb != null)
+            {
+                if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) _radio = -1;
+                if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) _radio = 1;
+            }
         }
 
         // Control names differ slightly between OpenXR interaction profiles; try the common ones.
