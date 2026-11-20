@@ -1,0 +1,294 @@
+{
+ "al_chat_j1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Aline/ElevenLabs_audio_elevenlabs-v4_[excited] Hey! _2026-11-20T18_02_28.mp3"
+ ],
+ "al_chat_j2.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Aline/ElevenLabs_audio_elevenlabs-v4_Great. Bring th_2026-11-20T18_02_27.mp3"
+ ],
+ "al_chat_j2b.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Aline/ElevenLabs_audio_elevenlabs-v4_[laughs] No way_2026-11-20T18_02_34.mp3"
+ ],
+ "gk_chat_i1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_The stall opens_2026-11-20T17_55_30.mp3"
+ ],
+ "gk_market_h1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_Muraho, young o_2026-11-20T17_55_42.mp3"
+ ],
+ "gk_market_h2.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_A poster_ Then _2026-11-20T17_55_27.mp3"
+ ],
+ "gk_market_h2b.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_[chuckles] Brig_2026-11-20T17_55_30.mp3"
+ ],
+ "gk_market_h3.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_Choose one._2026-11-20T17_55_30.mp3"
+ ],
+ "gk_market_h4.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_Good choice. Fo_2026-11-20T17_55_41.mp3"
+ ],
+ "gk_market_h6.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Mzee Gakuba/ElevenLabs_audio_elevenlabs-v4_Come back when _2026-11-20T17_55_27.mp3"
+ ],
+ "jp_chat_e1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Jean-Paul-jp-chat/ElevenLabs_audio_elevenlabs-v4_The quiet room _2026-11-20T17_44_09.mp3"
+ ],
+ "jp_library_d3.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Jean-Paul-jp-library/ElevenLabs_audio_elevenlabs-v4_Start with the _2026-11-20T17_35_39.mp3"
+ ],
+ "jp_library_d5.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Jean-Paul-jp-library/ElevenLabs_audio_elevenlabs-v4_Good. Come back_2026-11-20T17_35_39.mp3"
+ ],
+ "mf_chat_c1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/MF-Chats/ElevenLabs_audio_elevenlabs-v4_Muraho! Are you_2026-11-20T17_32_22.mp3"
+ ],
+ "mf_chat_c2.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/MF-Chats/ElevenLabs_audio_elevenlabs-v4_Greet the neigh_2026-11-20T17_32_22.mp3"
+ ],
+ "mf_tea_a1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_[warmly] Mwa..._2026-11-20T16_56_46.mp3"
+ ],
+ "mf_tea_a2.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_[delighted] ..._2026-11-20T16_56_46.mp3"
+ ],
+ "mf_tea_a2b.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_You are welc..._2026-11-20T16_57_17.mp3"
+ ],
+ "mf_tea_a3.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_So, how is F..._2026-11-20T16_57_02.mp3"
+ ],
+ "mf_tea_a4.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_[pleased] A ..._2026-11-20T16_57_12.mp3"
+ ],
+ "mf_tea_a4b.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_[amused] The..._2026-11-20T16_57_02.mp3"
+ ],
+ "mf_tea_a5.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_You came by ..._2026-11-20T16_57_17.mp3"
+ ],
+ "mf_tea_a6.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Maman_Fils Sounds-ElevenLabs_Creative_Agent_Generations/ElevenLabs_audio_eleven-v-4_[warmly] Com..._2026-11-20T16_56_54.mp3"
+ ],
+ "mf_thanks_b1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/MF-Thanks/ElevenLabs_audio_elevenlabs-v4_Mwiriwe! You lo_2026-11-20T17_26_30.mp3"
+ ],
+ "mf_thanks_b2.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/MF-Thanks/ElevenLabs_audio_elevenlabs-v4_Before the dead_2026-11-20T17_26_39.mp3"
+ ],
+ "mf_thanks_b4.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/MF-Thanks/ElevenLabs_audio_elevenlabs-v4_The door is alw_2026-11-20T17_26_39.mp3"
+ ],
+ "off_chat_g1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Seatbelt on, sp_2026-11-20T17_49_56.mp3"
+ ],
+ "off_lesson_f1.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Mwaramutse. I a_2026-11-20T17_50_02.mp3"
+ ],
+ "off_lesson_f1b.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Three questions_2026-11-20T17_49_47.mp3"
+ ],
+ "off_lesson_f2.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_First_ in Rwand_2026-11-20T17_49_54.mp3"
+ ],
+ "off_lesson_f3.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Second_ when an_2026-11-20T17_49_48.mp3"
+ ],
+ "off_lesson_f4.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Third_ if an of_2026-11-20T17_50_00.mp3"
+ ],
+ "off_lesson_f5.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Now, the questi_2026-11-20T17_49_53.mp3"
+ ],
+ "off_lesson_f6.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/Officer Mukamana/ElevenLabs_audio_elevenlabs-v4_Thank you. [war_2026-11-20T17_49_56.mp3"
+ ],
+ "svc_alu_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Welcome to ALU!_2026-11-20T20_09_48.mp3"
+ ],
+ "svc_alu_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Have a great da_2026-11-20T20_09_57.mp3"
+ ],
+ "svc_alu_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good luck with _2026-11-20T20_09_48.mp3"
+ ],
+ "svc_alu_food.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_The canteen is _2026-11-20T20_08_37.mp3"
+ ],
+ "svc_alu_study.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_The library and_2026-11-20T20_08_37.mp3"
+ ],
+ "svc_bank_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good day! Welco_2026-11-20T19_54_41.mp3"
+ ],
+ "svc_bank_acct.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Bring your ID a_2026-11-20T19_55_07.mp3"
+ ],
+ "svc_bank_atm.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Just outside, o_2026-11-20T19_54_41.mp3"
+ ],
+ "svc_bank_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_You're welcome._2026-11-20T19_54_57.mp3"
+ ],
+ "svc_bank_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Thank you for c_2026-11-20T19_54_46.mp3"
+ ],
+ "svc_bar_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Hello! Welcome _2026-11-20T18_46_11.mp3"
+ ],
+ "svc_bar_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_All right. See _2026-11-20T18_46_06.mp3"
+ ],
+ "svc_bar_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Enjoy your even_2026-11-20T18_46_16.mp3"
+ ],
+ "svc_bar_soda.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_One soda, cold._2026-11-20T18_46_06.mp3"
+ ],
+ "svc_bar_tv.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_There is always_2026-11-20T18_46_21.mp3"
+ ],
+ "svc_clinic_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good day, welco_2026-11-20T18_49_50.mp3",
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Do you have an _2026-11-20T19_54_40.mp3"
+ ],
+ "svc_clinic_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_All right. Take_2026-11-20T19_54_43.mp3"
+ ],
+ "svc_clinic_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Have a good day_2026-11-20T19_54_57.mp3"
+ ],
+ "svc_clinic_info.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Here is a leafl_2026-11-20T19_55_02.mp3"
+ ],
+ "svc_clinic_visit.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Visitors sign i_2026-11-20T19_54_52.mp3"
+ ],
+ "svc_food_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_[warmly] Muraho_2026-11-20T181357.mp3"
+ ],
+ "svc_food_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_No problem. Com_2026-11-20T18_37_36.mp3"
+ ],
+ "svc_food_eat.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_The buffet is f_2026-11-20T181530.mp3"
+ ],
+ "svc_food_inside.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Of course! Mura_2026-11-20T181537.mp3"
+ ],
+ "svc_food_tea.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_African tea, co_2026-11-20T181529.mp3"
+ ],
+ "svc_food_water.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Here you are. C_2026-11-20T181539.mp3"
+ ],
+ "svc_garage_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good day! What _2026-11-20T20_01_31.mp3"
+ ],
+ "svc_garage_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_No problem. Dri_2026-11-20T20_07_12.mp3"
+ ],
+ "svc_garage_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Thank you, and _2026-11-20T20_06_04.mp3"
+ ],
+ "svc_garage_fuel.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Filling up now._2026-11-20T20_04_56.mp3"
+ ],
+ "svc_garage_tyres.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Sure. They were_2026-11-20T20_05_57.mp3"
+ ],
+ "svc_gym_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Hey! Welcome he_2026-11-20T20_08_39.mp3"
+ ],
+ "svc_gym_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Any time._2026-11-20T20_09_43.mp3"
+ ],
+ "svc_gym_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_See you on the _2026-11-20T20_09_43.mp3"
+ ],
+ "svc_gym_pass.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Ask at the desk_2026-11-20T20_08_45.mp3"
+ ],
+ "svc_hotel_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Welcome here! A_2026-11-20T20_02_31.mp3"
+ ],
+ "svc_hotel_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Have a lovely d_2026-11-20T20_02_52.mp3"
+ ],
+ "svc_hotel_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Enjoy your stay_2026-11-20T20_03_01.mp3"
+ ],
+ "svc_hotel_meet.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Of course. The _2026-11-20T20_02_59.mp3"
+ ],
+ "svc_hotel_room.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Let me check..._2026-11-20T20_02_53.mp3"
+ ],
+ "svc_office_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good day, welco_2026-11-20T20_04_08.mp3"
+ ],
+ "svc_office_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_No problem!_2026-11-20T20_07_22.mp3"
+ ],
+ "svc_office_dir.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Your phone's ma_2026-11-20T20_06_03.mp3"
+ ],
+ "svc_office_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Have a good day_2026-11-20T20_05_52.mp3"
+ ],
+ "svc_office_meet.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Please sign in _2026-11-20T20_07_13.mp3"
+ ],
+ "svc_pharmacy_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good day. Welco_2026-11-20T18_37_52.mp3"
+ ],
+ "svc_pharmacy_basic.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Here you are. A_2026-11-20T18_46_09.mp3"
+ ],
+ "svc_pharmacy_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Of course. Stay_2026-11-20T181530.mp3"
+ ],
+ "svc_pharmacy_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Take care of yo_2026-11-20T18_49_50.mp3"
+ ],
+ "svc_pharmacy_rx.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Let me see it. _2026-11-20T18_37_55.mp3"
+ ],
+ "svc_salon_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_mu.ɾɑ.ɦo! Wel_2026-11-20T20_03_08.mp3"
+ ],
+ "svc_salon_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_All right, see _2026-11-20T19_54_42.mp3"
+ ],
+ "svc_salon_done.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Looking good! C_2026-11-20T20_01_31.mp3"
+ ],
+ "svc_salon_trim.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Sit here. Ten m_2026-11-20T20_03_07.mp3"
+ ],
+ "svc_salon_wait.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Two people befo_2026-11-20T20_03_04.mp3"
+ ],
+ "svc_school_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Good day. Welco_2026-11-20T20_05_53.mp3"
+ ],
+ "svc_school_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Have a good day_2026-11-20T20_08_39.mp3"
+ ],
+ "svc_school_look.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_You're welcome._2026-11-20T20_07_23.mp3"
+ ],
+ "svc_shop_a.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Muraho! Welcome_2026-11-20T181544.mp3"
+ ],
+ "svc_shop_bye.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Take your time._2026-11-20T18_49_38.mp3"
+ ],
+ "svc_shop_credit.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Yes, at the cou_2026-11-20T18_49_38.mp3"
+ ],
+ "svc_shop_house.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Soap, sugar, ri_2026-11-20T18_46_21.mp3"
+ ],
+ "svc_shop_paid.wav": [
+  "Assets/Sourced Assets/ElevenLabs Audio/ElevenLabs_audio_elevenlabs-v4_Thank you! Mura_2026-11-20T18_49_41.mp3"
+ ]
+}

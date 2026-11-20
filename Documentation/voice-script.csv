@@ -1,0 +1,186 @@
+file,character,voice,line,notes,conversation,node
+mf_tea_a1.wav,Maman Fils,woman,"Mwaramutse! You found the house. Fils told me his friend from ALU was coming. Come in, come in.",Kinyarwanda: mwaramutse (native speaker to check),mf_tea,a1
+mf_tea_a2.wav,Maman Fils,woman,"Ni meza! You are learning Kinyarwanda, good. Sit down, the icyayi is ready.","Kinyarwanda: ni meza, icyayi (native speaker to check)",mf_tea,a2
+mf_tea_a2b.wav,Maman Fils,woman,"You are welcome here. Next time, try 'Mwaramutse'; it makes an old woman happy. Sit down, the icyayi is ready.","Kinyarwanda: mwaramutse, icyayi (native speaker to check)",mf_tea,a2b
+mf_tea_a3.wav,Maman Fils,woman,"So, how is Fils doing on campus? He never tells me anything.",,mf_tea,a3
+mf_tea_a4.wav,Maman Fils,woman,"A group project! Then you must all finish it together. Drink, before it gets cold.",,mf_tea,a4
+mf_tea_a4b.wav,Maman Fils,woman,"The first? That boy? You are being kind. Drink, before it gets cold.",,mf_tea,a4b
+mf_tea_a5.wav,Maman Fils,woman,You came by car? Drive carefully on the way back. The roads near the market are busy at this hour.,,mf_tea,a5
+mf_tea_a6.wav,Maman Fils,woman,Come back when the summative is finished and tell me how it went.,,mf_tea,a6
+mf_thanks_b1.wav,Maman Fils,woman,"Mwiriwe! You look tired, but happy. Is it finished?",Kinyarwanda: mwiriwe (native speaker to check),mf_thanks,b1
+mf_thanks_b2.wav,Maman Fils,woman,Before the deadline! That is how it should be. I am proud of you both.,,mf_thanks,b2
+mf_thanks_b2b.wav,Maman Fils,woman,Ha! Then the poster will be beautiful. I am proud of you both.,,mf_thanks,b2b
+mf_thanks_b4.wav,Maman Fils,woman,"The door is always open. Now go and rest, and drive slowly.",,mf_thanks,b4
+mf_chat_c1.wav,Maman Fils,woman,Muraho! Are you looking for Fils? He is on campus all day this week.,Kinyarwanda: muraho (native speaker to check),mf_chat,c1
+mf_chat_c2.wav,Maman Fils,woman,Greet the neighbours on your way. A street is friendlier when people say hello.,,mf_chat,c2
+jp_library_d1.wav,Jean-Paul,man,Good morning. You look like someone with a summative due on Wednesday.,,jp_library,d1
+jp_library_d2.wav,Jean-Paul,man,Everyone who walks in this week has the same face. Let me help.,,jp_library,d2
+jp_library_d3.wav,Jean-Paul,man,"Start with the two books on your module's reading list, not the whole shelf. Read the summary chapters first.",,jp_library,d3
+jp_library_d4.wav,Jean-Paul,man,Read in short blocks and write three lines of notes after each one. Share the notes with your group tonight.,,jp_library,d4
+jp_library_d5.wav,Jean-Paul,man,Good. Come back if you get stuck. And do not drive and read at the same time!,,jp_library,d5
+jp_library_d5b.wav,Jean-Paul,man,"One today, one tomorrow, so your group can share. Now go, the clock is running.",,jp_library,d5b
+jp_chat_e1.wav,Jean-Paul,man,The quiet room is free this afternoon if your group needs it.,,jp_chat,e1
+off_lesson_f1.wav,Officer Mukamana,woman,"Mwaramutse. I am Officer Mukamana. You are here for the road-safety talk for new drivers? Good. It is short, then three questions.",Kinyarwanda: mwaramutse (native speaker to check),off_lesson,f1
+off_lesson_f1b.wav,Officer Mukamana,woman,"Three questions, right after the talk. Listen well.",,off_lesson,f1b
+off_lesson_f2.wav,Officer Mukamana,woman,"First: in Rwanda, vehicles drive on the right-hand side of the road. Keep right, always.",,off_lesson,f2
+off_lesson_f3.wav,Officer Mukamana,woman,"Second: when an officer is directing traffic, the officer's instructions come before the signs and the traffic lights.",,off_lesson,f3
+off_lesson_f4.wav,Officer Mukamana,woman,"Third: if an officer signals you to stop, you stop. Refusing to stop is an offence with a heavy fine and even prison.",,off_lesson,f4
+off_lesson_f5.wav,Officer Mukamana,woman,"Now, the questions.",,off_lesson,f5
+off_lesson_f6.wav,Officer Mukamana,woman,"Thank you. Drive like that every day and you will not need to see me again, except to say hello.",,off_lesson,f6
+off_chat_g1.wav,Officer Mukamana,woman,"Seatbelt on, speed down, and stop at the white line on red. That is all I ask.",,off_chat,g1
+gk_market_h1.wav,Mzee Gakuba,man,"Muraho, young one! You came just in time; I am closing early today. What are you looking for?",Kinyarwanda: muraho (native speaker to check),gk_market,h1
+gk_market_h2.wav,Mzee Gakuba,man,"A poster? Then you want colour that can be seen from far away. This blue, or this yellow?",,gk_market,h2
+gk_market_h2b.wav,Mzee Gakuba,man,"Bright! You came to the right stall. This blue, or this yellow?",,gk_market,h2b
+gk_market_h3.wav,Mzee Gakuba,man,Choose one.,,gk_market,h3
+gk_market_h4.wav,Mzee Gakuba,man,"Good choice. For a student, a fair price. Carry it carefully, the market is crowded.",,gk_market,h4
+gk_market_h6.wav,Mzee Gakuba,man,Come back when you are rich and famous. Ha!,,gk_market,h6
+gk_chat_i1.wav,Mzee Gakuba,man,The stall opens early tomorrow. Come before the midday crowd.,,gk_chat,i1
+al_chat_j1.wav,Aline,woman,Hey! Did you see the group chat? We meet on campus before the deadline.,,al_chat,j1
+al_chat_j2.wav,Aline,woman,Great. Bring the fabric if you have it.,,al_chat,j2
+al_chat_j2b.wav,Aline,woman,"No way, you have the steady hands. Stand back so the whole building fits!",,al_chat,j2b
+svc_food_a_f.wav,"Staff (cafes, shops, clinics...)",woman,"Muraho! Welcome to {place}. Table for one, or something to take away?",names the business: say it so it works anywhere ('here'); Kinyarwanda: muraho (native speaker to check),svc_food,a
+svc_food_a_m.wav,"Staff (cafes, shops, clinics...)",man,"Muraho! Welcome to {place}. Table for one, or something to take away?",names the business: say it so it works anywhere ('here'); Kinyarwanda: muraho (native speaker to check),svc_food,a
+svc_food_tea_f.wav,"Staff (cafes, shops, clinics...)",woman,"African tea, coming right up. Take a seat outside, I'll bring it over.",,svc_food,tea
+svc_food_tea_m.wav,"Staff (cafes, shops, clinics...)",man,"African tea, coming right up. Take a seat outside, I'll bring it over.",,svc_food,tea
+svc_food_eat_f.wav,"Staff (cafes, shops, clinics...)",woman,"The buffet is fresh today: rice, beans, matoke, greens and meat. Shall I bring you a plate?",,svc_food,eat
+svc_food_eat_m.wav,"Staff (cafes, shops, clinics...)",man,"The buffet is fresh today: rice, beans, matoke, greens and meat. Shall I bring you a plate?",,svc_food,eat
+svc_food_water_f.wav,"Staff (cafes, shops, clinics...)",woman,Here you are. Cold from the fridge.,,svc_food,water
+svc_food_water_m.wav,"Staff (cafes, shops, clinics...)",man,Here you are. Cold from the fridge.,,svc_food,water
+svc_food_served_f.wav,"Staff (cafes, shops, clinics...)",woman,I'll bring it to your table outside. Enjoy! Murakoze for coming to {place}.,names the business: say it so it works anywhere ('here'); Kinyarwanda: murakoze (native speaker to check),svc_food,served
+svc_food_served_m.wav,"Staff (cafes, shops, clinics...)",man,I'll bring it to your table outside. Enjoy! Murakoze for coming to {place}.,names the business: say it so it works anywhere ('here'); Kinyarwanda: murakoze (native speaker to check),svc_food,served
+svc_food_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,No problem. Come back any time!,,svc_food,bye
+svc_food_bye_m.wav,"Staff (cafes, shops, clinics...)",man,No problem. Come back any time!,,svc_food,bye
+svc_food_inside_f.wav,"Staff (cafes, shops, clinics...)",woman,"Of course! Murakaza neza. Come in, my colleague will show you to a table.","Kinyarwanda: murakaza, neza (native speaker to check)",svc_food,inside
+svc_food_inside_m.wav,"Staff (cafes, shops, clinics...)",man,"Of course! Murakaza neza. Come in, my colleague will show you to a table.","Kinyarwanda: murakaza, neza (native speaker to check)",svc_food,inside
+svc_bar_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Hello! Welcome to {place}. What can I get you?,names the business: say it so it works anywhere ('here'),svc_bar,a
+svc_bar_a_m.wav,"Staff (cafes, shops, clinics...)",man,Hello! Welcome to {place}. What can I get you?,names the business: say it so it works anywhere ('here'),svc_bar,a
+svc_bar_soda_f.wav,"Staff (cafes, shops, clinics...)",woman,"One soda, cold. I'll put it on your table.",,svc_bar,soda
+svc_bar_soda_m.wav,"Staff (cafes, shops, clinics...)",man,"One soda, cold. I'll put it on your table.",,svc_bar,soda
+svc_bar_tv_f.wav,"Staff (cafes, shops, clinics...)",woman,"There is always a match somewhere. Come back in the evening, the place fills up.",,svc_bar,tv
+svc_bar_tv_m.wav,"Staff (cafes, shops, clinics...)",man,"There is always a match somewhere. Come back in the evening, the place fills up.",,svc_bar,tv
+svc_bar_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Enjoy your evening at {place}!,names the business: say it so it works anywhere ('here'),svc_bar,done
+svc_bar_done_m.wav,"Staff (cafes, shops, clinics...)",man,Enjoy your evening at {place}!,names the business: say it so it works anywhere ('here'),svc_bar,done
+svc_bar_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,All right. See you another time.,,svc_bar,bye
+svc_bar_bye_m.wav,"Staff (cafes, shops, clinics...)",man,All right. See you another time.,,svc_bar,bye
+svc_shop_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Muraho! Welcome to {place}. Can I help you find something?,names the business: say it so it works anywhere ('here'); Kinyarwanda: muraho (native speaker to check),svc_shop,a
+svc_shop_a_m.wav,"Staff (cafes, shops, clinics...)",man,Muraho! Welcome to {place}. Can I help you find something?,names the business: say it so it works anywhere ('here'); Kinyarwanda: muraho (native speaker to check),svc_shop,a
+svc_shop_house_f.wav,"Staff (cafes, shops, clinics...)",woman,"Soap, sugar, rice, oil... it's all on the shelves. Take a basket and pay at the counter.",,svc_shop,house
+svc_shop_house_m.wav,"Staff (cafes, shops, clinics...)",man,"Soap, sugar, rice, oil... it's all on the shelves. Take a basket and pay at the counter.",,svc_shop,house
+svc_shop_credit_f.wav,"Staff (cafes, shops, clinics...)",woman,"Yes, at the counter. Which network?",,svc_shop,credit
+svc_shop_credit_m.wav,"Staff (cafes, shops, clinics...)",man,"Yes, at the counter. Which network?",,svc_shop,credit
+svc_shop_paid_f.wav,"Staff (cafes, shops, clinics...)",woman,"Thank you! Murakoze, come again to {place}.",names the business: say it so it works anywhere ('here'); Kinyarwanda: murakoze (native speaker to check),svc_shop,paid
+svc_shop_paid_m.wav,"Staff (cafes, shops, clinics...)",man,"Thank you! Murakoze, come again to {place}.",names the business: say it so it works anywhere ('here'); Kinyarwanda: murakoze (native speaker to check),svc_shop,paid
+svc_shop_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,Take your time. Call me if you need anything.,,svc_shop,bye
+svc_shop_bye_m.wav,"Staff (cafes, shops, clinics...)",man,Take your time. Call me if you need anything.,,svc_shop,bye
+svc_pharmacy_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Good day. Welcome to {place}. How can I help?,names the business: say it so it works anywhere ('here'),svc_pharmacy,a
+svc_pharmacy_a_m.wav,"Staff (cafes, shops, clinics...)",man,Good day. Welcome to {place}. How can I help?,names the business: say it so it works anywhere ('here'),svc_pharmacy,a
+svc_pharmacy_basic_f.wav,"Staff (cafes, shops, clinics...)",woman,Here you are. Anything else?,,svc_pharmacy,basic
+svc_pharmacy_basic_m.wav,"Staff (cafes, shops, clinics...)",man,Here you are. Anything else?,,svc_pharmacy,basic
+svc_pharmacy_rx_f.wav,"Staff (cafes, shops, clinics...)",woman,"Let me see it. Please wait a few minutes while I prepare it, and follow the instructions on the box.",,svc_pharmacy,rx
+svc_pharmacy_rx_m.wav,"Staff (cafes, shops, clinics...)",man,"Let me see it. Please wait a few minutes while I prepare it, and follow the instructions on the box.",,svc_pharmacy,rx
+svc_pharmacy_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Take care of yourself!,,svc_pharmacy,done
+svc_pharmacy_done_m.wav,"Staff (cafes, shops, clinics...)",man,Take care of yourself!,,svc_pharmacy,done
+svc_pharmacy_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,Of course. Stay well.,,svc_pharmacy,bye
+svc_pharmacy_bye_m.wav,"Staff (cafes, shops, clinics...)",man,Of course. Stay well.,,svc_pharmacy,bye
+svc_clinic_a_f.wav,"Staff (cafes, shops, clinics...)",woman,"Good day, welcome to {place}. Do you have an appointment?",names the business: say it so it works anywhere ('here'),svc_clinic,a
+svc_clinic_a_m.wav,"Staff (cafes, shops, clinics...)",man,"Good day, welcome to {place}. Do you have an appointment?",names the business: say it so it works anywhere ('here'),svc_clinic,a
+svc_clinic_info_f.wav,"Staff (cafes, shops, clinics...)",woman,"Here is a leaflet with our services and hours. For an emergency, come straight to the front desk.",,svc_clinic,info
+svc_clinic_info_m.wav,"Staff (cafes, shops, clinics...)",man,"Here is a leaflet with our services and hours. For an emergency, come straight to the front desk.",,svc_clinic,info
+svc_clinic_visit_f.wav,"Staff (cafes, shops, clinics...)",woman,"Visitors sign in here, please. Visiting hours are on the board.",,svc_clinic,visit
+svc_clinic_visit_m.wav,"Staff (cafes, shops, clinics...)",man,"Visitors sign in here, please. Visiting hours are on the board.",,svc_clinic,visit
+svc_clinic_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Have a good day.,,svc_clinic,done
+svc_clinic_done_m.wav,"Staff (cafes, shops, clinics...)",man,Have a good day.,,svc_clinic,done
+svc_clinic_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,All right. Take care.,,svc_clinic,bye
+svc_clinic_bye_m.wav,"Staff (cafes, shops, clinics...)",man,All right. Take care.,,svc_clinic,bye
+svc_bank_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Good day! Welcome to {place}. How can we help you today?,names the business: say it so it works anywhere ('here'),svc_bank,a
+svc_bank_a_m.wav,"Staff (cafes, shops, clinics...)",man,Good day! Welcome to {place}. How can we help you today?,names the business: say it so it works anywhere ('here'),svc_bank,a
+svc_bank_acct_f.wav,"Staff (cafes, shops, clinics...)",woman,"Bring your ID and your student card, and a colleague inside will help you. It doesn't take long.",,svc_bank,acct
+svc_bank_acct_m.wav,"Staff (cafes, shops, clinics...)",man,"Bring your ID and your student card, and a colleague inside will help you. It doesn't take long.",,svc_bank,acct
+svc_bank_atm_f.wav,"Staff (cafes, shops, clinics...)",woman,"Just outside, on the left of the door.",,svc_bank,atm
+svc_bank_atm_m.wav,"Staff (cafes, shops, clinics...)",man,"Just outside, on the left of the door.",,svc_bank,atm
+svc_bank_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Thank you for coming to {place}.,names the business: say it so it works anywhere ('here'),svc_bank,done
+svc_bank_done_m.wav,"Staff (cafes, shops, clinics...)",man,Thank you for coming to {place}.,names the business: say it so it works anywhere ('here'),svc_bank,done
+svc_bank_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,You're welcome. Have a good day.,,svc_bank,bye
+svc_bank_bye_m.wav,"Staff (cafes, shops, clinics...)",man,You're welcome. Have a good day.,,svc_bank,bye
+svc_hotel_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Welcome to {place}! Are you checking in?,names the business: say it so it works anywhere ('here'),svc_hotel,a
+svc_hotel_a_m.wav,"Staff (cafes, shops, clinics...)",man,Welcome to {place}! Are you checking in?,names the business: say it so it works anywhere ('here'),svc_hotel,a
+svc_hotel_meet_f.wav,"Staff (cafes, shops, clinics...)",woman,"Of course. The restaurant is straight through, on your right.",,svc_hotel,meet
+svc_hotel_meet_m.wav,"Staff (cafes, shops, clinics...)",man,"Of course. The restaurant is straight through, on your right.",,svc_hotel,meet
+svc_hotel_room_f.wav,"Staff (cafes, shops, clinics...)",woman,"Let me check... yes, we have one. Would you like to see it first?",,svc_hotel,room
+svc_hotel_room_m.wav,"Staff (cafes, shops, clinics...)",man,"Let me check... yes, we have one. Would you like to see it first?",,svc_hotel,room
+svc_hotel_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Enjoy your stay at {place}!,names the business: say it so it works anywhere ('here'),svc_hotel,done
+svc_hotel_done_m.wav,"Staff (cafes, shops, clinics...)",man,Enjoy your stay at {place}!,names the business: say it so it works anywhere ('here'),svc_hotel,done
+svc_hotel_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,Have a lovely day.,,svc_hotel,bye
+svc_hotel_bye_m.wav,"Staff (cafes, shops, clinics...)",man,Have a lovely day.,,svc_hotel,bye
+svc_salon_a_f.wav,"Staff (cafes, shops, clinics...)",woman,"Muraho! Welcome to {place}. Haircut, braids, or just a trim?",names the business: say it so it works anywhere ('here'); Kinyarwanda: muraho (native speaker to check),svc_salon,a
+svc_salon_a_m.wav,"Staff (cafes, shops, clinics...)",man,"Muraho! Welcome to {place}. Haircut, braids, or just a trim?",names the business: say it so it works anywhere ('here'); Kinyarwanda: muraho (native speaker to check),svc_salon,a
+svc_salon_trim_f.wav,"Staff (cafes, shops, clinics...)",woman,Sit here. Ten minutes and you'll look sharp for class.,,svc_salon,trim
+svc_salon_trim_m.wav,"Staff (cafes, shops, clinics...)",man,Sit here. Ten minutes and you'll look sharp for class.,,svc_salon,trim
+svc_salon_wait_f.wav,"Staff (cafes, shops, clinics...)",woman,"Two people before you. Have a seat, there's music.",,svc_salon,wait
+svc_salon_wait_m.wav,"Staff (cafes, shops, clinics...)",man,"Two people before you. Have a seat, there's music.",,svc_salon,wait
+svc_salon_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Looking good! Come back soon.,,svc_salon,done
+svc_salon_done_m.wav,"Staff (cafes, shops, clinics...)",man,Looking good! Come back soon.,,svc_salon,done
+svc_salon_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,"All right, see you next time.",,svc_salon,bye
+svc_salon_bye_m.wav,"Staff (cafes, shops, clinics...)",man,"All right, see you next time.",,svc_salon,bye
+svc_garage_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Good day! What does the car need?,,svc_garage,a
+svc_garage_a_m.wav,"Staff (cafes, shops, clinics...)",man,Good day! What does the car need?,,svc_garage,a
+svc_garage_fuel_f.wav,"Staff (cafes, shops, clinics...)",woman,Filling up now. Please switch off the engine and put your phone away near the pumps.,,svc_garage,fuel
+svc_garage_fuel_m.wav,"Staff (cafes, shops, clinics...)",man,Filling up now. Please switch off the engine and put your phone away near the pumps.,,svc_garage,fuel
+svc_garage_tyres_f.wav,"Staff (cafes, shops, clinics...)",woman,Sure. They were a little low; all four are right now. Safe driving!,,svc_garage,tyres
+svc_garage_tyres_m.wav,"Staff (cafes, shops, clinics...)",man,Sure. They were a little low; all four are right now. Safe driving!,,svc_garage,tyres
+svc_garage_done_f.wav,"Staff (cafes, shops, clinics...)",woman,"Thank you, and drive safely.",,svc_garage,done
+svc_garage_done_m.wav,"Staff (cafes, shops, clinics...)",man,"Thank you, and drive safely.",,svc_garage,done
+svc_garage_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,No problem. Drive safely.,,svc_garage,bye
+svc_garage_bye_m.wav,"Staff (cafes, shops, clinics...)",man,No problem. Drive safely.,,svc_garage,bye
+svc_office_a_f.wav,"Staff (cafes, shops, clinics...)",woman,"Good day, welcome to {place}. Who are you here to see?",names the business: say it so it works anywhere ('here'),svc_office,a
+svc_office_a_m.wav,"Staff (cafes, shops, clinics...)",man,"Good day, welcome to {place}. Who are you here to see?",names the business: say it so it works anywhere ('here'),svc_office,a
+svc_office_dir_f.wav,"Staff (cafes, shops, clinics...)",woman,Your phone's map will get you there. Press N for the satnav if you're driving.,,svc_office,dir
+svc_office_dir_m.wav,"Staff (cafes, shops, clinics...)",man,Your phone's map will get you there. Press N for the satnav if you're driving.,,svc_office,dir
+svc_office_meet_f.wav,"Staff (cafes, shops, clinics...)",woman,"Please sign in when you come back, and I'll call them down.",,svc_office,meet
+svc_office_meet_m.wav,"Staff (cafes, shops, clinics...)",man,"Please sign in when you come back, and I'll call them down.",,svc_office,meet
+svc_office_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Have a good day.,,svc_office,done
+svc_office_done_m.wav,"Staff (cafes, shops, clinics...)",man,Have a good day.,,svc_office,done
+svc_office_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,No problem!,,svc_office,bye
+svc_office_bye_m.wav,"Staff (cafes, shops, clinics...)",man,No problem!,,svc_office,bye
+svc_school_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Good day. Welcome to {place}. Classes are on; can I help you?,names the business: say it so it works anywhere ('here'),svc_school,a
+svc_school_a_m.wav,"Staff (cafes, shops, clinics...)",man,Good day. Welcome to {place}. Classes are on; can I help you?,names the business: say it so it works anywhere ('here'),svc_school,a
+svc_school_look_f.wav,"Staff (cafes, shops, clinics...)",woman,You're welcome. Please don't go into the classrooms during lessons.,,svc_school,look
+svc_school_look_m.wav,"Staff (cafes, shops, clinics...)",man,You're welcome. Please don't go into the classrooms during lessons.,,svc_school,look
+svc_school_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,Have a good day.,,svc_school,bye
+svc_school_bye_m.wav,"Staff (cafes, shops, clinics...)",man,Have a good day.,,svc_school,bye
+svc_gym_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Hey! Welcome to {place}. Ready to train?,names the business: say it so it works anywhere ('here'),svc_gym,a
+svc_gym_a_m.wav,"Staff (cafes, shops, clinics...)",man,Hey! Welcome to {place}. Ready to train?,names the business: say it so it works anywhere ('here'),svc_gym,a
+svc_gym_pass_f.wav,"Staff (cafes, shops, clinics...)",woman,"Ask at the desk inside, they'll explain the options. Bring water and a towel!",,svc_gym,pass
+svc_gym_pass_m.wav,"Staff (cafes, shops, clinics...)",man,"Ask at the desk inside, they'll explain the options. Bring water and a towel!",,svc_gym,pass
+svc_gym_done_f.wav,"Staff (cafes, shops, clinics...)",woman,See you on the floor!,,svc_gym,done
+svc_gym_done_m.wav,"Staff (cafes, shops, clinics...)",man,See you on the floor!,,svc_gym,done
+svc_gym_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,Any time.,,svc_gym,bye
+svc_gym_bye_m.wav,"Staff (cafes, shops, clinics...)",man,Any time.,,svc_gym,bye
+svc_alu_a_f.wav,"Staff (cafes, shops, clinics...)",woman,Welcome to ALU! How can I help you today?,,svc_alu,a
+svc_alu_a_m.wav,"Staff (cafes, shops, clinics...)",man,Welcome to ALU! How can I help you today?,,svc_alu,a
+svc_alu_study_f.wav,"Staff (cafes, shops, clinics...)",woman,The library and the study rooms are open all day. Keep your voice down and you'll be fine.,,svc_alu,study
+svc_alu_study_m.wav,"Staff (cafes, shops, clinics...)",man,The library and the study rooms are open all day. Keep your voice down and you'll be fine.,,svc_alu,study
+svc_alu_food_f.wav,"Staff (cafes, shops, clinics...)",woman,The canteen is just across the courtyard. Lunch is ready from midday.,,svc_alu,food
+svc_alu_food_m.wav,"Staff (cafes, shops, clinics...)",man,The canteen is just across the courtyard. Lunch is ready from midday.,,svc_alu,food
+svc_alu_done_f.wav,"Staff (cafes, shops, clinics...)",woman,Good luck with your work!,,svc_alu,done
+svc_alu_done_m.wav,"Staff (cafes, shops, clinics...)",man,Good luck with your work!,,svc_alu,done
+svc_alu_bye_f.wav,"Staff (cafes, shops, clinics...)",woman,Have a great day on campus.,,svc_alu,bye
+svc_alu_bye_m.wav,"Staff (cafes, shops, clinics...)",man,Have a great day on campus.,,svc_alu,bye
+police_chat_a_f.wav,Police officer on patrol,woman,Good day. Everything all right?,,police_chat,a
+police_chat_a_m.wav,Police officer on patrol,man,Good day. Everything all right?,,police_chat,a
+police_chat_ok_f.wav,Police officer on patrol,woman,Good. Keep to the speed limit and always wear your seatbelt. Have a safe day.,,police_chat,ok
+police_chat_ok_m.wav,Police officer on patrol,man,Good. Keep to the speed limit and always wear your seatbelt. Have a safe day.,,police_chat,ok
+police_chat_tips_f.wav,Police officer on patrol,woman,"Slow down near schools and markets, stop for people on the zebra crossings, and never use your phone while driving.",,police_chat,tips
+police_chat_tips_m.wav,Police officer on patrol,man,"Slow down near schools and markets, stop for people on the zebra crossings, and never use your phone while driving.",,police_chat,tips
+acc_driver_a.wav,The other driver (accident),man,Eh! Look what you did to my car! Weren't you looking?,,acc_driver,a
+acc_driver_hurt.wav,The other driver (accident),man,"I'm fine, thank God. But the car... Look at this.",,acc_driver,hurt
+acc_driver_argue.wav,The other driver (accident),man,"Don't shout at me! If you want, we wait for the police and they decide.",,acc_driver,argue
+acc_driver_police.wav,The other driver (accident),man,Then we wait. Put your hazard lights on and stay off the road.,,acc_driver,police
+acc_driver_details.wav,The other driver (accident),man,Let's take photos of both cars and exchange numbers and insurance details. Then we move the cars aside.,,acc_driver,details
+acc_driver_end.wav,The other driver (accident),man,Thank you. Next time keep your distance and watch the road. Drive safely.,,acc_driver,end
+svc_dine_a.wav,Waitress,woman,Here is the menu. What would you like to eat?,,svc_dine,a
+svc_dine_drink.wav,Waitress,woman,And to drink?,,svc_dine,drink
+svc_dine_ok.wav,Waitress,woman,Very good. It won't be long.,,svc_dine,ok
+svc_dine_later.wav,Waitress,woman,Take your time.,,svc_dine,later
+svc_dine_bill_a.wav,Waitress,woman,Did you enjoy your meal?,,svc_dine_bill,a
+svc_dine_bill_thanks.wav,Waitress,woman,"Here is your bill. Thank you for coming to eat with us, see you again!",,svc_dine_bill,thanks
