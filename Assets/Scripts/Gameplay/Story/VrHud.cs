@@ -59,8 +59,8 @@ namespace KR.Gameplay.Story
             go.transform.localScale = Vector3.one * 0.00036f;     // about 0.31 m x 0.37 m
 
             var bg = Child<Image>(go.transform, "Panel");
-            bg.color = new Color(0.03f, 0.04f, 0.05f, 0.92f);
             Fill(bg.rectTransform, 0f, 0f, 1f, 1f, 0f);
+            KR.Gameplay.UI.KrTheme.Skin(bg);
             _tabs = MakeText(go.transform, "Tabs", 0.93f, 1f, 26);
             _text = MakeText(go.transform, "Body", 0.42f, 0.93f, 30);
             _mapArea = new GameObject("Map area", typeof(RectTransform)).GetComponent<RectTransform>();
@@ -77,8 +77,8 @@ namespace KR.Gameplay.Story
         Text MakeText(Transform parent, string name, float y0, float y1, int size)
         {
             var t = Child<Text>(parent, name);
-            t.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            t.fontSize = size;
+            t.font = KR.Gameplay.UI.KrTheme.Font(KR.Gameplay.UI.KrTheme.Weight.SemiBold);
+            t.fontSize = size + 4;
             t.supportRichText = true;
             t.color = Color.white;
             t.alignment = TextAnchor.UpperLeft;
@@ -123,7 +123,7 @@ namespace KR.Gameplay.Story
 
             Place(driving);
             Navigate();
-            int font = Comfort.LargeText ? 36 : 30;
+            int font = Comfort.LargeText ? 40 : 34;
             _text.fontSize = font;
             _tabs.text = Tabs();
             _text.text = Body();
@@ -172,7 +172,7 @@ namespace KR.Gameplay.Story
         {
             Page.Journal => _places != null ? _places.Catalog.places.Length : 0,
             Page.Photos => director.Photos.Count,
-            Page.Settings => 8,
+            Page.Settings => 10,
             _ => 0,
         };
 
@@ -180,8 +180,8 @@ namespace KR.Gameplay.Story
         {
             _sb.Clear();
             foreach (Page p in System.Enum.GetValues(typeof(Page)))
-                _sb.Append(p == _page ? $"<b><color=#66ddff>[{p}]</color></b>  " : $"{p}  ");
-            _sb.Append($"\n<size=20><color=#999999>Left stick: pages and rows   {(VrRig.Active ? "X" : "Enter")}: select   {(VrRig.Active ? "☰" : "Tab")}: close (game paused)</color></size>");
+                _sb.Append(p == _page ? $"<b><color=#3ee6ff>{p.ToString().ToUpperInvariant()}</color></b>   " : $"<color=#beacb2>{p.ToString().ToUpperInvariant()}</color>   ");
+            _sb.Append($"\n<size=20><color=#999999>Left stick: pages and rows   {(VrRig.Active ? "X" : "Enter")}: select   {(VrRig.Active ? "Menu button" : "Tab")}: close (game paused)</color></size>");
             return _sb.ToString();
         }
 
@@ -301,11 +301,13 @@ namespace KR.Gameplay.Story
                 "Recentre view",
                 $"Choose a destination (now: {dest})",
                 "Start the Kimironko tour",
+                $"Car radio: {CarRadio.VolumeText}  (plays all game; in the car: right stick up/down)",
+                "Quit to main menu",
             };
             _sb.Clear();
             _sb.Append("<b>Settings</b>\n\n");
             for (int i = 0; i < rows.Length; i++)
-                _sb.Append(i == _row ? "<b>> " : "   ").Append(rows[i]).Append(i == _row ? "</b>\n" : "\n");
+                _sb.Append(i == _row ? "<color=#3ee6ff>›</color> <b>" : "   ").Append(rows[i]).Append(i == _row ? "</b>\n" : "\n");
             return _sb.ToString();
         }
 
@@ -332,8 +334,24 @@ namespace KR.Gameplay.Story
                     }
                     break;
                 case 7: StartTour(); break;
+                case 8: CarRadio.Volume = CarRadio.Volume >= 0.95f ? 0f : CarRadio.Volume + 0.1f; break;
+                case 9: QuitToMenu(); return;
             }
             director.ApplyComfort();
+        }
+
+        // Back to the KR main menu (headset build; the PC build has no menu scene).
+        void QuitToMenu()
+        {
+            const string menu = "Quest Menu";
+            if (!Application.CanStreamedLevelBeLoaded(menu))
+            {
+                rig.Toast("The main menu is only in the headset build.", 3f);
+                return;
+            }
+            _open = false;
+            GamePause.SetPanel(false);
+            UnityEngine.SceneManagement.SceneManager.LoadScene(menu);
         }
 
         void StartTour()
