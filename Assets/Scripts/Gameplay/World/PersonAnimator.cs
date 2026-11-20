@@ -33,7 +33,9 @@ namespace KR.Gameplay.World
         float _speed;
         float _baseSpeed = 1f;
         float _nextAction;
-        bool _talking;
+        bool _talking, _speaking;
+        float _level, _smoothLevel, _speechTime;
+        Transform _head;
 
         public void Configure(Animator body, RuntimeAnimatorController controller, AnimationClip[] slotPlaceholders,
                               AnimationClip[] slotClips, int actions, float clipSpeed, Vector2 every)
@@ -131,10 +133,45 @@ namespace KR.Gameplay.World
         public void SetTalking(bool on, Vector3 towards)
         {
             _talking = on;
+            _speaking = on;
+            _level = 0f;
             if (on)
                 Face(towards);
             if (animator != null && animator.isActiveAndEnabled)
                 animator.SetBool(TalkingId, on);
+        }
+
+        // In a conversation, called every frame: the Talk gestures run only while this person's line is being
+        // spoken (still while you answer), and the head moves with the loudness of the voice (0..1).
+        public void Speak(bool speaking, float level)
+        {
+            _level = speaking ? level : 0f;
+            if (speaking == _speaking || !_talking)
+                return;
+            _speaking = speaking;
+            if (animator != null && animator.isActiveAndEnabled)
+                animator.SetBool(TalkingId, speaking);
+        }
+
+        void LateUpdate()
+        {
+            if (!_talking || animator == null || !animator.isActiveAndEnabled)
+                return;
+            if (_head == null)
+            {
+                if (!animator.isHuman)
+                    return;
+                _head = animator.GetBoneTransform(HumanBodyBones.Head);
+                if (_head == null)
+                    return;
+            }
+            float dt = Time.deltaTime;
+            _smoothLevel = Mathf.Lerp(_smoothLevel, _level, 1f - Mathf.Exp(-14f * dt));
+            _speechTime += dt;
+            // Small nods on the stressed syllables and a slow sway, after the animation has posed the head.
+            float nod = _smoothLevel * 6f * (0.65f + 0.35f * Mathf.Sin(_speechTime * 6.3f));
+            float sway = _smoothLevel * 3f * Mathf.Sin(_speechTime * 1.9f);
+            _head.rotation = Quaternion.AngleAxis(nod, transform.right) * Quaternion.AngleAxis(sway, Vector3.up) * _head.rotation;
         }
 
         void Face(Vector3 target)

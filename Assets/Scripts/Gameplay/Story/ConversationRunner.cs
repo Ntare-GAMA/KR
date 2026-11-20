@@ -32,6 +32,11 @@ namespace KR.Gameplay.Story
         int _correct, _asked;
 
         Canvas _panel, _label;
+        AudioSource _voice;
+        readonly float[] _samples = new float[256];
+        float _lineStart, _lineSeconds;
+        bool _revealed;
+        readonly Dictionary<Npc, string> _gender = new Dictionary<Npc, string>();
         Text _panelText, _labelText;
         readonly StringBuilder _sb = new StringBuilder();
 
@@ -61,6 +66,90 @@ namespace KR.Gameplay.Story
                     _quiz[q.id] = q;
             _panel = MakeCanvas("Conversation panel", new Vector2(760f, 520f), 0.0011f, 30, out _panelText);
             _label = MakeCanvas("Talk label", new Vector2(360f, 70f), 0.0016f, 34, out _labelText);
+            var voice = new GameObject("Voice");
+            voice.transform.SetParent(transform, false);
+            _voice = voice.AddComponent<AudioSource>();
+            _voice.playOnAwake = false;
+            _voice.spatialBlend = 0.8f;
+            _voice.minDistance = 2f;
+            _voice.maxDistance = 15f;
+        }
+
+        // Spoken line, if recorded: Resources/Story/VO/<conversation>_<node>_<f|m>.wav (for lines shared by many
+        // characters), else <conversation>_<node>.wav. Made by Tools/voiceover/make_voice_lines.py; silent if missing.
+        // The subtitle is typed out in step with the voice (or at reading pace when the line has no recording);
+        // replies appear once the line has been said. X during a line shows it all at once.
+        void Speak()
+        {
+            _voice.Stop();
+            _voice.clip = null;
+            _lineStart = Time.unscaledTime;
+            _lineSeconds = 0f;
+            _revealed = false;
+            if (_node == null || _node.speaker == "you" || _with == null || _current == null)
+            {
+                _revealed = true;
+                return;
+            }
+            string key = $"Story/VO/{_current.id}_{_node.id}";
+            var clip = Resources.Load<AudioClip>($"{key}_{GenderOf(_with)}") ?? Resources.Load<AudioClip>(key);
+            if (clip == null)
+            {
+                _lineSeconds = Mathf.Min(4f, (_node.text?.Length ?? 0) * 0.03f);
+                return;
+            }
+            _voice.transform.position = _with.HeadPosition;
+            _voice.clip = clip;
+            _voice.Play();
+        }
+
+        // 0..1: how much of the current line has been said. Text runs slightly ahead of the voice so the last
+        // word is on screen as it is spoken.
+        float Said()
+        {
+            if (_revealed)
+                return 1f;
+            float t;
+            if (_voice.clip != null)
+                t = _voice.isPlaying ? _voice.time / Mathf.Max(0.1f, _voice.clip.length) * 1.1f : 1f;
+            else
+                t = _lineSeconds <= 0f ? 1f : (Time.unscaledTime - _lineStart) / _lineSeconds;
+            if (t >= 1f)
+                _revealed = true;
+            return Mathf.Clamp01(t);
+        }
+
+        // Loudness of the voice now (0..1), for the speaker's head and gestures.
+        float VoiceLevel()
+        {
+            if (_voice.clip == null || !_voice.isPlaying)
+                return 0f;
+            _voice.GetOutputData(_samples, 0);
+            float sum = 0f;
+            for (int i = 0; i < _samples.Length; i++)
+                sum += _samples[i] * _samples[i];
+            return Mathf.Clamp01(Mathf.Sqrt(sum / _samples.Length) * 7f);
+        }
+
+        // "f" or "m" from the character's model (the women's models are named Woman / female).
+        string GenderOf(Npc npc)
+        {
+            if (_gender.TryGetValue(npc, out var g))
+                return g;
+            g = "m";
+            foreach (var r in npc.GetComponentsInChildren<Renderer>(true))
+            {
+                string n = r.name.ToLowerInvariant();
+                if (n.Contains("woman") || n.Contains("female") || n.Contains("girl"))
+                {
+                    g = "f";
+                    break;
+                }
+            }
+            string who = npc.name.ToLowerInvariant();
+            if (who.Contains("woman") || who.Contains("waitress"))
+                g = "f";
+            return _gender[npc] = g;
         }
 
         Canvas MakeCanvas(string name, Vector2 size, float scale, int font, out Text text)
@@ -73,12 +162,12 @@ namespace KR.Gameplay.Story
             go.transform.localScale = Vector3.one * scale;
             var bg = new GameObject("Panel", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Image>();
             bg.transform.SetParent(go.transform, false);
-            bg.color = new Color(0.03f, 0.04f, 0.05f, 0.88f);
             Fill(bg.rectTransform, 0f);
+            KR.Gameplay.UI.KrTheme.Skin(bg);
             text = new GameObject("Text", typeof(RectTransform), typeof(CanvasRenderer)).AddComponent<Text>();
             text.transform.SetParent(go.transform, false);
-            text.font = Resources.GetBuiltinResource<Font>("LegacyRuntime.ttf");
-            text.fontSize = font;
+            text.font = KR.Gameplay.UI.KrTheme.Font(KR.Gameplay.UI.KrTheme.Weight.SemiBold);
+            text.fontSize = font + 4;   // Rajdhani is narrow: a little larger reads the same
             text.supportRichText = true;
             text.color = Color.white;
             text.alignment = TextAnchor.UpperLeft;
@@ -141,7 +230,7 @@ namespace KR.Gameplay.Story
             Vector3 pos = _near.HeadPosition + Vector3.up * 0.45f;
             _label.transform.SetPositionAndRotation(pos, cam != null ? Quaternion.LookRotation(pos - cam.transform.position) : Quaternion.identity);
             _labelText.alignment = TextAnchor.MiddleCenter;
-            _labelText.text = $"<b>{(VrRig.Active ? "X" : "Enter")}</b>  Talk to {_near.DisplayName}";
+            _labelText.text = $"<color=#3ee6ff><b>{(VrRig.Active ? "X" : "Enter")}</b></color>  Talk to {_near.DisplayName}";
         }
 
         // The milestone's conversation for this character if one is running, otherwise their everyday chat.
@@ -196,17 +285,26 @@ namespace KR.Gameplay.Story
                 director.SetFlag(_node.setFlag);
                 FlagSet?.Invoke(_node.setFlag, _with);
             }
+            Speak();
         }
 
         void Converse()
         {
-            int choices = _question != null ? (_answered ? 0 : _question.options.Length) : _node != null ? _node.choices.Length : 0;
+            bool saying = _question == null && _node != null && Said() < 1f;
+            int choices = _question != null ? (_answered ? 0 : _question.options.Length) : _node != null && !saying ? _node.choices.Length : 0;
             if (choices > 0)
                 _choice = (_choice - RigInput.NavY + choices) % choices;
             if (RigInput.ConfirmPressed)
-                Advance();
+            {
+                if (saying)
+                    _revealed = true;
+                else
+                    Advance();
+            }
             if (_with == null)
                 return;
+            bool npcLine = _question == null && _node != null && _node.speaker != "you";
+            _with.Speaking(npcLine && (_voice.isPlaying || saying), npcLine ? VoiceLevel() : 0f);
             PlacePanel();
             _panelText.text = Compose();
         }
@@ -284,8 +382,8 @@ namespace KR.Gameplay.Story
                 _sb.Append($"<b>Question {_asked + (_answered ? 0 : 1)}</b>  <size=22><color=#999999>(draft, under review)</color></size>\n{_question.text}\n\n");
                 for (int i = 0; i < _question.options.Length; i++)
                 {
-                    string mark = _answered ? (i == _question.correct ? "<color=#66ff88>✔ </color>" : i == _choice ? "<color=#ff7766>✘ </color>" : "   ")
-                                            : (i == _choice ? "<b>> </b>" : "   ");
+                    string mark = _answered ? (i == _question.correct ? "<color=#66ff88>Right  </color>" : i == _choice ? "<color=#ff7766>Wrong  </color>" : "   ")
+                                            : (i == _choice ? "<color=#3ee6ff>›</color> " : "   ");
                     _sb.Append(mark).Append(_question.options[i]).Append('\n');
                 }
                 if (_answered)
@@ -295,11 +393,20 @@ namespace KR.Gameplay.Story
                 return _sb.ToString();
             }
             string who = _node.speaker == "you" ? "You" : _with.DisplayName;
-            _sb.Append($"<b>{who}</b>\n{Fill(_node.text)}\n\n");
-            if (_node.choices.Length > 0)
+            string line = Fill(_node.text) ?? "";
+            float said = Said();
+            int shown = said >= 1f ? line.Length : Mathf.Clamp(Mathf.CeilToInt(line.Length * said), 0, line.Length);
+            _sb.Append("<color=#ff6278><b>").Append(who.ToUpperInvariant()).Append("</b></color>\n").Append(line, 0, shown);
+            // The rest of the line is laid out invisibly so the words do not jump while it is typed.
+            if (shown < line.Length)
+                _sb.Append("<color=#00000000>").Append(line, shown, line.Length - shown).Append("</color>");
+            _sb.Append("\n\n");
+            if (said < 1f)
+                _sb.Append($"<size=24><color=#999999>{confirm}: skip</color></size>");
+            else if (_node.choices.Length > 0)
             {
                 for (int i = 0; i < _node.choices.Length; i++)
-                    _sb.Append(i == _choice ? "<b>> " : "   ").Append(Fill(_node.choices[i].text)).Append(i == _choice ? "</b>\n" : "\n");
+                    _sb.Append(i == _choice ? "<color=#3ee6ff>›</color> <b>" : "   ").Append(Fill(_node.choices[i].text)).Append(i == _choice ? "</b>\n" : "\n");
                 _sb.Append($"\n<size=24>Left stick to choose, {confirm} to reply.</size>");
             }
             else
@@ -337,6 +444,8 @@ namespace KR.Gameplay.Story
             _current = null;
             _node = null;
             _panel.gameObject.SetActive(false);
+            if (_voice != null)
+                _voice.Stop();
             rig.Busy = false;
             rig.Player.Frozen = false;
             if (npc != null)

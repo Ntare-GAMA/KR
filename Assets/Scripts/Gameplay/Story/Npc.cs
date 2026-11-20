@@ -39,6 +39,13 @@ namespace KR.Gameplay.Story
         void OnEnable() => Active.Add(this);
         void OnDisable() => Active.Remove(this);
 
+        // While talking: whether this character's line is being spoken, and how loud the voice is now (0..1).
+        public void Speaking(bool speaking, float level)
+        {
+            if (animator != null)
+                animator.Speak(speaking, level);
+        }
+
         public void Talking(bool on, Vector3 towards)
         {
             if (animator != null)
