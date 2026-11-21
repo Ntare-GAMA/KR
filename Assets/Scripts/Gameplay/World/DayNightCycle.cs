@@ -217,7 +217,9 @@ namespace KR.Gameplay.World
                 for (int i = 0; i < mats.Length; i++)
                 {
                     var m = mats[i];
-                    if (m == null || Classify(m.name) == Glow.None)
+                    // Only a vehicle's lamps glow; its windows stay dark (no lit rooms inside cars).
+                    var kind = m != null ? Classify(m.name) : Glow.None;
+                    if (kind != Glow.Lamp && kind != Glow.Tail)
                         continue;
                     if (!clones.TryGetValue(m, out var clone))
                     {

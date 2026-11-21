@@ -10,7 +10,8 @@ namespace KR.Gameplay.Story
     {
         static readonly StringBuilder Sb = new StringBuilder();
 
-        public static string Compose(StoryDirector d, PlayerRig rig, Navigator nav, bool inCar)
+        // drivingLine: the speed, gear, belt and lights line (the instrument cluster shows those itself).
+        public static string Compose(StoryDirector d, PlayerRig rig, Navigator nav, bool inCar, bool drivingLine = true)
         {
             var sb = Sb;
             sb.Clear();
@@ -33,7 +34,7 @@ namespace KR.Gameplay.Story
             else
                 sb.Append($"<b><size=40>{KigaliTime.Clock}</size></b>   {d.DayName}   {(d.Weather != null ? d.Weather.Summary : "")}\n");
 
-            if (inCar && rules != null)
+            if (inCar && drivingLine && rules != null)
             {
                 string speedColour = rules.SpeedKmh > rules.LimitKmh + 1f ? "#ff6655" : "#ffffff";
                 sb.Append($"<b><size=36><color={speedColour}>{rules.SpeedKmh:0}</color></size></b> km/h  (limit {rules.LimitKmh:0})   ");

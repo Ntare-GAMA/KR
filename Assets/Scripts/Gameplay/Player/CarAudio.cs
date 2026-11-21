@@ -5,7 +5,7 @@ namespace KR.Gameplay.Player
 {
     // Sounds of the player's car: doors and the starter when you get in, an idle and a revving loop blended by an
     // automatic gearbox's engine speed, the horn (H / left grip), tyre squeal on hard braking or sliding, and
-    // impacts. All sources are made once at start (no allocations while driving).
+    // impacts (a body thump, or the crash recording on a real smash; never breaking glass). All sources are made once at start (no allocations while driving).
     [RequireComponent(typeof(DrivableCar))]
     public sealed class CarAudio : MonoBehaviour
     {
@@ -133,30 +133,41 @@ namespace KR.Gameplay.Player
                 s.Stop();
         }
 
-        void Play(AudioClip clip, float vol)
+        void Play(AudioClip clip, float vol, float pitch = 1f)
         {
-            if (clip != null)
-                _oneShot.PlayOneShot(clip, vol * volume);
+            if (clip == null)
+                return;
+            _oneShot.pitch = pitch;
+            _oneShot.PlayOneShot(clip, vol * volume);
+        }
+
+        // A soft body thump (0..1), for knocks the physics does not report (people and motorbikes, CarImpacts).
+        public void Bump(float strength)
+        {
+            if (Time.time - _lastHit < 0.3f)
+                return;
+            _lastHit = Time.time;
+            Play(thud, Mathf.Clamp01(strength) * 0.6f + 0.1f, 0.6f);
         }
 
         void OnCollisionEnter(Collision c)
         {
-            float hit = c.relativeVelocity.magnitude;
-            if (hit < 2.5f || Time.time - _lastHit < 0.6f)
+            // How much the knock actually changed the car's speed (m/s): kerbs, poles brushed in passing, bumps and
+            // the road surface hardly move a 1.5 t car, so they stay silent. No breaking glass, ever (owner
+            // decision 2026-11-21): small knocks are a soft body thump, only a real smash plays the crash.
+            float hit = _rb != null && _rb.mass > 0f ? c.impulse.magnitude / _rb.mass : c.relativeVelocity.magnitude;
+            if (hit < 1.5f || Time.time - _lastHit < 0.8f)
                 return;
             _lastHit = Time.time;
-            if (hit > 7f)
+            if (hit > 9f)
             {
-                // Two recordings of crashes, and breaking glass on a hard one.
                 if (Random.value < 0.5f || SoundBank.Get("crash") == null)
-                    Play(crash, 1f);
+                    Play(crash, 0.8f);
                 else
-                    SoundBank.Play("crash", c.GetContact(0).point, 1f);
-                if (hit > 11f)
-                    SoundBank.Play("glass", c.GetContact(0).point, 0.9f);
+                    SoundBank.Play("crash", c.GetContact(0).point, 0.8f);
             }
             else
-                Play(thud, Mathf.Clamp01(hit / 7f) + 0.2f);
+                Play(thud, Mathf.Clamp01(hit / 9f) * 0.6f + 0.1f, 0.65f);
         }
     }
 }

@@ -295,18 +295,25 @@ namespace KR.Gameplay.World
             return t.SampleHeight(p) + t.transform.position.y;
         }
 
-        // The real surface under p (road, kerb, footpath or ground) near the expected height; anything much higher
-        // (a bench, a bin, a parked car's shell) or lower is ignored.
+        // The real surface under p (road, kerb, footpath or ground) near the expected height: the highest upward-facing
+        // surface from 1.6 m above to 3 m below it. Walls (steep faces) and anything with a rigidbody (the player's
+        // car, a knocked-over motorbike) are never ground: traffic and people used to climb onto the player's car.
+        static readonly RaycastHit[] Hits = new RaycastHit[8];
         static bool SurfaceAt(Vector3 p, float expected, out float y)
         {
-            var from = new Vector3(p.x, expected + 1.2f, p.z);
-            if (Physics.Raycast(from, Vector3.down, out var hit, 2.6f, GroundMask, QueryTriggerInteraction.Ignore))
-            {
-                y = hit.point.y;
-                return true;
-            }
+            var from = new Vector3(p.x, expected + 1.6f, p.z);
+            int n = Physics.RaycastNonAlloc(from, Vector3.down, Hits, 4.6f, GroundMask, QueryTriggerInteraction.Ignore);
+            float best = float.MaxValue;
             y = 0f;
-            return false;
+            for (int i = 0; i < n; i++)
+            {
+                var h = Hits[i];
+                if (h.collider.attachedRigidbody != null || h.normal.y < 0.75f || h.distance >= best)
+                    continue;
+                best = h.distance;
+                y = h.point.y;
+            }
+            return best < float.MaxValue;
         }
 
         // Kinematic colliders so the City Life player (on foot or driving) cannot pass through traffic.
@@ -562,6 +569,9 @@ namespace KR.Gameplay.World
                     }
                     float fl = Surface(h.y, car.offset - h.x), fr = Surface(h.y, car.offset + h.x);
                     float bl = Surface(-h.y, car.offset - h.x), br = Surface(-h.y, car.offset + h.x);
+                    // A wheel over a kerb or a verge never lifts the car into the air: it sinks into it a little.
+                    float low = Mathf.Min(Mathf.Min(fl, fr), Mathf.Min(bl, br)) + 0.25f;
+                    fl = Mathf.Min(fl, low); fr = Mathf.Min(fr, low); bl = Mathf.Min(bl, low); br = Mathf.Min(br, low);
                     pos.y = (fl + fr + bl + br) * 0.25f;
                     var forward = (flat * (2f * h.y) + Vector3.up * ((fl + fr) - (bl + br)) * 0.5f).normalized;
                     var right = (side * (2f * h.x) + Vector3.up * ((fr + br) - (fl + bl)) * 0.5f).normalized;

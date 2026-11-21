@@ -1233,7 +1233,7 @@ namespace KR.Editor.Kigali
         }
 
         // Two headlights (submesh 0) and two tail lights (submesh 1) at the corners of the vehicle bounds.
-        static Mesh VehicleLightMesh(Bounds b)
+        internal static Mesh VehicleLightMesh(Bounds b)
         {
             var builder = new BoxMeshBuilder(2);
             float y = b.min.y + b.size.y * 0.42f, x = Mathf.Max(0.3f, b.extents.x - 0.35f);

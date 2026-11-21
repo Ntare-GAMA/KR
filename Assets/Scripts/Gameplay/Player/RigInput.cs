@@ -17,8 +17,8 @@ namespace KR.Gameplay.Player
         static int _frame = -1;
         static bool _use, _confirm, _belt, _wasUse, _wasConfirm, _wasBelt;
         static bool _gear, _lights, _map, _dest, _menu, _wasGear, _wasLights, _wasMap, _wasDest, _wasMenu;
-        static bool _shutter, _wasShutter, _navReady = true, _radioReady = true;
-        static int _navX, _navY, _radio;
+        static bool _shutter, _wasShutter, _navReady = true, _radioReady = true, _indicatorReady = true;
+        static int _navX, _navY, _radio, _indicator;
 
         public static Vector2 Move
         {
@@ -121,6 +121,8 @@ namespace KR.Gameplay.Player
         public static int NavY { get { Refresh(); return _navY; } }
         // Car radio volume while driving: right stick up/down, one step per push (- and + keys on a desktop).
         public static int RadioStep { get { Refresh(); return _radio; } }
+        // Turn indicators while driving: -1 left, +1 right, one per press (Z / X, or a flick of the right stick).
+        public static int IndicatorStep { get { Refresh(); return _indicator; } }
 
         // How closed each real hand is (grip and trigger squeezed), 0 to 1, for the hand models' fingers.
         public static float HandClosed(bool left)
@@ -204,6 +206,20 @@ namespace KR.Gameplay.Player
             {
                 if (kb.minusKey.wasPressedThisFrame || kb.numpadMinusKey.wasPressedThisFrame) _radio = -1;
                 if (kb.equalsKey.wasPressedThisFrame || kb.numpadPlusKey.wasPressedThisFrame) _radio = 1;
+            }
+
+            _indicator = 0;
+            if (Mathf.Abs(right.x) < 0.3f)
+                _indicatorReady = true;
+            else if (_indicatorReady && Mathf.Abs(right.x) > 0.7f && Mathf.Abs(right.x) > Mathf.Abs(right.y))
+            {
+                _indicatorReady = false;
+                _indicator = right.x > 0f ? 1 : -1;
+            }
+            if (kb != null)
+            {
+                if (kb.zKey.wasPressedThisFrame) _indicator = -1;
+                if (kb.xKey.wasPressedThisFrame) _indicator = 1;
             }
         }
 

@@ -72,7 +72,11 @@ namespace KR.Gameplay.Player
             _rig = rig;
             _rb = GetComponent<Rigidbody>();
             if (_rb != null)
+            {
                 _rb.mass = PlayerCarMass;
+                // Pushed out of traffic gently, not fired into the air.
+                _rb.maxDepenetrationVelocity = 1.5f;
+            }
             var cols = new List<Collider>();
             bool any = false;
             foreach (var c in GetComponentsInChildren<Collider>(true))
@@ -182,6 +186,28 @@ namespace KR.Gameplay.Player
                     Hit(who, v);
         }
 
+        // Traffic is kinematic (it cannot give way physically), so a touch from it could throw the car up or over.
+        // While touching a traffic vehicle the car may not rise faster than walking pace or pitch and roll quickly.
+        void OnCollisionEnter(Collision c) => Settle(c);
+        void OnCollisionStay(Collision c) => Settle(c);
+
+        void Settle(Collision c)
+        {
+            if (_rb == null || c.rigidbody == null || !c.rigidbody.isKinematic)
+                return;
+            var v = _rb.linearVelocity;
+            if (v.y > 0.5f)
+                _rb.linearVelocity = new Vector3(v.x, 0.5f, v.z);
+            var w = transform.InverseTransformDirection(_rb.angularVelocity);
+            w.x = Mathf.Clamp(w.x, -0.4f, 0.4f);
+            w.z = Mathf.Clamp(w.z, -0.4f, 0.4f);
+            _rb.angularVelocity = transform.TransformDirection(w);
+        }
+
+        // Someone on foot (true) or a rider (false) was knocked down here: the ambulance and the police respond
+        // (EmergencyResponse).
+        public static event System.Action<Vector3, bool> PersonHit;
+
         void Hit(Light who, Vector3 v)
         {
             var push = who.root.position - transform.position;
@@ -205,7 +231,10 @@ namespace KR.Gameplay.Player
                     m.enabled = false;
             StartCoroutine(KnockDown(who, push, Mathf.Clamp01(approach / 12f)));
             Buzz();
-            SoundBank.Play("crash", who.root.position + Vector3.up, 0.25f + 0.35f * Mathf.Clamp01(approach / 10f));
+            var audio = GetComponent<CarAudio>();
+            if (audio != null)
+                audio.Bump(approach / 10f);
+            PersonHit?.Invoke(who.root.position, who.mass <= PersonMass);
             _rig.Toast(who.mass <= PersonMass
                 ? "You hit someone! Slow down and watch for people on the road."
                 : "You knocked a motorbike over! Give riders room.", 5f);

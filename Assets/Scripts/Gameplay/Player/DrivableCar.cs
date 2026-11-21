@@ -59,6 +59,8 @@ namespace KR.Gameplay.Player
         public Transform HipPoint => hipPoint;
         public float Throttle => _throttle;
         public float BrakePedal => _brake;
+        // Road-wheel angle (degrees, + to the right).
+        public float SteerAngle => _steer;
         public bool Reverse => _reverse;
         // P (park) holds the car and is the only gear you can get out in; the right stick click cycles P, D, R.
         public string Gear => !Driven || _park ? "P" : _reverse ? "R" : "D";

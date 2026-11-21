@@ -97,16 +97,30 @@ namespace KR.Editor.Util
                 Object.DestroyImmediate(c);
             foreach (var c in go.GetComponentsInChildren<AudioSource>(true))
                 Object.DestroyImmediate(c);
+            // Effects (trails, particles): a parked or traffic model never needs them.
+            foreach (var c in go.GetComponentsInChildren<ParticleSystemRenderer>(true))
+                Object.DestroyImmediate(c);
+            foreach (var c in go.GetComponentsInChildren<ParticleSystem>(true))
+                Object.DestroyImmediate(c);
+            foreach (var c in go.GetComponentsInChildren<TrailRenderer>(true))
+                Object.DestroyImmediate(c);
+            foreach (var c in go.GetComponentsInChildren<LineRenderer>(true))
+                Object.DestroyImmediate(c);
         }
 
+        // The visible model's bounds: meshes only. Effects (tyre trails, exhaust and nitro particles) are left out:
+        // their bounds hang below and around a car and used to lift traffic off the road and misplace its lamps.
         public static Bounds RendererBounds(GameObject go)
         {
-            var renderers = go.GetComponentsInChildren<Renderer>();
-            if (renderers.Length == 0)
-                return new Bounds(go.transform.position, Vector3.zero);
-            var b = renderers[0].bounds;
-            for (int i = 1; i < renderers.Length; i++)
-                b.Encapsulate(renderers[i].bounds);
+            bool any = false;
+            var b = new Bounds(go.transform.position, Vector3.zero);
+            foreach (var r in go.GetComponentsInChildren<Renderer>())
+            {
+                if (!(r is MeshRenderer || r is SkinnedMeshRenderer) || r.bounds.size.sqrMagnitude < 1e-6f)
+                    continue;
+                if (any) b.Encapsulate(r.bounds);
+                else { b = r.bounds; any = true; }
+            }
             return b;
         }
 

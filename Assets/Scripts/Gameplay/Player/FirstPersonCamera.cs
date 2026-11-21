@@ -15,6 +15,8 @@ namespace KR.Gameplay.Player
         [SerializeField] float maxLookAside = 110f;
         [SerializeField] float recentre = 1.5f;
         [SerializeField] float eyeHeight = 1.62f;
+        const float SeatedEye = 1.17f;
+        float _eye;
 
         float _yaw, _pitch, _lookYaw, _idle;
         Camera _cam;
@@ -66,7 +68,9 @@ namespace KR.Gameplay.Player
 
             _lookYaw = 0f;
             _yaw += d.x;
-            Vector3 eye = rig.Player.transform.position + Vector3.up * eyeHeight;
+            // Sitting at a table (a restaurant chair): eyes at seated height, eased so it feels like sitting down.
+            _eye = Mathf.MoveTowards(_eye <= 0f ? eyeHeight : _eye, rig.Player.Seated ? SeatedEye : eyeHeight, Time.deltaTime * 1.6f);
+            Vector3 eye = rig.Player.transform.position + Vector3.up * _eye;
             transform.SetPositionAndRotation(eye, Quaternion.Euler(_pitch, _yaw, 0f));
         }
     }

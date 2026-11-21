@@ -13,7 +13,7 @@ using Activity = KR.Editor.Kigali.PcPeople.Activity;
 namespace KR.Editor.Kigali
 {
     // The dining room every cafe and restaurant opens into (Restaurant): a warm, modest room with wooden floor and
-    // plastered walls, six tables with chairs (Furniture Mega Pack), a counter (its kitchen cabinets), a board with
+    // plastered walls, six tables with chairs (built from simple pieces), a counter (its kitchen cabinets), a board with
     // the restaurant's name and menu, the waitress, the dishes she serves (RPG Food & Drinks Pack, Food Pack Mixed,
     // plus the generated cup, plate and bottle) and soft background music (Casual & Relaxing Game Music, "Happy").
     // The room is built once, below the city where nothing else can be seen (y = -60).
@@ -92,35 +92,24 @@ namespace KR.Editor.Kigali
             Box(room, "Counter top", new Vector3(0f, 0.93f, D / 2f - 0.55f), new Vector3(6.8f, 0.05f, 0.7f), counterTop, true);
             var board = Board(room, new Vector3(0f, 2.4f, D / 2f - 0.02f), out var title);
 
-            // Six tables in two rows either side of a centre aisle; the chair on the aisle side is yours.
-            // Tables: the sourced wooden tables (Poly Haven) when present, else dining tables from the Mega Pack.
-            // (painted_wooden_table is 1.14 m high, a serving table, so it stands by the right wall instead.)
-            var tables = new[] { SourcedAssets.Furniture("wooden_table_02") }.Where(p => p != null).ToArray();
-            var serving = SourcedAssets.Furniture("painted_wooden_table");
-            if (serving != null)
-                Place(room, serving, new Vector3(W / 2f - 0.65f, 0f, 0f), 90f, Size(serving).size.y, 3f);
-            if (tables.Length == 0)
-                tables = Prefabs("Assets/Furniture Mega Pack/Prefabs/Tables", _ => true)
-                    .Where(p => Fits(p, 0.65f, 0.85f, 0.7f, 1.8f)).ToArray();
-            var chairs = Prefabs("Assets/Furniture Mega Pack/Prefabs/Chairs", _ => true)
-                .Where(p => Fits(p, 0.75f, 1.15f, 0.35f, 0.75f)).ToArray();
+            // Six tables in two rows either side of a centre aisle, two chairs each; the chair on the aisle side is
+            // yours. Built here from simple pieces (a solid wooden top on four legs, chairs with a seat, a back and
+            // legs, a cloth runner), so every room is furnished whatever packs are imported.
+            var wood = EditorAssetUtil.LitMaterial(Out, "Furniture_Wood", new Color(0.45f, 0.29f, 0.17f), 0.45f);
+            var woodDark = EditorAssetUtil.LitMaterial(Out, "Furniture_Wood_Dark", new Color(0.24f, 0.15f, 0.09f), 0.4f);
+            var cloth = EditorAssetUtil.LitMaterial(Out, "Table_Runner", new Color(0.78f, 0.12f, 0.16f), 0.15f);
             var seats = new List<DiningSeat>();
             foreach (float side in new[] { -1f, 1f })
                 foreach (float z in new[] { -2.6f, 0f, 2.4f })
                 {
                     var t = new Vector3(side * 3.6f, 0f, z);
-                    var table = tables.Length > 0 ? Place(room, tables[rng.Next(tables.Length)], t, 0f, 0.76f, 1.2f)
-                                                  : Box(room, "Table", t + Vector3.up * 0.38f, new Vector3(1f, 0.76f, 0.8f), band, true);
-                    float top = EditorAssetUtil.RendererBounds(table).max.y - Origin.y;
+                    const float top = 0.76f;
+                    Table(room, t, wood, woodDark, cloth, top);
                     var towardsAisle = new Vector3(-side, 0f, 0f);
-                    var chairAt = t + towardsAisle * 0.85f;
-                    var oppositeAt = t - towardsAisle * 0.85f;
-                    if (chairs.Length > 0)
-                    {
-                        var chair = chairs[rng.Next(chairs.Length)];
-                        Place(room, chair, chairAt, Yaw(-towardsAisle), 0.95f, 0.65f);
-                        Place(room, chair, oppositeAt, Yaw(towardsAisle), 0.95f, 0.65f);
-                    }
+                    var chairAt = t + towardsAisle * 0.75f;
+                    var oppositeAt = t - towardsAisle * 0.75f;
+                    Chair(room, chairAt, Yaw(-towardsAisle), wood, woodDark);
+                    Chair(room, oppositeAt, Yaw(towardsAisle), wood, woodDark);
                     seats.Add(new DiningSeat
                     {
                         seat = Point(room, "Your seat", chairAt, Yaw(-towardsAisle)),
@@ -283,6 +272,35 @@ namespace KR.Editor.Kigali
             EditorAssetUtil.StripRuntimeComponents(go);
             foreach (var r in go.GetComponentsInChildren<Renderer>())
                 r.shadowCastingMode = ShadowCastingMode.Off;
+        }
+
+        // A dining table: a solid top on four legs (the top is solid to walk into; the legs are only seen).
+        static void Table(Transform room, Vector3 at, Material wood, Material dark, Material cloth, float top)
+        {
+            var t = new GameObject("Table").transform;
+            t.SetParent(room, false);
+            t.localPosition = at;
+            Box(t, "Top", new Vector3(0f, top - 0.025f, 0f), new Vector3(0.9f, 0.05f, 1.2f), wood, true);
+            Box(t, "Runner", new Vector3(0f, top + 0.002f, 0f), new Vector3(0.34f, 0.004f, 1.22f), cloth, false);
+            foreach (var c in new[] { new Vector2(-0.38f, -0.53f), new Vector2(0.38f, -0.53f), new Vector2(-0.38f, 0.53f), new Vector2(0.38f, 0.53f) })
+                Box(t, "Leg", new Vector3(c.x, (top - 0.05f) / 2f, c.y), new Vector3(0.06f, top - 0.05f, 0.06f), dark, false);
+            var col = t.gameObject.AddComponent<BoxCollider>();
+            col.center = new Vector3(0f, top / 2f, 0f);
+            col.size = new Vector3(0.9f, top, 1.2f);
+        }
+
+        // A dining chair facing yaw: seat at 0.46 m, a back behind, four legs. No collider: you sit on it from the
+        // aisle and walk past it freely.
+        static void Chair(Transform room, Vector3 at, float yaw, Material wood, Material dark)
+        {
+            var c = new GameObject("Chair").transform;
+            c.SetParent(room, false);
+            c.localPosition = at;
+            c.localRotation = Quaternion.Euler(0f, yaw, 0f);
+            Box(c, "Seat", new Vector3(0f, 0.445f, 0f), new Vector3(0.44f, 0.04f, 0.42f), wood, false);
+            Box(c, "Back", new Vector3(0f, 0.72f, -0.2f), new Vector3(0.44f, 0.5f, 0.035f), wood, false);
+            foreach (var p in new[] { new Vector2(-0.19f, -0.18f), new Vector2(0.19f, -0.18f), new Vector2(-0.19f, 0.18f), new Vector2(0.19f, 0.18f) })
+                Box(c, "Leg", new Vector3(p.x, 0.212f, p.y), new Vector3(0.035f, 0.425f, 0.035f), dark, false);
         }
 
         static GameObject Box(Transform room, string name, Vector3 local, Vector3 size, Material mat, bool collide)

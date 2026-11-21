@@ -17,6 +17,10 @@ namespace KR.Editor.Batch
         // Rush Week content, police posts and Story Mode wiring on top of the Kimironko scene.
         public static void AddStoryMode() => Run(StoryModeBuilder.Build);
 
+        // Objects standing in the carriageway: list them (Temp/clear_roads.txt), or remove them and keep the layers.
+        public static void ClearRoadsReport() => Run(KR.Editor.Kigali.ClearRoads.Report);
+        public static void ClearRoads() => Run(KR.Editor.Kigali.ClearRoads.Apply);
+
         // Where streets have steps, gaps, floating edges or impossible grades (Temp/road_report.txt).
         public static void RoadReport() => Run(KR.Editor.Kigali.RoadReport.Run);
 
@@ -60,6 +64,47 @@ namespace KR.Editor.Batch
             EditorApplication.delayCall += () => EditorApplication.isPlaying = true;
         }
 
+        // The restaurant dining room (-captureDir <folder>): from the door, and from your seat at a table.
+        public static void CaptureRestaurant() => Run(() =>
+        {
+            var args = Environment.GetCommandLineArgs();
+            int i = Array.IndexOf(args, "-captureDir");
+            string folder = i >= 0 && i + 1 < args.Length ? args[i + 1] : "Logs/Restaurant";
+            System.IO.Directory.CreateDirectory(folder);
+            UnityEditor.SceneManagement.EditorSceneManager.OpenScene(StoryModeBuilder.ScenePath, UnityEditor.SceneManagement.OpenSceneMode.Single);
+            Transform room = null;
+            foreach (var t in UnityEngine.Object.FindObjectsByType<Transform>(FindObjectsInactive.Include, FindObjectsSortMode.None))
+                if (t.name.StartsWith("Restaurant dining room"))
+                    room = t;
+            var seat = room != null ? room.Find("Your seat") : null;
+            if (room == null || seat == null)
+            {
+                Debug.LogError("[Capture] No restaurant room or seat.");
+                return;
+            }
+            var cam = new GameObject("Capture").AddComponent<Camera>();
+            cam.fieldOfView = 70f;
+            var shots = new[]
+            {
+                ("1 From the door", room.position + new Vector3(0f, 1.62f, -4.6f), Quaternion.Euler(8f, 0f, 0f)),
+                ("2 Seated at a table", seat.position + Vector3.up * 1.17f, seat.rotation * Quaternion.Euler(18f, 0f, 0f)),
+            };
+            var rt = new RenderTexture(1600, 900, 24);
+            var tex = new Texture2D(1600, 900, TextureFormat.RGB24, false);
+            cam.targetTexture = rt;
+            foreach (var (name, pos, rot) in shots)
+            {
+                cam.transform.SetPositionAndRotation(pos, rot);
+                cam.Render();
+                cam.Render();
+                RenderTexture.active = rt;
+                tex.ReadPixels(new Rect(0, 0, 1600, 900), 0, 0);
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(folder, name + ".png"), tex.EncodeToPNG());
+            }
+            RenderTexture.active = null;
+            UnityEngine.Object.DestroyImmediate(cam.gameObject);
+        });
+
         public static void CaptureCar() => Run(() =>
         {
             var args = Environment.GetCommandLineArgs();
@@ -79,13 +124,36 @@ namespace KR.Editor.Batch
                 hands.PoseOnWheel(car);
             var t = car.transform;
             Vector3 eye = car.EyePoint;
-            var shots = new (string name, Vector3 pos, Quaternion rot, float fov)[]
+            // The instrument cluster (sample content) and the working mirrors, as they look while driving.
+            var cluster = KR.Gameplay.Story.CarCluster.Create(car, null, null);
+            cluster.Preview();
+            Canvas.ForceUpdateCanvases();
+            var mirrors = KR.Gameplay.Player.CarMirrors.Attach(car);
+            if (mirrors != null)
+            {
+                mirrors.ShowForCapture(eye);   // the first frame can use the Editor's placeholder shaders
+                mirrors.ShowForCapture(eye);
+                var view = new Texture2D(mirrors.View.width, mirrors.View.height, TextureFormat.RGB24, false);
+                RenderTexture.active = mirrors.View;
+                view.ReadPixels(new Rect(0, 0, view.width, view.height), 0, 0);
+                RenderTexture.active = null;
+                System.IO.File.WriteAllBytes(System.IO.Path.Combine(folder, "7 Mirror camera view.png"), view.EncodeToPNG());
+                var mc = mirrors.ViewCamera.transform;
+                Debug.Log($"[Capture] Mirror camera at {t.InverseTransformPoint(mc.position):F2} (car-local), facing {t.InverseTransformDirection(mc.forward):F2}.");
+            }
+            Vector3 Look(Vector3 at) => at - eye;
+            var parts = KR.Gameplay.Player.CarGeometry.Mirrors;
+            var shots = new System.Collections.Generic.List<(string name, Vector3 pos, Quaternion rot, float fov)>
             {
                 ("1 Outside front-left", t.position + t.forward * 5.5f - t.right * 4f + Vector3.up * 1.6f, Quaternion.LookRotation(t.position + Vector3.up * 0.7f - (t.position + t.forward * 5.5f - t.right * 4f + Vector3.up * 1.6f)), 50f),
                 ("2 Outside rear-right", t.position - t.forward * 6f + t.right * 3.5f + Vector3.up * 2f, Quaternion.LookRotation(t.position + Vector3.up * 0.7f - (t.position - t.forward * 6f + t.right * 3.5f + Vector3.up * 2f)), 50f),
                 ("3 Driver view ahead", eye, Quaternion.LookRotation(t.forward, Vector3.up) * Quaternion.Euler(6f, 0f, 0f), 90f),
                 ("4 Driver view down to wheel", eye, Quaternion.LookRotation(t.forward, Vector3.up) * Quaternion.Euler(35f, 0f, 0f), 90f),
+                ("5 Cluster close", eye, Quaternion.LookRotation(Look(cluster.transform.position), t.up), 40f),
             };
+            foreach (var g in parts)
+                shots.Add(($"6 Mirror {(Mathf.Abs(g.centre.x) < 0.3f ? "rear-view" : g.centre.x < 0f ? "left" : "right")}", eye,
+                           Quaternion.LookRotation(Look(t.TransformPoint(g.centre)), t.up), 35f));
             cam.nearClipPlane = 0.03f;
             const int w = 1600, h = 900;
             var rt = new RenderTexture(w, h, 24, RenderTextureFormat.ARGBHalf);
@@ -103,7 +171,7 @@ namespace KR.Editor.Batch
             }
             cam.targetTexture = null;
             RenderTexture.active = null;
-            Debug.Log($"[Capture] {shots.Length} car renders in {folder}. Eye {eye:F2}, hip {(car.HipPoint != null ? car.HipPoint.position.ToString("F2") : "none")}, " +
+            Debug.Log($"[Capture] {shots.Count} car renders in {folder}. Eye {eye:F2}, hip {(car.HipPoint != null ? car.HipPoint.position.ToString("F2") : "none")}, " +
                       $"grips {(car.LeftGrip != null ? car.LeftGrip.position.ToString("F2") : "none")} / {(car.RightGrip != null ? car.RightGrip.position.ToString("F2") : "none")}.");
         });
 

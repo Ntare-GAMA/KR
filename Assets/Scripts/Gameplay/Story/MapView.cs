@@ -18,7 +18,8 @@ namespace KR.Gameplay.Story
         RectTransform _viewport, _content;
         RawImage _image;
         RouteLine _route;
-        MapMarker _player, _dest;
+        MapMarker _player, _dest, _car;
+        KR.Gameplay.Player.PlayerRig _rig;
         Text _bar;
         readonly List<(RectTransform label, Vector3 world)> _labels = new List<(RectTransform, Vector3)>();
         readonly List<Vector2> _uv = new List<Vector2>();
@@ -82,6 +83,14 @@ namespace KR.Gameplay.Story
             _dest.Kind = MapMarker.Shape.Diamond;
             _dest.color = new Color(1f, 0.35f, 0.25f);
             _dest.rectTransform.sizeDelta = new Vector2(22f, 22f);
+
+            // Your parked car, so you can always find it again.
+            _rig = FindFirstObjectByType<KR.Gameplay.Player.PlayerRig>();
+            _car = Child<MapMarker>(_content, "Your car");
+            _car.Kind = MapMarker.Shape.Arrow;
+            _car.color = new Color(0.24f, 0.9f, 1f);
+            _car.rectTransform.sizeDelta = new Vector2(18f, 24f);
+            _car.enabled = false;
 
             if (labels && nav != null)
                 foreach (var (name, pos) in nav.Places)
@@ -161,6 +170,14 @@ namespace KR.Gameplay.Story
             {
                 Place(_dest.rectTransform, map.ToUV(dest.Value));
                 _dest.rectTransform.localRotation = Quaternion.Inverse(_content.localRotation);
+            }
+
+            var car = _rig != null ? _rig.Car : null;
+            _car.enabled = car != null && _rig.CurrentMode != KR.Gameplay.Player.PlayerRig.Mode.Driving;
+            if (_car.enabled)
+            {
+                Place(_car.rectTransform, map.ToUV(car.transform.position));
+                _car.rectTransform.localRotation = Quaternion.Euler(0f, 0f, -car.transform.eulerAngles.y);
             }
 
             _routeTimer -= Time.deltaTime;

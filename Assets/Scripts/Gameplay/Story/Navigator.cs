@@ -33,6 +33,7 @@ namespace KR.Gameplay.Story
         float _replan;
 
         public IReadOnlyList<Vector3> Route => _route;
+        public RoadGraph Graph => _graph;
         public int Progress => _progress;
         public int RouteVersion { get; private set; }
         public string DestinationName { get; private set; }

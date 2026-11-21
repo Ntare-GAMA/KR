@@ -19,6 +19,7 @@ namespace KR.Gameplay.Player
         [SerializeField] float homeYaw;
 
         readonly List<(string text, float until)> _toasts = new List<(string, float)>();
+        Vector3 _lastFeet;
 
         public Mode CurrentMode { get; private set; } = Mode.Walking;
         public PlayerMotor Player => player;
@@ -55,6 +56,7 @@ namespace KR.Gameplay.Player
             StartYaw = homeYaw;
             BesideCar();
             player.Teleport(StartSpot, StartYaw);
+            _lastFeet = StartSpot;
             StartCoroutine(ReportHeight());
             if (firstPerson != null)
                 firstPerson.enabled = true;
@@ -118,6 +120,7 @@ namespace KR.Gameplay.Player
                 if (_toasts[i].until < Time.unscaledTime)
                     _toasts.RemoveAt(i);
 
+            KeepCarNear();
             var kb = Keyboard.current;
             if (kb != null && kb.escapeKey.wasPressedThisFrame)
                 SetCursor(Cursor.lockState != CursorLockMode.Locked);
@@ -149,6 +152,66 @@ namespace KR.Gameplay.Player
                         ExitCar();
                 }
             }
+        }
+
+        // The story sometimes moves you (the next milestone starts somewhere else). The car comes too: if you were
+        // moved far on foot and the car is left far behind, it is parked on open ground near where you are now.
+        void KeepCarNear()
+        {
+            if (car == null || CurrentMode != Mode.Walking)
+                return;
+            var feet = player.transform.position;
+            bool jumped = (feet - _lastFeet).sqrMagnitude > 30f * 30f;
+            _lastFeet = feet;
+            if (!jumped || (car.transform.position - feet).sqrMagnitude < 60f * 60f)
+                return;
+            if (ParkCarNear(feet, player.transform.eulerAngles.y))
+                Toast("Your car is parked right here. It shows on the map as the blue arrow.", 5f);
+        }
+
+        // Finds flat open ground 4 to 12 m away with room for the car, and parks it there, facing along yaw.
+        public bool ParkCarNear(Vector3 near, float yaw)
+        {
+            int mask = ~(1 << 2);
+            var half = new Vector3(1.05f, 0.65f, 2.45f);
+            foreach (float ring in new[] { 5f, 7f, 9.5f, 12f })
+                for (int k = 0; k < 12; k++)
+                {
+                    var dir = Quaternion.Euler(0f, yaw + 90f + k * 30f, 0f) * Vector3.forward;
+                    var spot = near + dir * ring;
+                    if (!Physics.Raycast(spot + Vector3.up * 4f, Vector3.down, out var hit, 12f, mask, QueryTriggerInteraction.Ignore) ||
+                        hit.normal.y < 0.94f || hit.collider.attachedRigidbody != null)
+                        continue;
+                    // Parallel to the way you face (most likely along the street), on level ground.
+                    var fwd = Vector3.ProjectOnPlane(Quaternion.Euler(0f, yaw, 0f) * Vector3.forward, hit.normal).normalized;
+                    var rot = Quaternion.LookRotation(fwd, hit.normal);
+                    bool level = true;
+                    foreach (var corner in new[] { new Vector3(-1f, 0f, -2.2f), new Vector3(1f, 0f, -2.2f), new Vector3(-1f, 0f, 2.2f), new Vector3(1f, 0f, 2.2f) })
+                    {
+                        var c = hit.point + rot * corner;
+                        if (!Physics.Raycast(c + Vector3.up * 1.5f, Vector3.down, out var ch, 3f, mask, QueryTriggerInteraction.Ignore) ||
+                            Mathf.Abs(ch.point.y - hit.point.y) > 0.35f)
+                        {
+                            level = false;
+                            break;
+                        }
+                    }
+                    if (!level || Physics.CheckBox(hit.point + rot * new Vector3(0f, half.y + 0.3f, 0f), half, rot, mask, QueryTriggerInteraction.Ignore))
+                        continue;
+                    var rb = car.GetComponent<Rigidbody>();
+                    var pos = hit.point + hit.normal * 0.15f;
+                    if (rb != null)
+                    {
+                        rb.linearVelocity = Vector3.zero;
+                        rb.angularVelocity = Vector3.zero;
+                        rb.position = pos;
+                        rb.rotation = rot;
+                    }
+                    car.transform.SetPositionAndRotation(pos, rot);
+                    Physics.SyncTransforms();
+                    return true;
+                }
+            return false;
         }
 
         void EnterCar()

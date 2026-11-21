@@ -128,7 +128,13 @@ namespace KR.Gameplay.Player
                                            Mathf.DeltaAngle(head.transform.eulerAngles.y, rig.Player.transform.eulerAngles.y));
             }
             if (cameraOffset != null)
-                cameraOffset.localPosition = Vector3.up * (Comfort.Seated && !_seated ? 0.45f : 0f);
+            {
+                // Seated play raises the view while walking; sitting on a chair (not in the car) lowers a standing
+                // player's view to seated height.
+                bool chair = rig.Player.Seated && rig.CurrentMode != PlayerRig.Mode.Driving;
+                float y = Comfort.Seated ? (chair || _seated ? 0f : 0.45f) : (chair ? -0.45f : 0f);
+                cameraOffset.localPosition = Vector3.MoveTowards(cameraOffset.localPosition, Vector3.up * y, Time.deltaTime * 1.5f);
+            }
             bool driving = rig.CurrentMode == PlayerRig.Mode.Driving && rig.Car != null;
             if (driving != _seated)
             {

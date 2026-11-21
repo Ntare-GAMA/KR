@@ -38,6 +38,12 @@ namespace KR.Gameplay.Story
         bool _revealed;
         readonly Dictionary<Npc, string> _gender = new Dictionary<Npc, string>();
         Text _panelText, _labelText;
+        // The conversation panel in the KR menu style: a red name tab, the line, one panel per reply.
+        const int MaxRows = 5;
+        const float PanelW = 780f, PanelH = 600f, RowH = 58f, RowGap = 8f, HintH = 44f;
+        Text _name, _sub, _hint;
+        readonly Image[] _rowBg = new Image[MaxRows], _rowFrame = new Image[MaxRows], _rowChip = new Image[MaxRows];
+        readonly Text[] _rowText = new Text[MaxRows], _rowKey = new Text[MaxRows];
         readonly StringBuilder _sb = new StringBuilder();
 
         // True while X belongs to the conversation (a character is in range, or you are talking).
@@ -64,7 +70,8 @@ namespace KR.Gameplay.Story
             foreach (var q in _script.quiz)
                 if (!string.IsNullOrEmpty(q.id))
                     _quiz[q.id] = q;
-            _panel = MakeCanvas("Conversation panel", new Vector2(760f, 520f), 0.0011f, 30, out _panelText);
+            _panel = MakeCanvas("Conversation panel", new Vector2(PanelW, PanelH), 0.0011f, 30, out _panelText);
+            BuildPanel();
             _label = MakeCanvas("Talk label", new Vector2(360f, 70f), 0.0016f, 34, out _labelText);
             var voice = new GameObject("Voice");
             voice.transform.SetParent(transform, false);
@@ -306,7 +313,7 @@ namespace KR.Gameplay.Story
             bool npcLine = _question == null && _node != null && _node.speaker != "you";
             _with.Speaking(npcLine && (_voice.isPlaying || saying), npcLine ? VoiceLevel() : 0f);
             PlacePanel();
-            _panelText.text = Compose();
+            Show();
         }
 
         void Advance()
@@ -373,45 +380,115 @@ namespace KR.Gameplay.Story
                 Go(_afterQuiz);
         }
 
-        string Compose()
+        void BuildPanel()
         {
-            _sb.Clear();
+            var root = _panel.transform;
+            var tab = UI.KrTheme.Panel(root, "Name tab", UI.KrTheme.Red);
+            UI.KrTheme.Place(tab.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -16f), new Vector2(330f, 50f));
+            _name = UI.KrTheme.Label(tab.transform, "Name", 32, UI.KrTheme.Weight.Bold, UI.KrTheme.Text, TextAnchor.MiddleLeft);
+            UI.KrTheme.Stretch(_name.rectTransform, 0f);
+            _name.rectTransform.offsetMin = new Vector2(16f, 0f);
+            _name.horizontalOverflow = HorizontalWrapMode.Overflow;
+            _sub = UI.KrTheme.Label(root, "Where", 22, UI.KrTheme.Weight.SemiBold, UI.KrTheme.Muted, TextAnchor.MiddleLeft);
+            UI.KrTheme.Place(_sub.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(362f, -16f), new Vector2(400f, 50f));
+
+            UI.KrTheme.Style(_panelText, 33, UI.KrTheme.Weight.SemiBold, UI.KrTheme.Text);
+            for (int i = 0; i < MaxRows; i++)
+            {
+                var bg = UI.KrTheme.Panel(root, $"Reply {i + 1}", UI.KrTheme.InkSoft);
+                var chip = UI.KrTheme.Panel(bg.transform, "Number", UI.KrTheme.RedDeep);
+                UI.KrTheme.Place(chip.rectTransform, new Vector2(0f, 0.5f), new Vector2(0f, 0.5f), new Vector2(8f, 0f), new Vector2(42f, 42f));
+                var key = UI.KrTheme.Label(chip.transform, "Key", 26, UI.KrTheme.Weight.Bold, UI.KrTheme.Text, TextAnchor.MiddleCenter);
+                UI.KrTheme.Stretch(key.rectTransform, 0f);
+                var label = UI.KrTheme.Label(bg.transform, "Text", 27, UI.KrTheme.Weight.SemiBold, UI.KrTheme.Text, TextAnchor.MiddleLeft);
+                UI.KrTheme.Stretch(label.rectTransform, 0f);
+                label.rectTransform.offsetMin = new Vector2(62f, 2f);
+                label.rectTransform.offsetMax = new Vector2(-12f, -2f);
+                _rowBg[i] = bg;
+                _rowChip[i] = chip;
+                _rowKey[i] = key;
+                _rowText[i] = label;
+                _rowFrame[i] = UI.KrTheme.Outline(bg.transform, UI.KrTheme.Accent);
+                bg.gameObject.SetActive(false);
+            }
+            _hint = UI.KrTheme.Label(root, "Hint", 22, UI.KrTheme.Weight.SemiBold, UI.KrTheme.Muted, TextAnchor.MiddleLeft);
+            UI.KrTheme.Place(_hint.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(22f, 8f), new Vector2(PanelW - 44f, HintH));
+        }
+
+        // Lays out the panel for the current line or question: the line above, the replies stacked at the bottom.
+        void Show()
+        {
             string confirm = VrRig.Active ? "X" : "Enter";
+            int rows = 0;
+            string body, hint;
             if (_question != null)
             {
-                _sb.Append($"<b>Question {_asked + (_answered ? 0 : 1)}</b>  <size=22><color=#999999>(draft, under review)</color></size>\n{_question.text}\n\n");
-                for (int i = 0; i < _question.options.Length; i++)
-                {
-                    string mark = _answered ? (i == _question.correct ? "<color=#66ff88>Right  </color>" : i == _choice ? "<color=#ff7766>Wrong  </color>" : "   ")
-                                            : (i == _choice ? "<color=#3ee6ff>›</color> " : "   ");
-                    _sb.Append(mark).Append(_question.options[i]).Append('\n');
-                }
+                _name.text = $"QUESTION {_asked + (_answered ? 0 : 1)}";
+                _sub.text = "Draft, under review";
+                body = _question.text;
                 if (_answered)
-                    _sb.Append($"\n<size=24>{_question.explanation}\n<color=#999999>Source: {_question.source}</color></size>\n\n{confirm}: continue");
-                else
-                    _sb.Append($"\n<size=24>Left stick to choose, {confirm} to answer.</size>");
-                return _sb.ToString();
-            }
-            string who = _node.speaker == "you" ? "You" : _with.DisplayName;
-            string line = Fill(_node.text) ?? "";
-            float said = Said();
-            int shown = said >= 1f ? line.Length : Mathf.Clamp(Mathf.CeilToInt(line.Length * said), 0, line.Length);
-            _sb.Append("<color=#ff6278><b>").Append(who.ToUpperInvariant()).Append("</b></color>\n").Append(line, 0, shown);
-            // The rest of the line is laid out invisibly so the words do not jump while it is typed.
-            if (shown < line.Length)
-                _sb.Append("<color=#00000000>").Append(line, shown, line.Length - shown).Append("</color>");
-            _sb.Append("\n\n");
-            if (said < 1f)
-                _sb.Append($"<size=24><color=#999999>{confirm}: skip</color></size>");
-            else if (_node.choices.Length > 0)
-            {
-                for (int i = 0; i < _node.choices.Length; i++)
-                    _sb.Append(i == _choice ? "<color=#3ee6ff>›</color> <b>" : "   ").Append(Fill(_node.choices[i].text)).Append(i == _choice ? "</b>\n" : "\n");
-                _sb.Append($"\n<size=24>Left stick to choose, {confirm} to reply.</size>");
+                    body += $"\n\n<size=25>{_question.explanation}</size>\n<size=21><color={UI.KrTheme.MutedHex}>Source: {_question.source}</color></size>";
+                rows = Mathf.Min(MaxRows, _question.options.Length);
+                for (int i = 0; i < rows; i++)
+                {
+                    bool right = _answered && i == _question.correct, wrong = _answered && i == _choice && i != _question.correct;
+                    Row(i, _question.options[i], !_answered && i == _choice,
+                        right ? new Color(0.25f, 0.85f, 0.45f) : wrong ? UI.KrTheme.Red : (Color?)null,
+                        right ? "OK" : wrong ? "X" : (i + 1).ToString());
+                }
+                hint = _answered ? $"{confirm}: continue" : $"Left stick or arrows to choose, {confirm} to answer";
             }
             else
-                _sb.Append($"<size=24>{confirm}: {(string.IsNullOrEmpty(_node.next) && (_node.quiz == null || _node.quiz.Length == 0) ? "end" : "continue")}</size>");
-            return _sb.ToString();
+            {
+                _name.text = (_node.speaker == "you" ? "You" : _with.DisplayName).ToUpperInvariant();
+                _sub.text = _node.speaker == "you" || string.IsNullOrEmpty(_with.Place) ? "" : _with.Place;
+                string line = Fill(_node.text) ?? "";
+                float said = Said();
+                int shown = said >= 1f ? line.Length : Mathf.Clamp(Mathf.CeilToInt(line.Length * said), 0, line.Length);
+                // The rest of the line is laid out invisibly so the words do not jump while it is typed.
+                body = shown < line.Length ? line.Substring(0, shown) + "<color=#00000000>" + line.Substring(shown) + "</color>" : line;
+                if (said >= 1f && _node.choices.Length > 0)
+                {
+                    rows = Mathf.Min(MaxRows, _node.choices.Length);
+                    for (int i = 0; i < rows; i++)
+                        Row(i, Fill(_node.choices[i].text), i == _choice, null, (i + 1).ToString());
+                    hint = $"Left stick or arrows to choose, {confirm} to reply";
+                }
+                else if (said < 1f)
+                    hint = $"{confirm}: skip";
+                else
+                    hint = $"{confirm}: {(string.IsNullOrEmpty(_node.next) && (_node.quiz == null || _node.quiz.Length == 0) ? "end" : "continue")}";
+            }
+            for (int i = rows; i < MaxRows; i++)
+                if (_rowBg[i].gameObject.activeSelf)
+                    _rowBg[i].gameObject.SetActive(false);
+            // Replies from the bottom up, above the hint; the line fills what is left under the name tab.
+            float bottom = 8f + HintH + 6f;
+            for (int i = rows - 1; i >= 0; i--)
+            {
+                UI.KrTheme.Place(_rowBg[i].rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, bottom), new Vector2(PanelW - 36f, RowH));
+                bottom += RowH + RowGap;
+            }
+            var r = _panelText.rectTransform;
+            r.anchorMin = Vector2.zero;
+            r.anchorMax = Vector2.one;
+            r.offsetMin = new Vector2(24f, bottom + 4f);
+            r.offsetMax = new Vector2(-24f, -84f);
+            _panelText.verticalOverflow = VerticalWrapMode.Truncate;
+            _panelText.text = body;
+            _hint.text = hint;
+        }
+
+        void Row(int i, string text, bool selected, Color? mark, string key)
+        {
+            if (!_rowBg[i].gameObject.activeSelf)
+                _rowBg[i].gameObject.SetActive(true);
+            _rowText[i].text = text;
+            _rowKey[i].text = key;
+            _rowFrame[i].enabled = selected || mark.HasValue;
+            _rowFrame[i].color = mark ?? UI.KrTheme.Accent;
+            _rowChip[i].color = mark ?? (selected ? UI.KrTheme.Red : UI.KrTheme.RedDeep);
+            _rowBg[i].color = selected ? new Color(0.16f, 0.07f, 0.1f, 0.95f) : UI.KrTheme.InkSoft;
         }
 
         // Lines can name the business and the character: {place}, {name}.
