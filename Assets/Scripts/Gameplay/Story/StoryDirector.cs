@@ -41,7 +41,7 @@ namespace KR.Gameplay.Story
         public KnowledgeCard LastCard { get; private set; }
         public string Toast { get; private set; }
         public float ToastUntil { get; private set; }
-        public string StopMessage { get; private set; }
+        public string StopMessage => _stop.Message;
         public int Demerits => _save.demeritPoints;
         public int Fines => _save.finesFrw;
         public int CardCount => _save.cards.Length;
@@ -49,7 +49,7 @@ namespace KR.Gameplay.Story
         public KigaliWeather Weather => weather;
         public TrafficRhythm Rhythm => rhythm;
         public RoadRulesMonitor Rules => rules;
-        public GhostTrack Ghost => _ghostBest;
+        public GhostTrack Ghost => _ghosts?.Best;
         public DrivingCoach Coach => coach;
         public bool Learner => !_save.fullLicence;
         public float CleanMetres => _save.learnerCleanMetres;
@@ -59,19 +59,12 @@ namespace KR.Gameplay.Story
         StorySave _save = new StorySave();
         float _dwell;
         bool _dwellAnim;
-        RoadRule _stopRule;
-        Vector3 _stopAt;
-        float _stopTimer;
-        bool _stopHolding;
-        readonly List<Vector3> _track = new List<Vector3>();
-        float _trackTimer;
-        GhostTrack _ghostBest;
-        Transform _ghostMarker;
+        readonly TrafficStop _stop = new TrafficStop();
+        GhostRecorder _ghosts;
         Vector3 _lastDrivePos;
         bool _driving;
 
         static string SavePath => Path.Combine(Application.persistentDataPath, "story_save.json");
-        static string GhostPath(string id) => Path.Combine(Application.persistentDataPath, "ghosts", id + ".json");
 
         public void Configure(StoryWeek content, Transform playerBody, PlayerMotor playerMotor, PlayerRig playerRig,
                               RoadRulesMonitor monitor, KigaliWeather kigaliWeather, TrafficRhythm traffic, Transform marker,
@@ -91,6 +84,7 @@ namespace KR.Gameplay.Story
         // Every launch is a new session: count it and give the weather its session number (it changes per session).
         void Awake()
         {
+            _ghosts = new GhostRecorder(Path.Combine(Application.persistentDataPath, "ghosts"));
             Load();
             _save.sessions++;
             Save();
@@ -302,7 +296,7 @@ namespace KR.Gameplay.Story
                     if (!InControl)
                         break;
                     Elapsed += dt;
-                    Record(dt);
+                    _ghosts.Tick(dt, player.position, Elapsed, State != Phase.Results);
                     Distance = Flat(player.position, m.position);
                     _persistTimer -= dt;
                     if (_persistTimer <= 0f)
@@ -370,8 +364,6 @@ namespace KR.Gameplay.Story
             Elapsed = Penalty = 0f;
             _dwell = 0f;
             _dwellAnim = false;
-            _track.Clear();
-            _trackTimer = 0f;
             State = Phase.Rushing;
             if (Current.startAtPoint && motor != null)
             {
@@ -382,7 +374,7 @@ namespace KR.Gameplay.Story
                     motor.Teleport(Current.startPoint, 0f);
             }
             Result(Current.id).attempts++;
-            _ghostBest = LoadGhost(Current.id);
+            _ghosts.Begin(Current.id);
             Notify($"GO! {Current.title}: par {Mmss(Current.parSeconds)}", 3f);
         }
 
@@ -399,7 +391,7 @@ namespace KR.Gameplay.Story
             if (LastWasBest)
             {
                 r.bestSeconds = total;
-                SaveGhost(m.id, total);
+                _ghosts.SaveBest(m.id, total);
             }
             r.bestStars = Mathf.Max(r.bestStars, LastStars);
             LastCard = week.Card(m.knowledgeCardId);
@@ -486,65 +478,40 @@ namespace KR.Gameplay.Story
             Save();
         }
 
-        // Pull over within 15 s and stay put until the officer is done (Art. 6: officers' instructions prevail).
-        // Driving away more than 120 m is refusing to stop (Art. 39), which ends the milestone.
+        // The officer's stop itself is TrafficStop; this decides what its outcome means for the run.
         void StartStop(RoadRule rule, Vector3 where)
         {
-            _stopRule = rule;
-            _stopAt = where;
-            _stopTimer = 15f;
-            _stopHolding = false;
-            StopMessage = "An officer signals you to stop. Pull over now.";
+            _stop.Start(rule, where);
             State = Phase.PoliceStop;
         }
 
         void UpdateStop(float dt)
         {
-            float moved = Flat(player.position, _stopAt);
-            if (moved > 120f)
+            var rule = _stop.Rule;
+            switch (_stop.Update(dt, player.position, rules != null ? rules.SpeedKmh : 0f))
             {
-                var refuse = week.Rule(RuleId.RefuseStop);
-                if (refuse != null)
-                {
-                    _save.finesFrw += refuse.fineFrw;
-                    Fail(refuse);
-                }
-                else
+                case TrafficStop.Outcome.Refused:
+                    var refuse = week.Rule(RuleId.RefuseStop);
+                    if (refuse != null)
+                    {
+                        _save.finesFrw += refuse.fineFrw;
+                        Fail(refuse);
+                    }
+                    else
+                        State = Phase.Rushing;
+                    break;
+                case TrafficStop.Outcome.Cleared:
+                    string fine = rule.fromOrder ? $"FRW {rule.fineFrw:N0}" : "fine to be set by the Minister's Order";
+                    Notify($"Electronic fault notice (Law 014/2026, Art. 35): {rule.title}, {fine}. You may continue.", 6f);
                     State = Phase.Rushing;
-                return;
-            }
-            bool stopped = rules == null || rules.SpeedKmh < 2f;
-            _stopTimer -= dt;
-            if (!_stopHolding)
-            {
-                if (stopped)
-                {
-                    _stopHolding = true;
-                    _stopTimer = 10f;
-                    StopMessage = "The officer checks your licence and insurance.";
-                }
-                else if (_stopTimer <= 0f)
-                {
-                    StopMessage = "You did not stop. The officer is following you.";
-                    _stopTimer = 15f;
-                }
-                return;
-            }
-            if (!stopped)
-                _stopTimer = Mathf.Max(_stopTimer, 6f);   // moving again restarts part of the check
-            if (_stopTimer <= 0f)
-            {
-                string fine = _stopRule.fromOrder ? $"FRW {_stopRule.fineFrw:N0}" : "fine to be set by the Minister's Order";
-                Notify($"Electronic fault notice (Law 014/2026, Art. 35): {_stopRule.title}, {fine}. You may continue.", 6f);
-                StopMessage = null;
-                State = Phase.Rushing;
+                    break;
             }
         }
 
         void Fail(RoadRule rule)
         {
             StopDwellAnimation();
-            StopMessage = null;
+            _stop.Cancel();
             Notify($"Milestone failed: {rule.title}. {rule.explanation}", 8f);
             _save.inRun = false;
             Save();
@@ -565,85 +532,6 @@ namespace KR.Gameplay.Story
             if (_dwellAnim && motor != null)
                 motor.BackToLocomotion();
             _dwellAnim = false;
-        }
-
-        // ---------- ghosts: your best run, and later other players' runs from the leaderboard ----------
-
-        [Serializable]
-        public sealed class GhostTrack
-        {
-            public string milestone;
-            public float seconds;
-            public float interval = 0.25f;
-            public Vector3[] points;
-
-            public Vector3 At(float t)
-            {
-                if (points == null || points.Length == 0)
-                    return Vector3.zero;
-                float f = t / interval;
-                int i = Mathf.Clamp(Mathf.FloorToInt(f), 0, points.Length - 1);
-                int j = Mathf.Min(i + 1, points.Length - 1);
-                return Vector3.Lerp(points[i], points[j], f - i);
-            }
-        }
-
-        void Record(float dt)
-        {
-            _trackTimer -= dt;
-            if (_trackTimer > 0f)
-                return;
-            _trackTimer = 0.25f;
-            _track.Add(player.position);
-            if (_ghostMarker != null && _ghostBest != null && State != Phase.Results)
-                _ghostMarker.position = _ghostBest.At(Elapsed) + Vector3.up;
-        }
-
-        void SaveGhost(string id, float seconds)
-        {
-            try
-            {
-                Directory.CreateDirectory(Path.GetDirectoryName(GhostPath(id)));
-                var g = new GhostTrack { milestone = id, seconds = seconds, points = _track.ToArray() };
-                WriteAtomic(GhostPath(id), JsonUtility.ToJson(g));
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[Story] Ghost not saved: {e.Message}");
-            }
-        }
-
-        GhostTrack LoadGhost(string id)
-        {
-            try
-            {
-                if (File.Exists(GhostPath(id)))
-                {
-                    var g = JsonUtility.FromJson<GhostTrack>(File.ReadAllText(GhostPath(id)));
-                    EnsureGhostMarker();
-                    return g;
-                }
-            }
-            catch (Exception e)
-            {
-                Debug.LogWarning($"[Story] Ghost not loaded: {e.Message}");
-            }
-            return null;
-        }
-
-        void EnsureGhostMarker()
-        {
-            if (_ghostMarker != null)
-                return;
-            var go = GameObject.CreatePrimitive(PrimitiveType.Capsule);
-            go.name = "Ghost (your best run)";
-            Destroy(go.GetComponent<Collider>());
-            var r = go.GetComponent<Renderer>();
-            var mat = new Material(Shader.Find("Universal Render Pipeline/Unlit"));
-            mat.SetColor("_BaseColor", new Color(0.3f, 0.9f, 1f));
-            r.sharedMaterial = mat;
-            r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            _ghostMarker = go.transform;
         }
 
         // ---------- helpers ----------
@@ -714,22 +602,12 @@ namespace KR.Gameplay.Story
         {
             try
             {
-                WriteAtomic(SavePath, JsonUtility.ToJson(_save, true));
+                KR.Core.AtomicFile.Write(SavePath, JsonUtility.ToJson(_save, true));
             }
             catch (Exception e)
             {
                 Debug.LogWarning($"[Story] Save failed: {e.Message}");
             }
-        }
-
-        static void WriteAtomic(string path, string json)
-        {
-            string tmp = path + ".tmp";
-            File.WriteAllText(tmp, json);
-            if (File.Exists(path))
-                File.Replace(tmp, path, path + ".bak");   // the previous good save becomes the backup
-            else
-                File.Move(tmp, path);
         }
 
         static float Flat(Vector3 a, Vector3 b) => Vector2.Distance(new Vector2(a.x, a.z), new Vector2(b.x, b.z));
