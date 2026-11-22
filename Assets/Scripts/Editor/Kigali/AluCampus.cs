@@ -22,7 +22,7 @@ namespace KR.Editor.Kigali
     //  - a perforated-brick pavilion on brick piers, a round stormwater pond downhill (~1,800 m3).
     // Geometry is generated from those rules, not copied from drawings: room layout and interiors are not modelled.
     // Brick: Poly Haven brown_brick_02 (CC0). Everything else is procedural.
-    internal static class AluCampus
+    internal static partial class AluCampus
     {
         public const string PlaceName = "African Leadership University";
         const float Storey = 3.6f, ModuleSize = 16f, CornerRadius = 2.6f;
@@ -890,6 +890,75 @@ namespace KR.Editor.Kigali
                 if (bottom)
                     for (int i = 0; i < ring.Count; i++)
                         Tri(top ?? side, At(o, y0), At(ring[i], y0), At(ring[(i + 1) % ring.Count], y0));
+            }
+
+            // A flat polygon (any simple shape, concave too) at height y, facing up or down: ear clipping.
+            public void Cap(Material m, List<Vector3> ring, float y, bool up)
+            {
+                var idx = new List<int>();
+                for (int i = 0; i < ring.Count; i++)
+                    idx.Add(i);
+                float area = 0f;
+                for (int i = 0; i < ring.Count; i++)
+                {
+                    var a = ring[i];
+                    var b = ring[(i + 1) % ring.Count];
+                    area += a.x * b.z - b.x * a.z;
+                }
+                if (area < 0f)
+                    idx.Reverse();
+                int guard = 0;
+                while (idx.Count > 3 && guard++ < 4000)
+                {
+                    bool clipped = false;
+                    for (int k = 0; k < idx.Count; k++)
+                    {
+                        var a = ring[idx[(k + idx.Count - 1) % idx.Count]];
+                        var b = ring[idx[k]];
+                        var c = ring[idx[(k + 1) % idx.Count]];
+                        if ((b.x - a.x) * (c.z - a.z) - (b.z - a.z) * (c.x - a.x) <= 1e-5f)
+                            continue;   // reflex
+                        bool empty = true;
+                        foreach (int o in idx)
+                        {
+                            var p = ring[o];
+                            if (p == a || p == b || p == c)
+                                continue;
+                            if (InTri(p, a, b, c))
+                            {
+                                empty = false;
+                                break;
+                            }
+                        }
+                        if (!empty)
+                            continue;
+                        Face(m, a, b, c, y, up);
+                        idx.RemoveAt(k);
+                        clipped = true;
+                        break;
+                    }
+                    if (!clipped)
+                        break;
+                }
+                if (idx.Count == 3)
+                    Face(m, ring[idx[0]], ring[idx[1]], ring[idx[2]], y, up);
+            }
+
+            void Face(Material m, Vector3 a, Vector3 b, Vector3 c, float y, bool up)
+            {
+                a.y = b.y = c.y = y;
+                bool facesUp = Vector3.Cross(b - a, c - a).y > 0f;
+                if (facesUp == up) Tri(m, a, b, c);
+                else Tri(m, a, c, b);
+            }
+
+            static bool InTri(Vector3 p, Vector3 a, Vector3 b, Vector3 c)
+            {
+                float d1 = (p.x - b.x) * (a.z - b.z) - (a.x - b.x) * (p.z - b.z);
+                float d2 = (p.x - c.x) * (b.z - c.z) - (b.x - c.x) * (p.z - c.z);
+                float d3 = (p.x - a.x) * (c.z - a.z) - (c.x - a.x) * (p.z - a.z);
+                bool neg = d1 < 0 || d2 < 0 || d3 < 0, pos = d1 > 0 || d2 > 0 || d3 > 0;
+                return !(neg && pos);
             }
 
             public void Cylinder(Material side, Material cap, Vector3 axis, float r, float y0, float y1, int seg, bool bottom = false)
