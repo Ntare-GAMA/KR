@@ -156,8 +156,9 @@ namespace KR.Gameplay.Story
     public sealed class ComfortSave
     {
         public int turn;               // 0 snap 30, 1 snap 45, 2 smooth
-        public int vignette = 1;       // 0 off, 1 low, 2 high
-        public bool teleport;          // walk by teleport instead of the stick
+        public int vignette = 2;       // 0 off, 1 low, 2 high (high by default: owner reported motion sickness)
+        public bool teleport = true;   // walk by teleport instead of the stick (the most comfortable way in VR)
+        public int version;            // 1: the comfortable defaults have been applied once to an older save
         public bool largeText;
         public bool seated;            // raises the view for seated play
     }

@@ -4,13 +4,14 @@ using UnityEngine;
 namespace KR.Gameplay.Story
 {
     // The officer who gets out of the responding police car: steps out on the driver's side, walks to you (or the
-    // scene), says what the police say, waits a moment, then walks back and gets in again. The body is a copy of the
-    // city's own patrol officer (uniform, cap, animations); copied once and reused.
+    // scene), says the police's lines one after another (asking for your driving licence and ID, writing a ticket;
+    // each line can trigger something, such as the cards or the ticket on screen), then walks back and gets in again.
+    // The body is a copy of the city's own uniformed patrol officer (vest, cap, animations); copied once and reused.
     public sealed class OfficerOnFoot
     {
         enum Step { Hidden, ToYou, Talking, Back }
 
-        const float WalkSpeed = 1.5f, TalkSeconds = 7f;
+        const float WalkSpeed = 1.5f, LineSeconds = 5.5f;
 
         readonly Transform _body;
         readonly PersonAnimator _anim;
@@ -18,7 +19,9 @@ namespace KR.Gameplay.Story
         Step _step;
         Transform _car;
         Vector3 _goal;
-        string _line;
+        string[] _lines;
+        System.Action<int> _onLine;
+        int _index;
         float _until;
 
         public bool Busy => _step != Step.Hidden;
@@ -63,14 +66,18 @@ namespace KR.Gameplay.Story
         }
 
         // Out of the car (driver's side) towards target, to say line there.
-        public void GetOut(Transform car, Vector3 target, string line)
+        public void GetOut(Transform car, Vector3 target, string line) => GetOut(car, target, new[] { line }, null);
+
+        // Lines said in turn once beside you; onLine(i) runs as line i is said.
+        public void GetOut(Transform car, Vector3 target, string[] lines, System.Action<int> onLine)
         {
             _car = car;
-            _line = line;
+            _lines = lines;
+            _onLine = onLine;
             var door = Ground(car.position - car.right * 1.4f);
             var to = target - door;
             to.y = 0f;
-            _goal = to.magnitude > 1.8f ? target - to.normalized * 1.6f : door;
+            _goal = to.magnitude > 2.6f ? target - to.normalized * 2.4f : door;   // a polite distance, the face and the words in view
             _body.SetPositionAndRotation(door, Quaternion.LookRotation(to.sqrMagnitude > 0.01f ? to : car.forward));
             _body.gameObject.SetActive(true);
             _step = Step.ToYou;
@@ -84,14 +91,21 @@ namespace KR.Gameplay.Story
                     if (Walk(_goal, dt))
                     {
                         _step = Step.Talking;
-                        _until = Time.time + TalkSeconds;
+                        _index = -1;
+                        _until = 0f;
                         _anim?.SetTalking(true, you);
-                        _say.Say(_body, 2.1f, _line, TalkSeconds);
                     }
                     break;
                 case Step.Talking:
                     Face(you);
-                    if (Time.time > _until)
+                    if (Time.time > _until && _index + 1 < _lines.Length)
+                    {
+                        _index++;
+                        _until = Time.time + LineSeconds;
+                        _say.Say(_body, 1.95f, _lines[_index], LineSeconds);
+                        _onLine?.Invoke(_index);
+                    }
+                    else if (Time.time > _until)
                     {
                         _anim?.SetTalking(false, Vector3.zero);
                         _goal = Ground(_car.position - _car.right * 1.4f);

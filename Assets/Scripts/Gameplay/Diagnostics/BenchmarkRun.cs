@@ -22,6 +22,8 @@ namespace KR.Gameplay.Diagnostics
                                              new Vector3(700f, 0f, -700f), new Vector3(-700f, 0f, -700f) };
 
         public static bool Running { get; private set; }
+        const float HopMetres = 60f;
+        float _lastShown = -1f;
         public static string LastSummary { get; private set; }
 
         PlayerRig _rig;
@@ -32,12 +34,17 @@ namespace KR.Gameplay.Diagnostics
         {
             _rig = FindFirstObjectByType<PlayerRig>();
             _nav = FindFirstObjectByType<Navigator>();
-            foreach (var arg in System.Environment.GetCommandLineArgs())
-                if (arg == "-benchmark")
-                {
-                    _quitWhenDone = true;
-                    StartCoroutine(StartLater(8f));
-                }
+            var args = System.Environment.GetCommandLineArgs();
+            // -lodBias 1000 keeps every object at full detail: the "LODs off" comparison run.
+            int bias = System.Array.IndexOf(args, "-lodBias");
+            if (bias >= 0 && bias + 1 < args.Length && float.TryParse(args[bias + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float lodBias))
+                QualitySettings.lodBias = lodBias;
+            if (System.Array.IndexOf(args, "-benchmark") >= 0)
+            {
+                Debug.Log("[Benchmark] -benchmark: starting in 8 s.");
+                _quitWhenDone = true;
+                StartCoroutine(StartLater(8f));
+            }
         }
 
         IEnumerator StartLater(float seconds)
@@ -56,18 +63,25 @@ namespace KR.Gameplay.Diagnostics
         public void Begin()
         {
             if (Running || _rig == null || _nav == null || _nav.Graph == null)
+            {
+                Debug.LogWarning($"[Benchmark] Not started: running {Running}, rig {_rig != null}, navigator {_nav != null}, graph {_nav != null && _nav.Graph != null}.");
                 return;
+            }
             if (_rig.CurrentMode != PlayerRig.Mode.Walking)
             {
                 _rig.Toast("Get out of the car to run the benchmark.", 3f);
+                Debug.LogWarning("[Benchmark] Not started: the player is in the car.");
                 return;
             }
             var route = PlanRoute();
             if (route == null)
             {
                 _rig.Toast("No benchmark route found.", 3f);
+                Debug.LogWarning("[Benchmark] Not started: no route found.");
                 return;
             }
+            Fix();
+            Debug.Log($"[Benchmark] Started: {Length(route):0} m route, {route.Count} points, 10:00, calm weather.");
             StartCoroutine(Run(route));
         }
 
@@ -88,6 +102,53 @@ namespace KR.Gameplay.Diagnostics
             return null;
         }
 
+        // Same conditions every run: 10:00 with the clock held, calm dry weather, the same random sequence.
+        float _hour, _minutesPerSecond;
+        int _vSync, _targetFps;
+
+        void Fix()
+        {
+            // Uncapped on a desktop, so the result is what the machine can do, not the monitor's refresh rate
+            // (the headset always runs at its display rate).
+            _vSync = QualitySettings.vSyncCount;
+            _targetFps = Application.targetFrameRate;
+            if (!VrRig.Active)
+            {
+                QualitySettings.vSyncCount = 0;
+                Application.targetFrameRate = -1;
+            }
+            var sky = KR.Gameplay.World.DayNightCycle.Instance;
+            if (sky != null)
+            {
+                _hour = sky.Hour;
+                _minutesPerSecond = sky.GameMinutesPerSecond;
+                sky.Hour = 10f;
+                sky.GameMinutesPerSecond = 0f;
+            }
+            var weather = FindFirstObjectByType<KR.Gameplay.World.WeatherCycle>();
+            if (weather != null)
+            {
+                weather.Force(KR.Gameplay.World.WeatherCycle.Kind.Calm);
+                weather.SnapToForced();
+            }
+            Random.InitState(20261122);
+        }
+
+        void Unfix()
+        {
+            QualitySettings.vSyncCount = _vSync;
+            Application.targetFrameRate = _targetFps;
+            var sky = KR.Gameplay.World.DayNightCycle.Instance;
+            if (sky != null)
+            {
+                sky.Hour = _hour;
+                sky.GameMinutesPerSecond = _minutesPerSecond;
+            }
+            var weather = FindFirstObjectByType<KR.Gameplay.World.WeatherCycle>();
+            if (weather != null)
+                weather.Force(null);
+        }
+
         static float Length(System.Collections.Generic.List<Vector3> path)
         {
             float len = 0f;
@@ -104,7 +165,11 @@ namespace KR.Gameplay.Diagnostics
             float backYaw = motor.transform.eulerAngles.y;
             _rig.Busy = true;
             motor.Frozen = true;
-            _rig.Toast("Benchmark: 90 s along the streets. Keep your head still; close your eyes if moving bothers you.", 6f);
+            if (_rig.DesktopCamera != null)
+                _rig.DesktopCamera.ViewLocked = true;
+            _rig.Toast(VrRig.Active ? "Benchmark: about 70 s. The view jumps along a street every few seconds; you stay still in between."
+                                    : "Benchmark: 90 s along the streets.", 6f);
+            _lastShown = -1f;
             VrRig.Fade(0.4f);
 
             var all = new FrameStats();
@@ -119,13 +184,19 @@ namespace KR.Gameplay.Diagnostics
             while (travelled < total)
             {
                 yield return null;
-                if (GamePause.Paused)
-                    continue;
                 float dt = Time.unscaledDeltaTime;
                 clock += dt;
                 travelled += Speed * dt;
-                // Walk the route to the current distance.
-                float d = travelled;
+                // In the headset the view never glides (that makes people sick): it jumps to the next point along
+                // the route every 60 m, behind a short fade, and stays still in between. Same route and length.
+                float shown = VrRig.Active ? Mathf.Floor(travelled / HopMetres) * HopMetres : travelled;
+                bool hop = VrRig.Active && shown != _lastShown;
+                _lastShown = shown;
+                if (VrRig.Active && !hop)
+                    goto measure;
+                if (hop)
+                    VrRig.Fade(0.25f);
+                float d = shown;
                 Vector3 pos = route[route.Count - 1], dir = Vector3.forward;
                 for (int i = 1; i < route.Count; i++)
                 {
@@ -141,7 +212,10 @@ namespace KR.Gameplay.Diagnostics
                 dir.y = 0f;
                 float yaw = dir.sqrMagnitude > 0.01f ? Quaternion.LookRotation(dir).eulerAngles.y : motor.transform.eulerAngles.y;
                 motor.Teleport(pos, yaw);
+                if (_rig.DesktopCamera != null)
+                    _rig.DesktopCamera.LookAlong(yaw, 3f);
 
+            measure:
                 if (clock < WarmUp)
                     continue;
                 float ms = dt * 1000f;
@@ -172,8 +246,11 @@ namespace KR.Gameplay.Diagnostics
             VrRig.Fade(0.4f);
             motor.Teleport(back, backYaw);
             motor.Frozen = false;
+            if (_rig.DesktopCamera != null)
+                _rig.DesktopCamera.ViewLocked = false;
             _rig.Busy = false;
             Running = false;
+            Unfix();
 
             float budget = PerformanceOverlay.BudgetMs;
             var sum = new StringBuilder();
@@ -181,8 +258,9 @@ namespace KR.Gameplay.Diagnostics
                .Append("Device: ").Append(SystemInfo.deviceModel).Append(" | GPU: ").Append(SystemInfo.graphicsDeviceName)
                .Append(" | ").Append(SystemInfo.graphicsDeviceType).Append(" | VR: ").Append(VrRig.Active).Append('\n')
                .Append("Quality: ").Append(QualitySettings.names[QualitySettings.GetQualityLevel()])
-               .Append(" | target ").Append(PerformanceOverlay.TargetHz.ToString("0", ci)).Append(" Hz (budget ")
-               .Append(budget.ToString("0.0", ci)).Append(" ms) | dev build: ").Append(Debug.isDebugBuild).Append('\n')
+               .Append(" | LOD bias ").Append(QualitySettings.lodBias.ToString("0.##", ci))
+               .Append(" | display ").Append(PerformanceOverlay.TargetHz.ToString("0", ci)).Append(" Hz (budget ")
+               .Append(budget.ToString("0.0", ci)).Append(" ms, ").Append(VrRig.Active ? "vsync" : "uncapped").Append(") | dev build: ").Append(Debug.isDebugBuild).Append('\n')
                .Append("Route: ").Append(total.ToString("0", ci)).Append(" m at ").Append(Speed.ToString("0", ci))
                .Append(" m/s, ").Append(all.Count).Append(" frames measured\n")
                .Append("Average FPS: ").Append(all.AverageFps.ToString("0.0", ci))

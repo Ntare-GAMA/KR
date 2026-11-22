@@ -235,13 +235,24 @@ namespace KR.Gameplay.Player
         }
 
         // Darken the edge of the view in proportion to how fast the world moves past.
+        float _lastYaw, _lastSpeed, _motion;
+
         void UpdateVignette()
         {
             if (vignette == null)
                 return;
-            float speed = Time.deltaTime > 0f ? (transform.position - _lastPos).magnitude / Time.deltaTime : 0f;
+            float dt = Time.deltaTime;
+            float speed = dt > 0f ? (transform.position - _lastPos).magnitude / dt : 0f;
             _lastPos = transform.position;
-            float target = Mathf.Clamp01(speed / (_seated ? 12f : 3f)) * Comfort.VignetteStrength;
+            // Turning and speeding up or slowing down make people sick more than steady speed does: the vignette
+            // also closes in for the rig's turn rate and its change of speed (smoothed, so bumps do not flicker it).
+            float turnRate = dt > 0f ? Mathf.Abs(Mathf.DeltaAngle(_lastYaw, transform.eulerAngles.y)) / dt : 0f;
+            _lastYaw = transform.eulerAngles.y;
+            float accel = dt > 0f ? Mathf.Abs(speed - _lastSpeed) / dt : 0f;
+            _lastSpeed = speed;
+            _motion = Mathf.Lerp(_motion, Mathf.Max(Mathf.Clamp01(speed / (_seated ? 12f : 3f)),
+                                                    Mathf.Clamp01(turnRate / 45f), Mathf.Clamp01(accel / 4f)), 1f - Mathf.Exp(-6f * dt));
+            float target = _motion * Comfort.VignetteStrength;
             _vignette = Mathf.MoveTowards(_vignette, target, Time.deltaTime * 2.5f);
             _fade = Mathf.MoveTowards(_fade, 0f, Time.unscaledDeltaTime * _fadeSpeed);
             _block ??= new MaterialPropertyBlock();

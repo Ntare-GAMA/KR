@@ -437,8 +437,16 @@ namespace KR.Gameplay.Story
                         _attending = false;
                         if (r.siren != null) r.siren.Stop();
                         bool near = (you - _attendAt).sqrMagnitude < 40f * 40f;
-                        _officer?.GetOut(r.body, near ? you : _attendAt,
-                            "Police. Is anyone hurt? Move the cars to the side if you can, and exchange your details with the other driver.");
+                        _officer?.GetOut(r.body, near ? you : _attendAt, new[]
+                        {
+                            "Police. Is anyone hurt?",
+                            "Your driving licence and your identity card, please.",
+                            "Thank you. Move the cars to the side if you can, and exchange your details with the other driver.",
+                        }, i =>
+                        {
+                            if (i == 1 && near)
+                                Wallet.Instance?.Show(5f, Wallet.Card.Licence, Wallet.Card.Identity);
+                        });
                         _policeLeaveAt = Time.time + 30f;
                         _leavingPlanned = false;
                     }
@@ -495,8 +503,29 @@ namespace KR.Gameplay.Story
                 _director?.SetFlag("stopped_by_police_after_hit");
                 string said = "Police. Stay where you are. You knocked someone down" + (_crossing ? " on a zebra crossing" : "") +
                               ". The ambulance is with them. You did right to stop.";
-                _officer?.GetOut(r.body, you, said);
-                _rig.Toast(said, 7f);
+                string offence = _crossing ? "Hitting a pedestrian on a zebra crossing" : "Hitting a pedestrian";
+                var lines = new[]
+                {
+                    said,
+                    "Your driving licence and your identity card, please.",
+                    "Thank you, NTARE Shiloh. I am writing you a ticket for this.",
+                    "Here is your ticket. Drive slowly near crossings; people on foot always come first.",
+                };
+                _officer?.GetOut(r.body, you, lines, i =>
+                {
+                    if (i == 1)
+                        Wallet.Instance?.Show(5f, Wallet.Card.Licence, Wallet.Card.Identity);
+                    else if (i == 3)
+                    {
+                        // The fine is not made up: until the Minister's Order is supplied it stays a placeholder,
+                        // as for every other road rule in the game.
+                        Wallet.Instance?.Ticket(offence, _nav != null && !string.IsNullOrEmpty(_nav.StreetName) ? _nav.StreetName : "Kimironko",
+                                                "to be set by the Minister's Order (placeholder)");
+                        _director?.SetFlag("ticket_after_hit");
+                    }
+                });
+                if (_officer == null)
+                    _rig.Toast(said, 7f);
             }
             else if (_awayFor > LoseSeconds || (Time.time - _chaseStart > 240f && distance > 180f))
             {

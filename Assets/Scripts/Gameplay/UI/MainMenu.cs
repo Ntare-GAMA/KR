@@ -78,6 +78,9 @@ namespace KR.Gameplay.UI
             Select(0);
             SetFocus(Focus.Play);
             StartCoroutine(PlaceWhenTracked());
+            // The FPS benchmark (-benchmark) goes straight into the city.
+            if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-benchmark") >= 0)
+                StartCoroutine(LoadStory());
         }
 
         // ---------- layout ----------

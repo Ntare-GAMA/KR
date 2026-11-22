@@ -29,11 +29,13 @@ You play an ALU student racing deadlines through Rush Week: visit a friend, drin
 | Thumbstick | Walk (or aim a teleport); steer in the car; menus and replies | Snap or smooth turn |
 | Thumbstick click | Run; headlights in the car | Gear P / D / R (when stopped) |
 | Trigger | Brake | Accelerate; camera shutter when walking |
-| Grip | (closes the hand) | Hold to raise the photo camera (walking) |
+| Grip | Hold things: pick up, carry and throw; pull door handles; horn in the car | Hold things the same way; with nothing in reach, raises the photo camera |
 | Buttons | X start milestone / talk / select, Y seatbelt | A get in / out of the car (out only in P), B handbrake |
 | Menu ☰ | Info panel: Status, Journal, Progress, Photos, Settings (pauses the game) | |
 
-Desktop (Editor testing): WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it, C camera and click to shoot, M full map, N destination list (arrows pick a category and a place, Enter sets it; directions show on the minimap and as a line on the ground).
+Hands (walking): squeeze the grip near a cup, book, bottle, fruit or ball to pick it up; open the hand to drop it, or swing and open to throw. Take a building's door handle and pull to open it and go in. In a restaurant, bring the food or drink to your mouth to eat or sip. Each grab gives a short buzz.
+
+Desktop (Editor testing): G picks up what you look at (G again puts it down, right-click throws), F3 performance overlay, F9 FPS benchmark, WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it, C camera and click to shoot, M full map, N destination list (arrows pick a category and a place, Enter sets it; directions show on the minimap and as a line on the ground).
 
 ## Requirements
 
@@ -56,6 +58,10 @@ Open this folder in Unity Hub (Add, Add project from disk, pick the folder that 
 | `/` | The Unity project (Assets, Packages, ProjectSettings) |
 | `Assets/Scripts/Gameplay/Player` | Walking, the car (physics, lights), hands, VR rig, controller input |
 | `Assets/Scripts/Gameplay/Story` | Rush Week: milestones, road-rule monitor, driving coach, police, weather, clock, satnav, dashboard screen and VR panel |
+| `Assets/Scripts/Gameplay/Interaction` | Hands that grab, hold and throw (`IGrabbable`, `IHandDriver`, `HandInteractor`, `Grabbable`, `DoorHandle`, `Edible`) |
+| `Assets/Scripts/Gameplay/Diagnostics` | Performance overlay and the repeatable FPS benchmark |
+| `Assets/Scripts/Core` | Engine-light helpers: frame statistics, Profiler counters, atomic file writes |
+| `Assets/Scripts/Tests/EditMode` | Unit tests (NUnit, Unity Test Framework) |
 | `Assets/Scripts/Gameplay/World` | Traffic, signals, STOP signs, day and night, street lamps, instanced city, road graph, city map |
 | `Assets/Scripts/Editor` | Scene builders: GIS import, play area, roads, greenery, people, player and car, Story Mode, city map, Quest setup |
 | `Assets/World/PC/kimironko_kibagabaga` | The generated world (terrain, roads, instanced city, car materials, city map) |
@@ -64,7 +70,7 @@ Open this folder in Unity Hub (Add, Add project from disk, pick the folder that 
 | `Tools/gis` | Python: OSM extraction, district heightmaps, surrounding land |
 | `Documentation` | Asset register, sourcing guide, Story Mode plan, art direction |
 
-Assemblies: `KR.Core`, `KR.Gameplay`, `KR.Editor`, `KR.Editor.XR`.
+Assemblies: `KR.Core`, `KR.Gameplay`, `KR.Editor`, `KR.Editor.XR`, `KR.Tests.EditMode`.
 
 ## Building
 
@@ -96,6 +102,48 @@ The `.tif`, `.pbf` and `.geojson` inputs are git-ignored because of their size. 
 ### Mixamo animations
 
 The raw Mixamo download library is git-ignored. The curated clips the game uses are in `Assets/Art/Animations/Mixamo`. To change the set, download the clips again, edit `MixamoCatalog.cs` and run Characters → Import Mixamo Animations.
+
+## Testing
+
+Unit tests (frame statistics, road routing and one-way streets, hands and door handles, the police stop, atomic saves):
+
+```bash
+Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Logs/tests_editmode.xml
+```
+
+Or Window → General → Test Runner → EditMode → Run All.
+
+Play-mode checks that run the game in the Editor and save screenshots (no headset needed; leave out `-batchmode`):
+
+| Method | What it checks |
+|---|---|
+| `KR.Editor.Batch.PlayCapture.Interiors` | Goes into 8 buildings, photographs each room and picks something up |
+| `KR.Editor.Batch.PlayCapture.Emergency` | Knocks someone down on a zebra crossing (simulated) and records the ambulance and the police arriving |
+| `KR.Editor.Batch.PlayCapture.Traffic` | Traffic sits on the road, by day and by night |
+
+```bash
+Unity -projectPath . -executeMethod KR.Editor.Batch.PlayCapture.Interiors -captureDir Logs/Interiors
+```
+
+On the headset: walk, drive, open the info panel (left ☰), and on Settings switch on the performance overlay or run the FPS benchmark.
+
+## Performance
+
+- **Overlay:** F3 on a desktop, or Settings → Performance overlay on the headset. It shows FPS, frame time against the display budget (13.9 ms at 72 Hz), main-thread time, draw calls, batches, SetPass calls, triangles, GC allocation per frame and memory. Draw-call counters need a development build.
+- **Benchmark:** F9, Settings → Run the FPS benchmark, or `KigaliRushStory.exe -benchmark` (add `-lodBias 1000` for a "LODs off" comparison). It follows the same 818 m street route every time, at 10:00 in calm weather with the clock held. It writes a per-second CSV and a summary (average FPS, 1% and 0.1% lows, share of frames over budget, draw calls) to `persistentDataPath/Benchmarks`. On the Quest, fetch the results with `adb pull /sdcard/Android/data/<package>/files/Benchmarks`.
+- **Scene report:** Kigali Rush → Performance → Scene report (`BatchTasks.PerfReport`), which writes `Logs/perf_report.txt` with renderers, triangles, LOD groups, static flags and instancing per group, and the textures without mipmaps.
+- **Profiler markers:** `KR.Traffic`, `KR.Interiors`, `KR.InstancedCity.Draw`, `KR.StreetLights`, `KR.Signals`, `KR.Story`, `KR.Emergency`, `KR.CrossingWalkers`, `KR.Headlights`, `KR.DayNight`.
+- **Techniques in the build:**
+  - IL2CPP on ARM64;
+  - single-pass instanced stereo and foveated rendering (OpenXR);
+  - SRP Batcher;
+  - GPU instancing (the instanced city scatter and instanced materials);
+  - static batching (roads, road edges, road markings);
+  - 27,391 LOD groups (parked cars get a low-poly LOD1);
+  - per-layer cull distances;
+  - object pools (traffic, building doors, street lamps and headlights);
+  - mipmapped ASTC textures (only skyboxes and UI have none);
+  - interiors made only when you go in.
 
 ## Project rules (short version)
 

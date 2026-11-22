@@ -158,6 +158,16 @@ namespace KR.Gameplay.Story
         public void ApplyComfort()
         {
             var c = _save.comfort ??= new ComfortSave();
+            // Saves made before 2026-11-22 had a weak vignette and stick walking; move them once to the comfortable
+            // defaults (both can be changed back on the Settings page).
+            if (c.version < 1)
+            {
+                c.version = 1;
+                c.vignette = 2;
+                c.teleport = true;
+                if (c.turn == 2)
+                    c.turn = 0;
+            }
             Comfort.TurnMode = (Comfort.Turn)Mathf.Clamp(c.turn, 0, 2);
             Comfort.VignetteStrength = c.vignette == 0 ? 0f : c.vignette == 1 ? 0.5f : 0.85f;
             Comfort.Teleport = c.teleport;
