@@ -17,9 +17,21 @@ namespace KR.Editor.Batch
         // Rush Week content, police posts and Story Mode wiring on top of the Kimironko scene.
         public static void AddStoryMode() => Run(StoryModeBuilder.Build);
 
+        // ALU campus rebuilt from the OSM outlines (enterable ground floors, car park); renders with -captureDir.
+        public static void RebuildAlu() => Run(AluCampus.RebuildHalls);
+        public static void CaptureAlu() => Run(() =>
+        {
+            var args = Environment.GetCommandLineArgs();
+            int i = Array.IndexOf(args, "-captureDir");
+            AluCampus.CaptureHalls(i >= 0 && i + 1 < args.Length ? args[i + 1] : "Logs/Alu");
+        });
+
         // Objects standing in the carriageway: list them (Temp/clear_roads.txt), or remove them and keep the layers.
         public static void ClearRoadsReport() => Run(KR.Editor.Kigali.ClearRoads.Report);
         public static void ClearRoads() => Run(KR.Editor.Kigali.ClearRoads.Apply);
+
+        // Draw cost of the story scene and texture import settings (Logs/perf_report.txt).
+        public static void PerfReport() => Run(KR.Editor.Perf.PerfReport.Run);
 
         // Where streets have steps, gaps, floating edges or impossible grades (Temp/road_report.txt).
         public static void RoadReport() => Run(KR.Editor.Kigali.RoadReport.Run);

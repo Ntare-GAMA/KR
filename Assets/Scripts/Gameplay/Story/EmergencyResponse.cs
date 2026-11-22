@@ -197,7 +197,15 @@ namespace KR.Gameplay.Story
             r.route.Add(target);
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.Emergency");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             float dt = Time.deltaTime;
             Flash(_ambulance);

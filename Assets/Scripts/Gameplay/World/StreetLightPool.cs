@@ -65,7 +65,15 @@ namespace KR.Gameplay.World
             }
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.StreetLights");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             bool on = _night > 0.02f && lamps != null && lamps.Length > 0;
             if (!on)

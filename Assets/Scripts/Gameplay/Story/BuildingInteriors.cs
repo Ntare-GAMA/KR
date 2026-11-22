@@ -241,7 +241,15 @@ namespace KR.Gameplay.Story
         }
         static bool _warned;
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.Interiors");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             if (_rig == null)
                 return;

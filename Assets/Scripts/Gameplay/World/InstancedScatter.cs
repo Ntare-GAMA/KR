@@ -132,7 +132,15 @@ namespace KR.Gameplay.World
             _matrices = null;
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.InstancedCity.Draw");
+
         void Draw(ScriptableRenderContext context, Camera cam)
+        {
+            using (ProfileMarker.Auto())
+                DrawCity(cam);
+        }
+
+        void DrawCity(Camera cam)
         {
             if (_matrices == null || cam.cameraType == CameraType.Preview || cam.cameraType == CameraType.Reflection)
                 return;

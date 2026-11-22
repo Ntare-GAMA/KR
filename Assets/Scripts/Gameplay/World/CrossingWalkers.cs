@@ -59,7 +59,15 @@ namespace KR.Gameplay.World
             }
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.CrossingWalkers");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             float now = Time.time;
             for (int i = 0; i < walkers.Length; i++)

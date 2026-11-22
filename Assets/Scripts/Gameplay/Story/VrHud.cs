@@ -172,7 +172,7 @@ namespace KR.Gameplay.Story
         {
             Page.Journal => _places != null ? _places.Catalog.places.Length : 0,
             Page.Photos => director.Photos.Count,
-            Page.Settings => 10,
+            Page.Settings => 12,
             _ => 0,
         };
 
@@ -302,6 +302,8 @@ namespace KR.Gameplay.Story
                 $"Choose a destination (now: {dest})",
                 "Start the Kimironko tour",
                 $"Car radio: {CarRadio.VolumeText}  (plays all game; in the car: right stick up/down)",
+                $"Performance overlay: {(KR.Gameplay.Diagnostics.PerformanceOverlay.Visible ? "on" : "off")}",
+                KR.Gameplay.Diagnostics.BenchmarkRun.Running ? "FPS benchmark running..." : "Run the FPS benchmark (90 s route)",
                 "Quit to main menu",
             };
             _sb.Clear();
@@ -335,7 +337,17 @@ namespace KR.Gameplay.Story
                     break;
                 case 7: StartTour(); break;
                 case 8: CarRadio.Volume = CarRadio.Volume >= 0.95f ? 0f : CarRadio.Volume + 0.1f; break;
-                case 9: QuitToMenu(); return;
+                case 9: KR.Gameplay.Diagnostics.PerformanceOverlay.Visible = !KR.Gameplay.Diagnostics.PerformanceOverlay.Visible; break;
+                case 10:
+                    var bench = FindFirstObjectByType<KR.Gameplay.Diagnostics.BenchmarkRun>();
+                    if (bench != null && !KR.Gameplay.Diagnostics.BenchmarkRun.Running)
+                    {
+                        _open = false;
+                        GamePause.SetPanel(false);
+                        bench.Begin();
+                    }
+                    break;
+                case 11: QuitToMenu(); return;
             }
             director.ApplyComfort();
         }

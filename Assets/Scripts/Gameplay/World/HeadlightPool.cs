@@ -37,7 +37,15 @@ namespace KR.Gameplay.World
             }
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.Headlights");
+
         void LateUpdate()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             var cycle = DayNightCycle.Instance;
             float night = cycle != null ? cycle.Night : 0f;

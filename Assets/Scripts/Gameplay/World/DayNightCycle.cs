@@ -137,7 +137,15 @@ namespace KR.Gameplay.World
                 Destroy(m);
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.DayNight");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             if (gameMinutesPerSecond > 0f)
                 Hour = hour + gameMinutesPerSecond / 60f * Time.deltaTime;

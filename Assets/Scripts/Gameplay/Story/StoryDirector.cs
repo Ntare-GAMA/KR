@@ -255,7 +255,15 @@ namespace KR.Gameplay.Story
 
         bool InControl => rig == null || rig.isActiveAndEnabled;
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.Story");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             bool free = !GamePause.Paused && (rig == null || !rig.Busy) && (_talk == null || !_talk.WantsConfirm);
             bool confirm = free && RigInput.ConfirmPressed;

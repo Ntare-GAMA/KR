@@ -364,7 +364,15 @@ namespace KR.Gameplay.World
         static long CellKey(Vector3 p) =>
             ((long)Mathf.FloorToInt(p.x / CellSize) << 32) ^ (uint)Mathf.FloorToInt(p.z / CellSize);
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.Traffic");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             float dt = Time.deltaTime;
             if (dt <= 0f || _cumulative == null)

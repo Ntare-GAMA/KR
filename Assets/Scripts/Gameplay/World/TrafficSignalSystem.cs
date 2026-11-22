@@ -73,7 +73,15 @@ namespace KR.Gameplay.World
             return local < green ? green - local : local < green + amber ? green + amber - local : HalfCycle * 2f - local;
         }
 
+        static readonly Unity.Profiling.ProfilerMarker ProfileMarker = new Unity.Profiling.ProfilerMarker("KR.Signals");
+
         void Update()
+        {
+            using (ProfileMarker.Auto())
+                Tick();
+        }
+
+        void Tick()
         {
             _refresh -= Time.deltaTime;
             if (_refresh > 0f || lamps == null || litMaterials == null || litMaterials.Length < 3)
