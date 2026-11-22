@@ -114,6 +114,8 @@ namespace KR.Gameplay.Player
 
         // Photo camera: hold the right grip (C toggles on a desktop); the right trigger (left click) is the shutter.
         public static float RightGrip => Axis(XRController.rightHand, "grip");
+        // Either controller's grip, 0 to 1 (holding things with your hands).
+        public static float Grip(bool left) => Axis(left ? XRController.leftHand : XRController.rightHand, "grip");
         public static bool ShutterPressed { get { Refresh(); return _shutter; } }
         public static bool CameraKeyPressed => Keyboard.current != null && Keyboard.current.cKey.wasPressedThisFrame;
         // Menu navigation on the info panel and in conversations: left stick (arrows / W S A D on a desktop).

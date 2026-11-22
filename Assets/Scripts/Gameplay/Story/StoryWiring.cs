@@ -1,3 +1,4 @@
+using KR.Core;
 using UnityEngine;
 
 namespace KR.Gameplay.Story
@@ -8,8 +9,8 @@ namespace KR.Gameplay.Story
     {
         void Start()
         {
-            var director = GetComponent<StoryDirector>() ?? FindFirstObjectByType<StoryDirector>();
-            var camera = GetComponent<PhotoCamera>() ?? FindFirstObjectByType<PhotoCamera>();
+            var director = GetComponent<StoryDirector>().OrNull() ?? FindFirstObjectByType<StoryDirector>();
+            var camera = GetComponent<PhotoCamera>().OrNull() ?? FindFirstObjectByType<PhotoCamera>();
             if (director != null && camera != null)
                 camera.Taken += director.OnPhotoTaken;
         }

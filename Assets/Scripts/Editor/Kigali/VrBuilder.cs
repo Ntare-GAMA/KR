@@ -1,3 +1,4 @@
+using KR.Core;
 using KR.Editor.Util;
 using KR.Gameplay.Player;
 using KR.Gameplay.Story;
@@ -35,7 +36,7 @@ namespace KR.Editor.Kigali
             offset.SetParent(root.transform, false);
 
             // Head: driven by the headset pose only while VR is active (VrRig enables it).
-            var headPose = cam.gameObject.GetComponent<TrackedPoseDriver>() ?? cam.gameObject.AddComponent<TrackedPoseDriver>();
+            var headPose = cam.gameObject.GetOrAdd<TrackedPoseDriver>();
             headPose.positionAction = new InputAction("Head position", binding: "<XRHMD>/centerEyePosition");
             headPose.rotationAction = new InputAction("Head rotation", binding: "<XRHMD>/centerEyeRotation");
             headPose.trackingType = TrackedPoseDriver.TrackingType.RotationAndPosition;

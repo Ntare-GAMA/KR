@@ -78,7 +78,10 @@ namespace KR.Gameplay.Story
             bool walking = rig.CurrentMode == PlayerRig.Mode.Walking && !GamePause.Paused;
             if (!VrRig.Active && RigInput.CameraKeyPressed)
                 _desktopToggle = !_desktopToggle;
-            bool want = walking && (VrRig.Active ? RigInput.RightGrip > 0.6f : _desktopToggle);
+            // With something in reach of (or in) the right hand, the grip takes hold of it instead of the camera.
+            var grabHand = KR.Gameplay.Interaction.HandInteractor.Right;
+            bool handBusy = !_raised && grabHand != null && grabHand.Busy;
+            bool want = walking && (VrRig.Active ? RigInput.RightGrip > 0.6f && !handBusy : _desktopToggle);
             if (want != _raised)
             {
                 _raised = want;

@@ -1,3 +1,4 @@
+using KR.Core;
 using System;
 using System.Collections;
 using System.Collections.Generic;
@@ -279,6 +280,8 @@ namespace KR.Gameplay.Story
                 Face(_seat.seat.position);
                 Serve(_dish, _seat.plate);
                 Serve(_drink, _seat.drink);
+                Handheld(_dish, true);
+                Handheld(_drink, false);
                 Say("Enjoy your meal!", 3f);
                 _dishBites = _dish != null ? 3 : 0;
                 _drinkSips = _drink != null ? 3 : 0;
@@ -286,14 +289,21 @@ namespace KR.Gameplay.Story
                 yield return Walk(_homePos);
                 Face(_homePos + _homeRot * Vector3.forward);
 
-                // Eat and drink, a bite or a sip each press.
+                // Eat and drink: pick it up and bring it to your mouth (a bite or a sip each time), or press the key.
+                _bitFood = _bitDrink = false;
                 while (_dishBites > 0 || _drinkSips > 0)
                 {
-                    bool food = _dishBites > 0;
-                    var item = food ? _dish : _drink;
-                    _prompt.Say(item.transform, 0.35f, $"<b>{Key}</b>  {(food ? "Eat" : "Drink")}", 0.3f);
-                    if (RigInput.ConfirmPressed)
+                    bool next = _dishBites > 0;
+                    var shown = next ? _dish : _drink;
+                    _prompt.Say(shown.transform, 0.35f, VrRig.Active
+                        ? $"Pick it up and bring it to your mouth  <size=80%>(or <b>{Key}</b>)</size>"
+                        : $"<b>{Key}</b>  {(next ? "Eat" : "Drink")}  <size=80%>(G picks it up)</size>", 0.3f);
+                    int which = _bitFood && _dishBites > 0 ? 1 : _bitDrink && _drinkSips > 0 ? 2 : RigInput.ConfirmPressed ? (next ? 1 : 2) : 0;
+                    _bitFood = _bitDrink = false;
+                    if (which != 0)
                     {
+                        bool food = which == 1;
+                        var item = food ? _dish : _drink;
                         if (food) _dishBites--; else _drinkSips--;
                         var at = item.transform.position;
                         if (food)
@@ -409,6 +419,25 @@ namespace KR.Gameplay.Story
             item.transform.localScale = Vector3.one;
             item.SetActive(true);
         }
+
+        bool _bitFood, _bitDrink;
+
+        // Served food and drink can be picked up; let go and it goes back on the table. Bringing it to your mouth
+        // counts as a bite or a sip.
+        void Handheld(GameObject item, bool food)
+        {
+            if (item == null)
+                return;
+            var grab = KR.Gameplay.Interaction.Grabbable.Make(item, true, true);
+            grab.RememberHome();
+            var edible = item.GetOrAdd<KR.Gameplay.Interaction.Edible>();
+            edible.Bitten -= OnDishBitten;
+            edible.Bitten -= OnDrinkBitten;
+            edible.Bitten += food ? OnDishBitten : OnDrinkBitten;
+        }
+
+        void OnDishBitten(KR.Gameplay.Interaction.Edible e) => _bitFood = true;
+        void OnDrinkBitten(KR.Gameplay.Interaction.Edible e) => _bitDrink = true;
 
         void Serve(GameObject item, Transform spot)
         {
