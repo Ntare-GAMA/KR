@@ -27,6 +27,15 @@ namespace KR.Editor.Batch
                 EditorApplication.update += Tick;
         }
 
+        // Goes into a spread of the city's buildings and renders each room from the doorway (interiors_*.png).
+        public static void Interiors()
+        {
+            SessionState.SetString(ModeKey, "interiors");
+            Traffic();
+        }
+
+        const string ModeKey = "kr.playcapture.mode";
+
         public static void Traffic()
         {
             var args = System.Environment.GetCommandLineArgs();
@@ -62,6 +71,11 @@ namespace KR.Editor.Batch
             if (now < _next)
                 return;
             string dir = SessionState.GetString(Key, "");
+            if (SessionState.GetString(ModeKey, "") == "interiors")
+            {
+                TickInteriors(dir, now);
+                return;
+            }
             var traffic = Object.FindObjectsByType<RoadNetworkTraffic>(FindObjectsSortMode.None).FirstOrDefault(t => !t.IsWalkers);
             var rig = Object.FindFirstObjectByType<PlayerRig>();
             if (traffic == null || rig == null || traffic.Count == 0)
@@ -109,6 +123,60 @@ namespace KR.Editor.Batch
             _step++;
         }
 
+        static void TickInteriors(string dir, double now)
+        {
+            var bi = Object.FindFirstObjectByType<KR.Gameplay.Story.BuildingInteriors>();
+            if (bi == null || bi.Count == 0)
+            {
+                Debug.LogError("[PlayCapture] No enterable buildings.");
+                Quit();
+                return;
+            }
+            const int shots = 8;
+            int k = _step / 2;
+            if (k >= shots)
+            {
+                bi.ForceLeave();
+                Debug.Log($"[PlayCapture] Interiors done: {dir}");
+                Quit();
+                return;
+            }
+            int index = (k * 7919 + 101) % bi.Count;
+            if (_step % 2 == 0)
+            {
+                Debug.Log($"[PlayCapture] Enter building {index}: {bi.TryEnter(index)}");
+                _next = now + 1.5;
+            }
+            else
+            {
+                var main = Camera.main;
+                if (main != null)
+                {
+                    var go = new GameObject("Capture camera");
+                    var cam = go.AddComponent<Camera>();
+                    cam.CopyFrom(main);
+                    cam.stereoTargetEye = StereoTargetEyeMask.None;
+                    cam.fieldOfView = 80f;
+                    var rt = new RenderTexture(1280, 720, 24);
+                    var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+                    cam.targetTexture = rt;
+                    foreach (var (view, turn) in new[] { ("ahead", 0f), ("back to door", 180f) })
+                    {
+                        cam.transform.SetPositionAndRotation(main.transform.position, Quaternion.Euler(10f, main.transform.eulerAngles.y + turn, 0f));
+                        cam.Render();
+                        RenderTexture.active = rt;
+                        tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                        File.WriteAllBytes(Path.Combine(dir, $"interiors_{k}_{view}.png"), tex.EncodeToPNG());
+                    }
+                    RenderTexture.active = null;
+                    Object.DestroyImmediate(go);
+                    Object.DestroyImmediate(rt);
+                }
+                _next = now + 0.3;
+            }
+            _step++;
+        }
+
         static void Render(string dir, string name, Transform body)
         {
             var go = new GameObject("Capture camera");
@@ -147,6 +215,7 @@ namespace KR.Editor.Batch
         static void Quit()
         {
             SessionState.EraseString(Key);
+            SessionState.EraseString(ModeKey);
             EditorApplication.update -= Tick;
             EditorApplication.isPlaying = false;
             EditorApplication.delayCall += () => EditorApplication.Exit(0);
