@@ -32,6 +32,12 @@ namespace KR.Editor.Batch
 
         // Draw cost of the story scene and texture import settings (Logs/perf_report.txt).
         public static void PerfReport() => Run(KR.Editor.Perf.PerfReport.Run);
+        // LOD groups on city objects and static batching on roads (saves the scene and the editable layers).
+        public static void AddLods() => Run(KR.Editor.Perf.LodSetup.Run);
+        // People who would slide without a walking animation: list them, or remove them.
+        public static void AnimationAuditReport() => Run(KR.Editor.Perf.AnimationAudit.Report);
+        public static void AnimationAuditRemove() => Run(KR.Editor.Perf.AnimationAudit.Remove);
+        public static void AnimationFixRigs() => Run(KR.Editor.Perf.AnimationAudit.FixRigs);
 
         // Where streets have steps, gaps, floating edges or impossible grades (Temp/road_report.txt).
         public static void RoadReport() => Run(KR.Editor.Kigali.RoadReport.Run);
@@ -47,7 +53,8 @@ namespace KR.Editor.Batch
                 scenes = QuestBoot.Scenes,
                 locationPathName = exe,
                 target = UnityEditor.BuildTarget.StandaloneWindows64,
-                options = UnityEditor.BuildOptions.None,
+                // -development: a development build, so the Profiler can attach and the draw-call counters work.
+                options = Array.IndexOf(Environment.GetCommandLineArgs(), "-development") >= 0 ? UnityEditor.BuildOptions.Development : UnityEditor.BuildOptions.None,
             });
             var sum = report.summary;
             Debug.Log($"[Build] {sum.result}: {exe}, {sum.totalSize / (1024f * 1024f):0} MB, {sum.totalErrors} errors, {sum.totalTime.TotalMinutes:0.0} min");
