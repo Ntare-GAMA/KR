@@ -12,11 +12,12 @@ namespace KR.Gameplay.Story
     // The info panel. Nothing floats in view by default: the left controller's menu button (☰, Tab on a desktop)
     // opens it and closes it again, and the game pauses while it is open. Walking it is a tablet held above your
     // left hand; parked in the car it sits in front of you (while driving, the dashboard screen has everything).
-    // Pages (left stick left/right): Status, Journal, Progress, Photos, Settings. Up/down picks a row, X uses it.
+    // Pages (left stick left/right): Status, Journal, Progress, Photos, Phone, Wallet, Settings. Up/down picks a row, X uses it.
     // With the panel closed, the left controller buzzes when something new happens.
     public sealed class VrHud : MonoBehaviour
     {
-        enum Page { Status, Journal, Progress, Photos, Settings }
+        enum Page { Status, Journal, Progress, Photos, Phone, Wallet, Settings }
+        const int PageCount = 7;
 
         [SerializeField] StoryDirector director;
         [SerializeField] PlayerRig rig;
@@ -158,7 +159,7 @@ namespace KR.Gameplay.Story
             int x = RigInput.NavX;
             if (x != 0)
             {
-                _page = (Page)(((int)_page + x + 5) % 5);
+                _page = (Page)(((int)_page + x + PageCount) % PageCount);
                 _row = 0;
             }
             int rows = Rows();
@@ -193,6 +194,8 @@ namespace KR.Gameplay.Story
                 case Page.Progress: return Progress();
                 case Page.Photos: return Gallery();
                 case Page.Settings: return Settings();
+                case Page.Phone: return Phone.Instance != null ? Phone.Instance.ScreenText() : "No phone.";
+                case Page.Wallet: return $"<b>Your cards</b>\n\n{Wallet.Describe(Wallet.Card.Student)}\n\n{Wallet.Describe(Wallet.Card.Identity)}\n\n{Wallet.Describe(Wallet.Card.Licence)}{(Wallet.Instance != null && Wallet.Instance.Tickets.Count > 0 ? "\n\n<b>Tickets</b>\n" + string.Join("\n", Wallet.Instance.Tickets) : "")}";
                 default: return StoryInfo.Compose(director, rig, _nav, false);
             }
         }

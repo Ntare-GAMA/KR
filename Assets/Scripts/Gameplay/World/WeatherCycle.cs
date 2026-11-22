@@ -43,6 +43,9 @@ namespace KR.Gameplay.World
         public Kind Target { get; private set; }
         public float Wind01 => Mathf.Clamp01(_now.Wind / 1.35f);
         public float Rain01 => _now.Rain;
+        // Under a roof (inside a building or a restaurant): no rain falls around you.
+        public static bool Sheltered { get; set; }
+        bool _wasSheltered;
 
         public void Configure(WindZone windZone, Terrain ground, DayNightCycle dayNight, ParticleSystem rainParticles)
         {
@@ -153,7 +156,10 @@ namespace KR.Gameplay.World
                 if (cam != null)
                     rain.transform.position = cam.transform.position + Vector3.up * 18f;
                 var emission = rain.emission;
-                emission.rateOverTime = _now.Rain < 0.02f ? 0f : _now.Rain * maxRainPerSecond;
+                emission.rateOverTime = _now.Rain < 0.02f || Sheltered ? 0f : _now.Rain * maxRainPerSecond;
+                if (Sheltered && !_wasSheltered)
+                    rain.Clear();   // the drops already falling round your head go too
+                _wasSheltered = Sheltered;
                 if (_now.Rain > 0.02f && !rain.isPlaying)
                     rain.Play();
             }

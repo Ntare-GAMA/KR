@@ -151,6 +151,12 @@ namespace KR.Gameplay.Story
                 _rig = FindFirstObjectByType<PlayerRig>();
             if (_rig != null)
             {
+                string hint = _rig.CurrentHint;
+                if (hint != null)
+                {
+                    Panel(new Rect(w / 2 - 260, h - 230, 520, 40));
+                    GUI.Label(new Rect(w / 2 - 250, h - 226, 500, 32), hint, _body);
+                }
                 if (_rig.Prompt != null)
                 {
                     Panel(new Rect(w / 2 - 160, h - 180, 320, 40));

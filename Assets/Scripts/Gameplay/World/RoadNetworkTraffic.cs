@@ -476,9 +476,15 @@ namespace KR.Gameplay.World
                     {
                         if (j == i || !InCorridor(i, j, out float along))
                             continue;
-                        // Mutual block (typically two cars meeting at a junction): the lower index goes first.
+                        // Mutual block (typically two cars meeting at a junction): the lower index goes first, but only
+                        // while the other is still well ahead or off to the side; never into a body right in its path.
                         if (InCorridor(j, i, out _) && i < j)
-                            continue;
+                        {
+                            Vector3 d = _pos[j] - _pos[i];
+                            float lateral = Mathf.Abs(_fwd[i].x * d.z - _fwd[i].z * d.x);
+                            if (lateral > 1.4f || along > avoidGap + 4f)
+                                continue;
+                        }
                         room = Mathf.Min(room, along - avoidGap);
                     }
                 }

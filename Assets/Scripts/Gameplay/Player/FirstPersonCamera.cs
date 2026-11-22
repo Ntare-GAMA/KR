@@ -22,6 +22,14 @@ namespace KR.Gameplay.Player
         Camera _cam;
 
         public float Yaw => _yaw;
+        // Set by the benchmark: the mouse is ignored and the view is held where LookAlong puts it.
+        public bool ViewLocked { get; set; }
+
+        public void LookAlong(float yaw, float pitch)
+        {
+            _yaw = yaw;
+            _pitch = pitch;
+        }
 
         public void Configure(PlayerTuning tuning, PlayerRig playerRig)
         {
@@ -44,7 +52,7 @@ namespace KR.Gameplay.Player
                 return;
             Vector2 d = Vector2.zero;
             var mouse = Mouse.current;
-            if (mouse != null && Cursor.lockState == CursorLockMode.Locked)
+            if (mouse != null && Cursor.lockState == CursorLockMode.Locked && !ViewLocked)
                 d = mouse.delta.ReadValue() * (settings != null ? settings.mouseSensitivity : 0.12f);
             _pitch = Mathf.Clamp(_pitch - d.y, -70f, 75f);
 

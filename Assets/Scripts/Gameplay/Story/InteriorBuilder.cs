@@ -45,12 +45,14 @@ namespace KR.Gameplay.Story
         public Vector3 centre, right, fwd, doorAt, doorOut;
         public float hx, hz, floorY, height;
         public int seed;
+        public VenueKind venue;     // None: a home, shop or hall by size
+        public string venueName;
     }
 
     // Builds the inside of one building, sized to it: a home (living room, bedroom, kitchen), a shop or office, or
     // a hall. Walls, floors and big furniture are solid; cups, books, bottles, fruit and balls on the tables and
     // floors can be picked up (Grabbable). Seeded by the building, so a building looks the same each visit.
-    public sealed class InteriorBuilder
+    public sealed partial class InteriorBuilder
     {
         const float WallT = 0.15f;
 
@@ -118,8 +120,12 @@ namespace KR.Gameplay.Story
             leaf.GetComponent<Renderer>().sharedMaterial = _m.Wood;
             doorLeaf = leafHinge;
 
+            _spots.Clear();
+            _seats.Clear();
             float area = _width * _depth;
-            if (area < 140f)
+            if (f.venue != VenueKind.None && f.venue != VenueKind.Restaurant && _width >= 5f && _depth >= 6f)
+                Venue(f.venue, h);
+            else if (area < 140f)
                 Home(h, wall);
             else if (area < 600f)
                 Shop(h);
@@ -233,6 +239,7 @@ namespace KR.Gameplay.Story
         void Sofa(float x, float z, float yaw)
         {
             var rot = Quaternion.Euler(0f, yaw, 0f);
+            Seat(x, z, rot, Vector3.back);
             BoxR(_m.Fabric, x, 0.22f, z, new Vector3(1.9f, 0.44f, 0.85f), rot, Vector3.zero, true);
             BoxR(_m.Fabric, x, 0.62f, z, new Vector3(1.9f, 0.45f, 0.18f), rot, new Vector3(0f, 0f, 0.34f), true);
         }
@@ -253,6 +260,7 @@ namespace KR.Gameplay.Story
         void Chair(float x, float z, float yaw)
         {
             var rot = Quaternion.Euler(0f, yaw, 0f);
+            Seat(x, z, rot, Vector3.forward);
             BoxR(_m.Frame, x, 0.45f, z, new Vector3(0.44f, 0.05f, 0.44f), rot, Vector3.zero, false);
             BoxR(_m.Frame, x, 0.75f, z, new Vector3(0.44f, 0.55f, 0.04f), rot, new Vector3(0f, 0f, -0.2f), false);
             foreach (float sx in new[] { -0.18f, 0.18f })

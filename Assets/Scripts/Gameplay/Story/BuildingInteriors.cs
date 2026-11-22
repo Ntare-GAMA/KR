@@ -227,6 +227,15 @@ namespace KR.Gameplay.Story
             return true;
         }
 
+        // The enterable building nearest p within radius, or -1 (the Editor's play-mode checks).
+        public int BuildingNear(Vector3 p, float radius)
+        {
+            if (_index == null)
+                return -1;
+            _index.Nearby(p, radius, _nearby);
+            return _nearby.Count > 0 ? _nearby[0].i : -1;
+        }
+
         public void ForceLeave()
         {
             if (_inside >= 0)
@@ -254,20 +263,29 @@ namespace KR.Gameplay.Story
                     if (BuildingIndex.Ground(centre + right * (sx * (hx - 0.5f)) + fwd * (sz * (hz - 0.5f)), b.t, out float g))
                         _floorY = Mathf.Max(_floorY, g);
             _floorY += 0.06f;
+            // A named place in (or right by) this building: a bank, clinic, hotel... gets its own inside and people.
+            var kind = Venue.Near(_nav, centre, Mathf.Max(hx, hz) + 12f, out string venueName);
+            if (kind == VenueKind.Restaurant || kind == VenueKind.Shop || kind == VenueKind.Market)
+                kind = VenueKind.None;
             _interior = _builder.Build(new InteriorFrame
             {
                 centre = centre, right = right, fwd = fwd, hx = hx, hz = hz, height = height,
-                doorAt = _doorAt, doorOut = _doorOut, floorY = _floorY, seed = i,
+                doorAt = _doorAt, doorOut = _doorOut, floorY = _floorY, seed = i, venue = kind, venueName = venueName,
             }, transform, out _doorLeaf);
+            if (kind != VenueKind.None)
+                VenueLife.Create(_interior, kind, venueName, _builder);
             _props.Clear();
             _props.AddRange(_builder.Props);
             _inside = i;
+            KR.Gameplay.World.WeatherCycle.Sheltered = true;
             _bounds = (centre, right, fwd, hx, hz);
             door.root.gameObject.SetActive(false);
-            _rig.Player.Teleport(new Vector3(_doorAt.x, _floorY, _doorAt.z) - _doorOut * 1.3f,
-                                 Quaternion.LookRotation(-_doorOut).eulerAngles.y);
-            _rig.Toast(VrRig.Active ? "Grip to pick things up. Walk back out through the door to leave."
-                                    : "G picks things up. Walk back out through the door to leave.", 4f);
+            float inYaw = Quaternion.LookRotation(-_doorOut).eulerAngles.y;
+            _rig.Player.Teleport(new Vector3(_doorAt.x, _floorY, _doorAt.z) - _doorOut * 1.3f, inYaw);
+            _rig.DesktopCamera?.LookAlong(inYaw, 4f);   // face into the room, not wherever you were looking outside
+            string inside = kind != VenueKind.None ? $"You are in {venueName}. " : "";
+            _rig.Toast(inside + (VrRig.Active ? "Grip to pick things up, X to talk to people. Walk back out through the door to leave."
+                                              : "G picks things up, Enter talks to people, E sits down. Walk back out through the door to leave."), 5f);
         }
 
         (Vector3 centre, Vector3 right, Vector3 fwd, float hx, float hz) _bounds;
@@ -285,7 +303,9 @@ namespace KR.Gameplay.Story
                 if (RigInput.UsePressed)
                 {
                     VrRig.Fade(0.35f);
-                    _rig.Player.Teleport(new Vector3(_doorAt.x, _doorAt.y, _doorAt.z) + _doorOut * 1.2f, Quaternion.LookRotation(_doorOut).eulerAngles.y);
+                    float outYaw = Quaternion.LookRotation(_doorOut).eulerAngles.y;
+                    _rig.Player.Teleport(new Vector3(_doorAt.x, _doorAt.y, _doorAt.z) + _doorOut * 1.2f, outYaw);
+                    _rig.DesktopCamera?.LookAlong(outYaw, 4f);
                     out_ = true;
                 }
             }
@@ -310,6 +330,7 @@ namespace KR.Gameplay.Story
                 Destroy(_interior);
             _interior = null;
             _inside = -1;
+            KR.Gameplay.World.WeatherCycle.Sheltered = false;
             _assignTimer = 0f;
         }
 

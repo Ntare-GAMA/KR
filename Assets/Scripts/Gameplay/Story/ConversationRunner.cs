@@ -42,6 +42,10 @@ namespace KR.Gameplay.Story
         const int MaxRows = 5;
         const float PanelW = 780f, PanelH = 600f, RowH = 58f, RowGap = 8f, HintH = 44f;
         Text _name, _sub, _hint;
+        Image _tab, _panelBg;
+        Venue.Theme _theme = Venue.ThemeFor(VenueKind.None);
+        string _venueName;
+        Navigator _nav;
         readonly Image[] _rowBg = new Image[MaxRows], _rowFrame = new Image[MaxRows], _rowChip = new Image[MaxRows];
         readonly Text[] _rowText = new Text[MaxRows], _rowKey = new Text[MaxRows];
         readonly StringBuilder _sb = new StringBuilder();
@@ -71,6 +75,8 @@ namespace KR.Gameplay.Story
                 if (!string.IsNullOrEmpty(q.id))
                     _quiz[q.id] = q;
             _panel = MakeCanvas("Conversation panel", new Vector2(PanelW, PanelH), 0.0011f, 30, out _panelText);
+            _panelBg = _panel.transform.Find("Panel").GetComponent<Image>();
+            _nav = FindFirstObjectByType<Navigator>();
             BuildPanel();
             _label = MakeCanvas("Talk label", new Vector2(360f, 70f), 0.0016f, 34, out _labelText);
             var voice = new GameObject("Voice");
@@ -243,6 +249,27 @@ namespace KR.Gameplay.Story
         // The milestone's conversation for this character if one is running, otherwise their everyday chat.
         void Begin(Npc npc) => Begin(npc, null);
 
+        // Adds (or replaces) a conversation made at run time, e.g. the staff inside a bank or a clinic.
+        public void Register(Conversation conversation)
+        {
+            if (conversation != null && !string.IsNullOrEmpty(conversation.id))
+                _conversations[conversation.id] = conversation;
+        }
+
+        // The look of the panel follows where you are: the character's business, else the nearest named place.
+        void PickTheme(Npc npc)
+        {
+            _venueName = npc.Place;
+            var kind = Venue.Classify(npc.Place, null);
+            if (kind == VenueKind.None)
+                kind = Venue.Near(_nav, npc.transform.position, 45f, out _venueName);
+            if (kind == VenueKind.None)
+                _venueName = npc.Place;
+            _theme = Venue.ThemeFor(kind);
+            if (_panelBg != null) _panelBg.color = _theme.panel;
+            if (_tab != null) _tab.color = _theme.tab;
+        }
+
         // Starts a conversation with this character; with an id, that conversation instead of the usual one.
         public void Begin(Npc npc, string conversationId)
         {
@@ -261,6 +288,7 @@ namespace KR.Gameplay.Story
             }
             _with = npc;
             _near = null;
+            PickTheme(npc);
             _label.gameObject.SetActive(false);
             _correct = _asked = 0;
             _questions.Clear();
@@ -384,6 +412,7 @@ namespace KR.Gameplay.Story
         {
             var root = _panel.transform;
             var tab = UI.KrTheme.Panel(root, "Name tab", UI.KrTheme.Red);
+            _tab = tab;
             UI.KrTheme.Place(tab.rectTransform, new Vector2(0f, 1f), new Vector2(0f, 1f), new Vector2(18f, -16f), new Vector2(330f, 50f));
             _name = UI.KrTheme.Label(tab.transform, "Name", 32, UI.KrTheme.Weight.Bold, UI.KrTheme.Text, TextAnchor.MiddleLeft);
             UI.KrTheme.Stretch(_name.rectTransform, 0f);
@@ -441,7 +470,9 @@ namespace KR.Gameplay.Story
             else
             {
                 _name.text = (_node.speaker == "you" ? "You" : _with.DisplayName).ToUpperInvariant();
-                _sub.text = _node.speaker == "you" || string.IsNullOrEmpty(_with.Place) ? "" : _with.Place;
+                string where = string.IsNullOrEmpty(_venueName) ? _with.Place : _venueName;
+                _sub.text = string.IsNullOrEmpty(_theme.label) ? where ?? ""
+                          : $"<color=#{ColorUtility.ToHtmlStringRGB(_theme.accent)}><b>{_theme.label}</b></color>  {where}";
                 string line = Fill(_node.text) ?? "";
                 float said = Said();
                 int shown = said >= 1f ? line.Length : Mathf.Clamp(Mathf.CeilToInt(line.Length * said), 0, line.Length);
@@ -486,9 +517,9 @@ namespace KR.Gameplay.Story
             _rowText[i].text = text;
             _rowKey[i].text = key;
             _rowFrame[i].enabled = selected || mark.HasValue;
-            _rowFrame[i].color = mark ?? UI.KrTheme.Accent;
-            _rowChip[i].color = mark ?? (selected ? UI.KrTheme.Red : UI.KrTheme.RedDeep);
-            _rowBg[i].color = selected ? new Color(0.16f, 0.07f, 0.1f, 0.95f) : UI.KrTheme.InkSoft;
+            _rowFrame[i].color = mark ?? _theme.accent;
+            _rowChip[i].color = mark ?? (selected ? _theme.tab : _theme.tabDark);
+            _rowBg[i].color = selected ? Color.Lerp(_theme.row, _theme.tab, 0.35f) : _theme.row;
         }
 
         // Lines can name the business and the character: {place}, {name}.
@@ -503,6 +534,29 @@ namespace KR.Gameplay.Story
         // Beside the character at their head height, turned towards you.
         void PlacePanel()
         {
+            var canvas = _panel.GetComponent<Canvas>();
+            var rt = (RectTransform)_panel.transform;
+            if (!VrRig.Active)
+            {
+                if (canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                {
+                    canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    canvas.sortingOrder = 50;
+                    rt.localScale = Vector3.one;
+                }
+                float s = Mathf.Clamp(Screen.height / 1080f, 0.6f, 2f) * 0.85f;
+                rt.localScale = Vector3.one * s;
+                rt.pivot = new Vector2(0f, 0f);
+                rt.anchorMin = rt.anchorMax = new Vector2(0f, 0f);
+                rt.anchoredPosition = new Vector2(24f, 70f);
+                return;
+            }
+            if (canvas.renderMode != RenderMode.WorldSpace)
+            {
+                canvas.renderMode = RenderMode.WorldSpace;
+                rt.pivot = new Vector2(0.5f, 0.5f);
+                rt.localScale = Vector3.one * 0.0011f;
+            }
             var cam = Camera.main;
             if (cam == null)
                 return;

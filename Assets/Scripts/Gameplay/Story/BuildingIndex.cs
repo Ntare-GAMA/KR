@@ -13,7 +13,8 @@ namespace KR.Gameplay.Story
         public struct Building
         {
             public Transform t;
-            public BoxCollider box;
+            public Collider col;
+            public BoxCollider box;   // null for buildings with a mesh collider (their world bounds are used)
         }
 
         readonly List<Building> _buildings = new List<Building>();
@@ -24,20 +25,25 @@ namespace KR.Gameplay.Story
         public int Count => _buildings.Count;
         public Building this[int i] => _buildings[i];
 
-        // Houses, shops and halls under root: 14 to 3000 m², at least 2.4 m tall, not foundations, and not the
-        // restaurants (they open into their own dining room).
+        // Houses, shops, halls, banks, clinics and hotels under root: 14 to 12000 m², at least 2.4 m tall, not
+        // foundations, and not the restaurants (they open into their own dining room). Box colliders, and mesh
+        // colliders for the bigger landmark buildings (one per building object).
         public BuildingIndex(GameObject root, IReadOnlyList<Vector3> restaurantDoors)
         {
-            foreach (var box in root.GetComponentsInChildren<BoxCollider>())
+            var seen = new HashSet<Transform>();
+            foreach (var col in root.GetComponentsInChildren<Collider>())
             {
-                var t = box.transform;
-                if (t.name.StartsWith("Foundation"))
+                if (col.isTrigger || !(col is BoxCollider || col is MeshCollider))
                     continue;
-                var size = Vector3.Scale(box.size, Abs(t.lossyScale));
+                var t = col.transform;
+                if (t.name.StartsWith("Foundation") || !seen.Add(t))
+                    continue;
+                var box = col as BoxCollider;
+                var size = box != null ? Vector3.Scale(box.size, Abs(t.lossyScale)) : col.bounds.size;
                 float area = size.x * size.z;
-                if (area < 14f || area > 3000f || size.y < 2.4f)
+                if (area < 14f || area > 12000f || size.y < 2.4f)
                     continue;
-                var bounds = box.bounds;
+                var bounds = col.bounds;
                 bounds.Expand(6f);
                 bool restaurant = false;
                 foreach (var p in restaurantDoors)
@@ -46,8 +52,8 @@ namespace KR.Gameplay.Story
                 if (restaurant)
                     continue;
                 int index = _buildings.Count;
-                _buildings.Add(new Building { t = t, box = box });
-                long key = Key(box.bounds.center);
+                _buildings.Add(new Building { t = t, col = col, box = box });
+                long key = Key(bounds.center);
                 if (!_cells.TryGetValue(key, out var list))
                     _cells[key] = list = new List<int>();
                 list.Add(index);
@@ -64,7 +70,7 @@ namespace KR.Gameplay.Story
                     if (_cells.TryGetValue(((long)(cx + dx) << 32) ^ (uint)(cz + dz), out var list))
                         foreach (int i in list)
                         {
-                            float d = (_buildings[i].box.bounds.ClosestPoint(p) - p).sqrMagnitude;
+                            float d = (_buildings[i].col.bounds.ClosestPoint(p) - p).sqrMagnitude;
                             if (d < radius * radius)
                                 into.Add((d, i));
                         }
@@ -76,6 +82,18 @@ namespace KR.Gameplay.Story
         {
             var b = _buildings[i];
             var t = b.t;
+            if (b.box == null)
+            {
+                // Mesh collider: its world bounds, axis-aligned.
+                var wb = b.col.bounds;
+                centre = wb.center;
+                right = Vector3.right;
+                fwd = Vector3.forward;
+                hx = wb.extents.x;
+                hz = wb.extents.z;
+                height = wb.size.y;
+                return;
+            }
             centre = t.TransformPoint(b.box.center);
             right = Vector3.ProjectOnPlane(t.right, Vector3.up).normalized;
             fwd = Vector3.ProjectOnPlane(t.forward, Vector3.up).normalized;

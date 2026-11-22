@@ -210,6 +210,7 @@ namespace KR.Gameplay.Story
             VrRig.Fade(0.6f);
             yield return new WaitForSeconds(0.25f);
             _inside = true;
+            WeatherCycle.Sheltered = true;
             board.text = _door.PlaceName;
             rig.Player.Teleport(entry.position, entry.eulerAngles.y);
             if (music != null)
@@ -295,9 +296,9 @@ namespace KR.Gameplay.Story
                 {
                     bool next = _dishBites > 0;
                     var shown = next ? _dish : _drink;
-                    _prompt.Say(shown.transform, 0.35f, VrRig.Active
+                    SeatedHint(VrRig.Active
                         ? $"Pick it up and bring it to your mouth  <size=80%>(or <b>{Key}</b>)</size>"
-                        : $"<b>{Key}</b>  {(next ? "Eat" : "Drink")}  <size=80%>(G picks it up)</size>", 0.3f);
+                        : $"<b>{Key}</b>  {(next ? "Eat" : "Drink")}   (G picks it up)");
                     int which = _bitFood && _dishBites > 0 ? 1 : _bitDrink && _drinkSips > 0 ? 2 : RigInput.ConfirmPressed ? (next ? 1 : 2) : 0;
                     _bitFood = _bitDrink = false;
                     if (which != 0)
@@ -342,7 +343,7 @@ namespace KR.Gameplay.Story
             {
                 if (_seated)
                 {
-                    _prompt.Say(_seat.plate, 0.45f, $"<b>{Key}</b>  {label}", 0.3f);
+                    SeatedHint($"<b>{Key}</b>  {label}");
                     if (RigInput.ConfirmPressed)
                         yield break;
                 }
@@ -383,6 +384,7 @@ namespace KR.Gameplay.Story
             if (music != null)
                 music.Stop();
             _inside = false;
+            WeatherCycle.Sheltered = false;
             ClearTable();
             ResetWaitress();
             _prompt.Hide();
@@ -421,6 +423,20 @@ namespace KR.Gameplay.Story
         }
 
         bool _bitFood, _bitDrink;
+
+        // At the table the plate is right under your eyes: on a desktop the hint goes to the bottom of the screen;
+        // on the headset it floats across the table, above the far side, at a comfortable distance.
+        void SeatedHint(string text)
+        {
+            if (!VrRig.Active)
+            {
+                rig.Hint(text);
+                return;
+            }
+            var cam = Camera.main;
+            if (cam != null)
+                _prompt.SayAt(cam.transform.position + Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized * 1.4f + Vector3.up * 0.1f, text, 0.3f);
+        }
 
         // Served food and drink can be picked up; let go and it goes back on the table. Bringing it to your mouth
         // counts as a bite or a sip.

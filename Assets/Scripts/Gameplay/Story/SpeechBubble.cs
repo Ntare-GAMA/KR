@@ -63,6 +63,23 @@ namespace KR.Gameplay.Story
             LateUpdate();
         }
 
+        // A line at a fixed point in the world rather than above someone.
+        public void SayAt(Vector3 point, string line, float seconds = 3.5f)
+        {
+            if (_point == null)
+                _point = new GameObject("Bubble point").transform;
+            _point.position = point;
+            Say(_point, 0f, line, seconds);
+        }
+
+        Transform _point;
+
+        void OnDestroy()
+        {
+            if (_point != null)
+                Destroy(_point.gameObject);
+        }
+
         public void Hide() => gameObject.SetActive(false);
 
         void LateUpdate()

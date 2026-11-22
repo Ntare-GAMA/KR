@@ -30,6 +30,16 @@ namespace KR.Gameplay.Player
         public float StartYaw { get; private set; }
         public FirstPersonCamera DesktopCamera => firstPerson;
         public string Prompt { get; private set; }
+        // A line for the bottom of the screen this frame (things close to your face, like a meal, are hinted here
+        // instead of in a bubble right in front of your eyes). Call every frame it should show.
+        public void Hint(string text)
+        {
+            _hint = text;
+            _hintFrame = Time.frameCount;
+        }
+        public string CurrentHint => Time.frameCount - _hintFrame <= 1 ? _hint : null;
+        string _hint;
+        int _hintFrame = -10;
         public IReadOnlyList<(string text, float until)> Toasts => _toasts;
         // Set by VrRig while a headset is active: the tracked controller poses the hands follow.
         public Transform VrLeftHand { get; set; }
