@@ -16,7 +16,11 @@ namespace KR.Gameplay.Player
     // The glass positions come from CarGeometry (measured in the Editor). Added to the car when the scene loads.
     public sealed class CarMirrors : MonoBehaviour
     {
-        const int Width = 512, Height = 192;
+        // The three mirrors share one image, so each shows only a slice of it: the image must be large enough that
+        // a slice is still sharp (owner, 2026-11-22: the mirrors looked blurry at 512 x 192). Smaller on the headset,
+        // where it costs more.
+        static int Width => VrRig.Active ? 1280 : 1792;
+        static int Height => VrRig.Active ? 480 : 672;
         const float VerticalFov = 22f, Far = 160f;
 
         sealed class Glass
@@ -88,7 +92,11 @@ namespace KR.Gameplay.Player
                 }
             }
 
-            _rt = new RenderTexture(Width, Height, 16, RenderTextureFormat.ARGB32) { name = "Car mirrors", wrapMode = TextureWrapMode.Clamp };
+            _rt = new RenderTexture(Width, Height, 24, RenderTextureFormat.ARGB32)
+            {
+                name = "Car mirrors", wrapMode = TextureWrapMode.Clamp, filterMode = FilterMode.Bilinear,
+                antiAliasing = 4,   // MSAA; no mipmaps (an MSAA texture cannot have them, and the glass magnifies it)
+            };
             var camGo = new GameObject("Mirror camera (looking back)");
             camGo.transform.SetParent(t, false);
             Vector3 eye = t.InverseTransformPoint(car.EyePoint);
@@ -102,7 +110,7 @@ namespace KR.Gameplay.Player
             _cam.nearClipPlane = 0.2f;
             _cam.farClipPlane = Far;
             _cam.allowHDR = false;
-            _cam.allowMSAA = false;
+            _cam.allowMSAA = true;
             _cam.targetTexture = _rt;
             var data = _cam.GetUniversalAdditionalCameraData();
             data.renderShadows = false;

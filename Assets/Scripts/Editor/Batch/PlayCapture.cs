@@ -27,6 +27,75 @@ namespace KR.Editor.Batch
                 EditorApplication.update += Tick;
         }
 
+        // Knocks someone down on a zebra crossing (simulated), stands still beside the car, and records the
+        // ambulance and the police arriving (emergency_*.png, distances in the log).
+        public static void Emergency()
+        {
+            SessionState.SetString(ModeKey, "emergency");
+            Traffic();
+        }
+
+        static float _emergencyStart;
+
+        static void TickEmergency(string dir, double now)
+        {
+            var er = Object.FindFirstObjectByType<KR.Gameplay.Story.EmergencyResponse>();
+            var rig = Object.FindFirstObjectByType<PlayerRig>();
+            if (er == null || rig == null)
+            {
+                Debug.LogError("[PlayCapture] No emergency response or player.");
+                Quit();
+                return;
+            }
+            var you = rig.Player.transform.position;
+            if (_step == 0)
+            {
+                // The zebra crossing nearest the player, and the player standing 10 m from it.
+                Vector3 zebra = you;
+                float best = float.MaxValue;
+                foreach (var z in KR.Gameplay.Story.EmergencyResponse.ZebraCentres())
+                    if ((z - you).sqrMagnitude < best)
+                    {
+                        best = (z - you).sqrMagnitude;
+                        zebra = z;
+                    }
+                var stand = zebra + Vector3.right * 10f;
+                if (Physics.Raycast(stand + Vector3.up * 20f, Vector3.down, out var ground, 60f, ~(1 << 2), QueryTriggerInteraction.Ignore))
+                    stand = ground.point;
+                rig.Player.Teleport(stand, 270f);
+                er.Simulate(zebra);
+                _emergencyStart = Time.realtimeSinceStartup;
+                Debug.Log($"[PlayCapture] Hit simulated at {zebra:F0}, on a crossing: {er.OnCrossing}");
+                _step++;
+                _next = now + 1;
+                return;
+            }
+            float t = Time.realtimeSinceStartup - _emergencyStart;
+            if (_step == 1)
+                Debug.Log($"[PlayCapture] timeScale {Time.timeScale}, paused {GamePause.Paused}");
+            var amb = er.Ambulance;
+            var pol = er.Police;
+            you = rig.Player.transform.position;
+            Debug.Log($"[PlayCapture] t={t:0}s ambulance {(amb != null ? Vector3.Distance(amb.position, you).ToString("0") + " m" : "-")}" +
+                      $"{(er.AmbulanceWithPatient ? " (with the patient)" : "")}, police {(pol != null ? Vector3.Distance(pol.position, you).ToString("0") + " m" : "-")}" +
+                      $"{(er.Chasing ? " (chasing)" : " (not chasing)")}");
+            var officer = er.transform.Find("Police officer (responding)");
+            bool officerOut = officer != null && officer.gameObject.activeSelf;
+            if (officerOut)
+                Debug.Log($"[PlayCapture] officer out of the car, {Vector3.Distance(officer.position, you):0.0} m from you");
+            if (_step % 4 == 1 || er.AmbulanceWithPatient || officerOut)
+                foreach (var (label, body) in new[] { ("ambulance", amb), ("police", pol), ("officer", officerOut ? officer : null) })
+                    if (body != null)
+                        RenderFromEyes(dir, $"emergency_{t:000}s_{label}", body.position + Vector3.up * 0.8f);
+            _step++;
+            _next = now + 2.5;
+            if (!er.Chasing && !officerOut && t > 40f && pol == null || t > 150f)
+            {
+                Debug.Log($"[PlayCapture] Emergency done after {t:0} s: ambulance with patient {er.AmbulanceWithPatient}, police chase over {!er.Chasing}");
+                Quit();
+            }
+        }
+
         // Goes into a spread of the city's buildings and renders each room from the doorway (interiors_*.png).
         public static void Interiors()
         {
@@ -71,6 +140,11 @@ namespace KR.Editor.Batch
             if (now < _next)
                 return;
             string dir = SessionState.GetString(Key, "");
+            if (SessionState.GetString(ModeKey, "") == "emergency")
+            {
+                TickEmergency(dir, now);
+                return;
+            }
             if (SessionState.GetString(ModeKey, "") == "interiors")
             {
                 TickInteriors(dir, now);
@@ -168,6 +242,24 @@ namespace KR.Editor.Batch
                         tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
                         File.WriteAllBytes(Path.Combine(dir, $"interiors_{k}_{view}.png"), tex.EncodeToPNG());
                     }
+                    // Pick up the nearest loose thing with the player's hand and show it held in front of the eyes.
+                    var hand = KR.Gameplay.Interaction.HandInteractor.Right;
+                    var props = Object.FindObjectsByType<KR.Gameplay.Interaction.Grabbable>(FindObjectsSortMode.None);
+                    var nearest = props.OrderBy(p => (p.transform.position - main.transform.position).sqrMagnitude).FirstOrDefault();
+                    Debug.Log($"[PlayCapture] Building {index}: {props.Length} things to pick up, hand {(hand != null ? hand.name : "none")}");
+                    if (hand != null && nearest != null)
+                    {
+                        hand.Driver.UpdatePose(hand.transform);
+                        nearest.Grab(hand);
+                        nearest.HoldUpdate(hand);
+                        cam.transform.SetPositionAndRotation(main.transform.position, main.transform.rotation);
+                        cam.Render();
+                        RenderTexture.active = rt;
+                        tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+                        File.WriteAllBytes(Path.Combine(dir, $"interiors_{k}_holding_{nearest.name}.png"), tex.EncodeToPNG());
+                        Debug.Log($"[PlayCapture] Holding {nearest.name}: {nearest.Held}, {Vector3.Distance(nearest.transform.position, main.transform.position):0.00} m from the eyes");
+                        nearest.Release(hand, Vector3.zero);
+                    }
                     RenderTexture.active = null;
                     Object.DestroyImmediate(go);
                     Object.DestroyImmediate(rt);
@@ -175,6 +267,30 @@ namespace KR.Editor.Batch
                 _next = now + 0.3;
             }
             _step++;
+        }
+
+        // What the player sees looking towards target (from their own eyes).
+        static void RenderFromEyes(string dir, string name, Vector3 target)
+        {
+            var main = Camera.main;
+            if (main == null)
+                return;
+            var go = new GameObject("Capture camera");
+            var cam = go.AddComponent<Camera>();
+            cam.CopyFrom(main);
+            cam.stereoTargetEye = StereoTargetEyeMask.None;
+            cam.fieldOfView = 70f;
+            var rt = new RenderTexture(1280, 720, 24);
+            var tex = new Texture2D(1280, 720, TextureFormat.RGB24, false);
+            cam.targetTexture = rt;
+            cam.transform.SetPositionAndRotation(main.transform.position, Quaternion.LookRotation(target - main.transform.position));
+            cam.Render();
+            RenderTexture.active = rt;
+            tex.ReadPixels(new Rect(0, 0, 1280, 720), 0, 0);
+            RenderTexture.active = null;
+            File.WriteAllBytes(Path.Combine(dir, name + ".png"), tex.EncodeToPNG());
+            Object.DestroyImmediate(go);
+            Object.DestroyImmediate(rt);
         }
 
         static void Render(string dir, string name, Transform body)

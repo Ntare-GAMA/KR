@@ -28,7 +28,7 @@ namespace KR.Gameplay.Story
         static readonly string[] QueueLines = { "Move the cars aside!", "Come on, we're late!", "Pull over, please!", "What's going on up there?" };
 
         int _hit = -1;
-        float _nextLine, _nextHoot, _settledAt, _sirenAt;
+        float _nextLine, _nextHoot, _settledAt;
         bool _talked;
         Vector3 _scene;
         [SerializeField] AudioClip hornClip;   // recorded horn; synthesised when missing
@@ -105,20 +105,42 @@ namespace KR.Gameplay.Story
             _nextLine = Time.time + 1.5f;
             _nextHoot = Time.time + Random.Range(3f, 6f);
             director?.SetFlag("crash");
-            _sirenAt = Time.time + Random.Range(7f, 12f);
+            // A real police car comes to the scene (no siren without a vehicle).
+            var police = FindFirstObjectByType<EmergencyResponse>();
+            if (police != null)
+                police.AttendCrash(body.position);
 
             // The driver gets out on their side (left-hand drive) and faces your car.
             if (driver != null)
             {
+                // Out on the side away from your car, so they are not stuck between the two.
                 var side = -body.right;
-                var at = body.position + side * 1.6f;
-                at.y = body.position.y;
+                if (Vector3.Dot(rig.Car.transform.position - body.position, side) > 0f)
+                    side = -side;
+                var at = body.position + side * 1.7f;
+                at.y = GroundY(at, body.position.y);
                 driver.transform.SetPositionAndRotation(at, Quaternion.LookRotation(Flat(rig.Car.transform.position - at)));
                 driver.gameObject.SetActive(true);
                 _driverAnim?.SetTalking(true, rig.Car.transform.position);
                 SoundBank.Play("car_door", at + Vector3.up, 0.9f);
             }
             rig.Toast("You hit another car. Stop, shift to P and get out to talk to the driver.", 6f);
+        }
+
+        // Ground (road, pavement or grass) under p, not a car roof; fallback keeps the old height.
+        static float GroundY(Vector3 p, float fallback)
+        {
+            var hits = Physics.RaycastAll(new Vector3(p.x, p.y + 3f, p.z), Vector3.down, 8f, ~(1 << 2), QueryTriggerInteraction.Ignore);
+            // The walkable surface nearest the current height (a parked car's roof is not ground).
+            float best = fallback, gap = float.MaxValue;
+            foreach (var h in hits)
+                if (h.collider.attachedRigidbody == null && h.normal.y > 0.7f && !(h.collider is CapsuleCollider) &&
+                    Mathf.Abs(h.point.y - fallback) < gap)
+                {
+                    gap = Mathf.Abs(h.point.y - fallback);
+                    best = h.point.y;
+                }
+            return best;
         }
 
         void Update()
@@ -137,11 +159,19 @@ namespace KR.Gameplay.Story
             if (driver != null && driver.gameObject.activeSelf && !_talked)
             {
                 Vector3 you = rig.CurrentMode == PlayerRig.Mode.Driving ? rig.Car.transform.position : rig.Player.transform.position;
-                Vector3 goal = Vector3.MoveTowards(_scene, you, 4f);
-                goal.y = driver.transform.position.y;
+                // In your car: they come to your window (the driver's side, left in Rwanda), where you can see them,
+                // not between the two cars. On foot: up to you.
+                Vector3 goal = rig.CurrentMode == PlayerRig.Mode.Driving
+                    ? rig.Car.transform.position - rig.Car.transform.right * 2.1f + rig.Car.transform.forward * 0.6f
+                    : Vector3.MoveTowards(_scene, you, 4f);
+                goal.y = GroundY(goal, driver.transform.position.y);
                 Vector3 to = goal - driver.transform.position;
-                if (Flat(to).magnitude > 1.8f && runner != null && !runner.Talking)
-                    driver.transform.position += Flat(to).normalized * Mathf.Min(1.4f * Time.deltaTime, Flat(to).magnitude);
+                if (Flat(to).magnitude > (rig.CurrentMode == PlayerRig.Mode.Driving ? 0.3f : 1.8f) && runner != null && !runner.Talking)
+                {
+                    var next = driver.transform.position + Flat(to).normalized * Mathf.Min(1.6f * Time.deltaTime, Flat(to).magnitude);
+                    next.y = GroundY(next, next.y);
+                    driver.transform.position = next;
+                }
                 if (runner == null || !runner.Talking)
                     driver.transform.rotation = Quaternion.LookRotation(Flat(you - driver.transform.position) + Vector3.forward * 1e-4f);
                 if (now >= _nextLine && (runner == null || !runner.Talking))
@@ -149,13 +179,6 @@ namespace KR.Gameplay.Story
                     _driverBubble.Say(driver.transform, 2.25f, DriverLines[Random.Range(0, DriverLines.Length)]);
                     _nextLine = now + Random.Range(4f, 7f);
                 }
-            }
-            // A siren somewhere off down the road, once, a little while after the crash.
-            if (_sirenAt > 0f && now >= _sirenAt)
-            {
-                _sirenAt = 0f;
-                var away = _scene + Quaternion.Euler(0f, Random.Range(0f, 360f), 0f) * Vector3.forward * 60f;
-                SoundBank.Play("siren", away, 0.7f, true, 160f);
             }
             // The queue behind loses patience.
             if (now >= _nextHoot)

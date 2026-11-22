@@ -1,3 +1,4 @@
+using KR.Core;
 using System.Collections;
 using System.Collections.Generic;
 using KR.Gameplay.World;
@@ -19,7 +20,7 @@ namespace KR.Gameplay.Player
     public sealed class CarImpacts : MonoBehaviour
     {
         public const float PlayerCarMass = 1500f, PersonMass = 75f, MotoMass = 225f;
-        const float Restitution = 0.1f, LieSeconds = 7f;
+        const float Restitution = 0.1f, LieSeconds = 7f, WaitForAmbulance = 150f;
 
         sealed class Light
         {
@@ -28,8 +29,26 @@ namespace KR.Gameplay.Player
             public RoadNetworkTraffic traffic;
             public int index = -1;
             public float mass;
-            public bool down;
+            public bool down, collected;
             public Behaviour[] movers;
+            public Renderer[] hidden;
+        }
+
+        // The person most recently knocked down on foot (the ambulance comes for them), and the record behind it.
+        public static Transform LastVictim { get; private set; }
+        static Light _lastVictim;
+        static CarImpacts _instance;
+
+        // The ambulance crew has taken them: they disappear from the street (taken to hospital). They come back to
+        // the street only once you are far away, so nobody is seen getting up after being taken.
+        public static void Collect(Transform victim)
+        {
+            if (_lastVictim == null || _lastVictim.root != victim || _instance == null)
+                return;
+            _lastVictim.collected = true;
+            _lastVictim.hidden = victim.GetComponentsInChildren<Renderer>();
+            foreach (var r in _lastVictim.hidden)
+                r.enabled = false;
         }
 
         PlayerRig _rig;
@@ -143,7 +162,7 @@ namespace KR.Gameplay.Player
                         c.attachedRigidbody.mass = PersonMass;
                         Add(c, person.transform, null, -1, PersonMass);
                     }
-                var own = person.GetComponent<Collider>() ?? person.GetComponentInParent<Collider>();
+                var own = person.GetComponent<Collider>().OrNull() ?? person.GetComponentInParent<Collider>();
                 if (own != null && own.attachedRigidbody != null && own.attachedRigidbody.isKinematic && !_light.ContainsKey(own))
                 {
                     own.attachedRigidbody.mass = PersonMass;
@@ -224,8 +243,16 @@ namespace KR.Gameplay.Player
             }
             who.down = true;
             who.collider.enabled = false;          // the wheels must not climb over them either
+            bool onFoot = who.mass <= PersonMass;
+            who.collected = false;
+            if (onFoot)
+            {
+                LastVictim = who.root;
+                _lastVictim = who;
+                _instance = this;
+            }
             if (who.traffic != null && who.index >= 0)
-                who.traffic.Halt(who.index, LieSeconds + 3f);
+                who.traffic.Halt(who.index, onFoot ? WaitForAmbulance + 60f : LieSeconds + 3f);
             foreach (var m in who.movers)
                 if (m != null)
                     m.enabled = false;
@@ -234,7 +261,7 @@ namespace KR.Gameplay.Player
             var audio = GetComponent<CarAudio>();
             if (audio != null)
                 audio.Bump(approach / 10f);
-            PersonHit?.Invoke(who.root.position, who.mass <= PersonMass);
+            PersonHit?.Invoke(who.root.position, onFoot);
             _rig.Toast(who.mass <= PersonMass
                 ? "You hit someone! Slow down and watch for people on the road."
                 : "You knocked a motorbike over! Give riders room.", 5f);
@@ -262,7 +289,29 @@ namespace KR.Gameplay.Player
                     yield return null;
                 }
                 visual.localRotation = lying;
-                yield return new WaitForSeconds(LieSeconds);
+                // Someone knocked down on foot stays down until the ambulance crew takes them (or, if no ambulance
+                // can come, for a long while); a rider gets up again.
+                if (who.mass <= PersonMass)
+                {
+                    float until = Time.time + WaitForAmbulance;
+                    while (!who.collected && Time.time < until)
+                        yield return null;
+                    if (who.collected)
+                    {
+                        // Gone to hospital; back on the street only once you are well away.
+                        while (_rb != null && (who.root.position - transform.position).sqrMagnitude < 150f * 150f)
+                            yield return new WaitForSeconds(1f);
+                        if (who.hidden != null)
+                            foreach (var r in who.hidden)
+                                if (r != null) r.enabled = true;
+                        who.hidden = null;
+                        who.collected = false;
+                        if (who.traffic != null && who.index >= 0)
+                            who.traffic.Halt(who.index, 0.1f);
+                    }
+                }
+                else
+                    yield return new WaitForSeconds(LieSeconds);
                 Quaternion down = visual.localRotation;
                 Vector3 downPos = visual.localPosition;
                 for (float t = 0f; t < 1f; t += Time.deltaTime / 0.8f)
