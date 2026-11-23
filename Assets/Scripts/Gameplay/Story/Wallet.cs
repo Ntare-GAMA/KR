@@ -140,7 +140,7 @@ namespace KR.Gameplay.Story
             _ticket.gameObject.SetActive(false);
             Layout(cards);
             _showUntil = Time.unscaledTime + seconds;
-            _canvas.gameObject.SetActive(!VrRig.Active);
+            Present();
             var names = new List<string>();
             foreach (var c in cards)
                 names.Add(c == Card.Student ? "student card" : c == Card.Licence ? "driving licence" : "identity card");
@@ -161,7 +161,69 @@ namespace KR.Gameplay.Story
                 c.Value.gameObject.SetActive(false);
             _ticket.gameObject.SetActive(true);
             _showUntil = Time.unscaledTime + 7f;
-            _canvas.gameObject.SetActive(!VrRig.Active);
+            Present();
+        }
+
+        // On a desktop: over the screen. On the headset: a board 60 cm in front of you, a little below your eyes,
+        // facing you, placed once where you are looking (it stays put in the world rather than moving with your
+        // head, which is easier on the stomach).
+        void Present()
+        {
+            var rt = (RectTransform)_canvas.transform;
+            var scaler = _canvas.GetComponent<CanvasScaler>();
+            if (!VrRig.Active)
+            {
+                if (_canvas.renderMode != RenderMode.ScreenSpaceOverlay)
+                {
+                    _canvas.renderMode = RenderMode.ScreenSpaceOverlay;
+                    if (scaler != null) scaler.enabled = true;
+                }
+                _canvas.gameObject.SetActive(true);
+                return;
+            }
+            if (_canvas.renderMode != RenderMode.WorldSpace)
+            {
+                if (scaler != null) scaler.enabled = false;
+                _canvas.renderMode = RenderMode.WorldSpace;
+                rt.sizeDelta = new Vector2(1600f, 700f);
+                rt.localScale = Vector3.one * 0.00042f;   // a 460-unit card is about 19 cm wide
+            }
+            var cam = Camera.main;
+            if (cam != null)
+            {
+                var fwd = Vector3.ProjectOnPlane(cam.transform.forward, Vector3.up).normalized;
+                if (fwd.sqrMagnitude < 0.01f)
+                    fwd = cam.transform.forward;
+                var pos = cam.transform.position + fwd * 0.6f + Vector3.down * 0.15f;
+                rt.SetPositionAndRotation(pos, Quaternion.LookRotation(pos - cam.transform.position));
+            }
+            _canvas.gameObject.SetActive(true);
+        }
+
+        // The headset's Wallet page: all three cards (and the last ticket) in front of you while the page is open.
+        public void ShowAll(bool on)
+        {
+            if (!on)
+            {
+                if (_open)
+                {
+                    _open = false;
+                    _canvas.gameObject.SetActive(false);
+                }
+                return;
+            }
+            if (_open)
+                return;
+            _open = true;
+            Refresh();
+            var all = new[] { Card.Student, Card.Identity, Card.Licence };
+            foreach (var c in _cards)
+                c.Value.gameObject.SetActive(true);
+            _ticket.gameObject.SetActive(false);
+            Layout(all);
+            foreach (var c in all)
+                _cards[c].localScale = Vector3.one * 0.72f;
+            Present();
         }
 
         void Refresh()
@@ -195,7 +257,10 @@ namespace KR.Gameplay.Story
                 Layout(all);
                 foreach (var c in all)
                     _cards[c].localScale = Vector3.one * 0.72f;   // three across
-                _canvas.gameObject.SetActive(_open);
+                if (_open)
+                    Present();
+                else
+                    _canvas.gameObject.SetActive(false);
             }
             if (!_open && _showUntil > 0f && Time.unscaledTime > _showUntil)
             {
