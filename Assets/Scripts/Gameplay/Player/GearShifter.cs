@@ -31,6 +31,11 @@ namespace KR.Gameplay.Player
         DrivableCar.GearSel? _shown;
 
         public bool Held => _held;
+
+        // The right hand is at the lever (near enough to work it with the gear button).
+        public bool HandAtLever => _rig != null && _rig.VrRightHand != null && _knob != null &&
+                                   (_rig.VrRightHand.position - _knob.position).sqrMagnitude < HandNear * HandNear;
+        const float HandNear = 0.18f;
         public Transform Knob => _knob;
         // Seconds since the gear last changed (the driver's right hand shows the change when it was not done by hand).
         public float SinceChange => Time.time - _changedAt;
@@ -59,7 +64,14 @@ namespace KR.Gameplay.Player
                 return;
             }
             Build();
-            _car.GearChanged += g => _changedAt = Time.time;
+            // The lever jumps to the new gear at once, whatever changed it (owner 2026-11-23: "it should
+            // immediately happen").
+            _car.GearChanged += g =>
+            {
+                _changedAt = Time.time;
+                _angle = AngleOf(g);
+                Buzz(0.5f);
+            };
         }
 
         void Start() => _rig = FindFirstObjectByType<PlayerRig>();

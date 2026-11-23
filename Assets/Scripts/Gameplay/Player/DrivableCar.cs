@@ -148,15 +148,23 @@ namespace KR.Gameplay.Player
             float brake = Driven ? RigInput.Brake : 0f;
             float steerIn = Driven ? RigInput.Steer : 0f;
 
-            // The button cycles P -> D -> R -> P (the gear lever can also be moved by hand: SelectGear).
+            // The button cycles P -> D -> R -> P (the gear lever can also be moved by hand: SelectGear). In the headset
+            // with hand steering, your right hand has to be at the gear lever (owner 2026-11-23: "i should be near the
+            // gear shifter to change it, once i press the button for that, it should immediately happen").
             if (Driven && RigInput.GearPressed)
-                SelectGear(_park ? GearSel.D : !_reverse ? GearSel.R : GearSel.P);
+            {
+                var lever = GetComponent<GearShifter>();
+                if (VrRig.Active && Comfort.HandSteering && lever != null && !lever.HandAtLever)
+                    Message?.Invoke("Put your right hand on the gear lever, then press the right stick.");
+                else
+                    SelectGear(_park ? GearSel.D : !_reverse ? GearSel.R : GearSel.P);
+            }
 
             if (_park && accel > 0.3f && !_parkHint)
             {
                 _parkHint = true;
                 Message?.Invoke(!VrRig.Active ? "In P. Press R for D to drive."
-                    : Comfort.HandSteering ? "In P. Take the gear lever with your right hand and pull it back to D." : "In P. Click the right stick for D to drive.");
+                    : Comfort.HandSteering ? "In P. Hand on the gear lever and press the right stick (or pull the lever back) for D." : "In P. Click the right stick for D to drive.");
             }
             if (accel < 0.1f)
                 _parkHint = false;
@@ -178,7 +186,7 @@ namespace KR.Gameplay.Player
         {
             if (!Driven || g == Selected)
                 return g == Selected;
-            if (Mathf.Abs(Speed) >= 0.8f)
+            if (Mathf.Abs(Speed) >= 1.5f)   // rolling slowly (under about 5 km/h) still changes at once
             {
                 Message?.Invoke("Stop first, then change gear.");
                 return false;

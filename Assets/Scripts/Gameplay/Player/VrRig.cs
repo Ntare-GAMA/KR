@@ -27,7 +27,8 @@ namespace KR.Gameplay.Player
         static bool _active;
         bool _inVr, _seated, _turnReady = true;
         float _vignette;
-        Vector3 _seatLocal;           // rig position in the car's yaw-only frame
+        Vector3 _seatLocal;           // rig position in the seat's frame
+        const float MaxLean = 0.3f;   // how far the head may move from the driver's eye point while seated
         float _seatYaw;               // rig yaw relative to the car
         Vector3 _lastPos;
         Vector3 _lastPlayer;
@@ -147,9 +148,16 @@ namespace KR.Gameplay.Player
 
             if (_seated)
             {
+                // Fixed to the seat in every axis, so the cabin never moves around you however you drive (owner
+                // 2026-11-23: "my seat should stay stationary regardless of how i drive"): up and down hills, over
+                // bumps and under braking you move with the car.
                 var seat = rig.Car.Seat;
-                var frame = Quaternion.Euler(0f, seat.eulerAngles.y, 0f);
-                transform.SetPositionAndRotation(seat.position + frame * _seatLocal, frame * Quaternion.Euler(0f, _seatYaw, 0f));
+                transform.SetPositionAndRotation(seat.position + seat.rotation * _seatLocal, seat.rotation * Quaternion.Euler(0f, _seatYaw, 0f));
+                // Leaning (to see a mirror) is fine, but walking about the room never takes you out of the seat: the
+                // head stays within MaxLean of the driver's eye point.
+                var off = head.transform.position - rig.Car.EyePoint;
+                if (off.sqrMagnitude > MaxLean * MaxLean)
+                    transform.position -= off - off.normalized * MaxLean;
             }
             else
             {
@@ -199,7 +207,7 @@ namespace KR.Gameplay.Player
             float headYaw = head.transform.eulerAngles.y;
             transform.RotateAround(head.transform.position, Vector3.up, Mathf.DeltaAngle(headYaw, seat.eulerAngles.y));
             transform.position += car.EyePoint - head.transform.position;
-            _seatLocal = Quaternion.Inverse(frame) * (transform.position - seat.position);
+            _seatLocal = Quaternion.Inverse(seat.rotation) * (transform.position - seat.position);
             _seatYaw = Mathf.DeltaAngle(seat.eulerAngles.y, transform.eulerAngles.y);
         }
 
