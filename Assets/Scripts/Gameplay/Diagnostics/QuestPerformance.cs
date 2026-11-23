@@ -44,7 +44,8 @@ namespace KR.Gameplay.Diagnostics
 
         void Apply()
         {
-            XRSettings.eyeTextureResolutionScale = EyeScale;
+            // The player's render resolution (Settings) wins; 85% unless they changed it.
+            XRSettings.eyeTextureResolutionScale = DisplaySettings.VrScale;
             var displays = new List<XRDisplaySubsystem>();
             SubsystemManager.GetSubsystems(displays);
             foreach (var d in displays)
@@ -72,7 +73,7 @@ namespace KR.Gameplay.Diagnostics
                 cam.layerCullDistances = distances;
                 cam.layerCullSpherical = true;
             }
-            Debug.Log($"[QuestPerformance] eye scale {EyeScale}, foveation max, shadows off, LOD bias {LodBias}, far {FarPlane} m, layer culling on.");
+            Debug.Log($"[QuestPerformance] eye scale {DisplaySettings.VrScale}, foveation max, shadows off, LOD bias {LodBias}, far {FarPlane} m, layer culling on.");
         }
     }
 }
