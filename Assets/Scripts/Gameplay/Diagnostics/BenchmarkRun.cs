@@ -39,6 +39,9 @@ namespace KR.Gameplay.Diagnostics
             int bias = System.Array.IndexOf(args, "-lodBias");
             if (bias >= 0 && bias + 1 < args.Length && float.TryParse(args[bias + 1], NumberStyles.Float, CultureInfo.InvariantCulture, out float lodBias))
                 QualitySettings.lodBias = lodBias;
+            // Switches to find what the frame time goes on (compare runs): -noTraffic, -noPeople (all person
+            // animators off), -noCity (instanced city scatter off), -noLights (street lamps, signals), -noPhysics.
+            Without = Off(args);
             if (System.Array.IndexOf(args, "-benchmark") >= 0)
             {
                 Debug.Log("[Benchmark] -benchmark: starting in 8 s.");
@@ -147,6 +150,49 @@ namespace KR.Gameplay.Diagnostics
             var weather = FindFirstObjectByType<KR.Gameplay.World.WeatherCycle>();
             if (weather != null)
                 weather.Force(null);
+        }
+
+        public static string Without { get; private set; } = "";
+
+        static string Off(string[] args)
+        {
+            var off = new System.Collections.Generic.List<string>();
+            bool Has(string a) => System.Array.IndexOf(args, a) >= 0;
+            if (Has("-noTraffic"))
+            {
+                off.Add("traffic");
+                foreach (var t in FindObjectsByType<KR.Gameplay.World.RoadNetworkTraffic>(FindObjectsSortMode.None))
+                    t.gameObject.SetActive(false);
+            }
+            if (Has("-noPeople"))
+            {
+                off.Add("people");
+                foreach (var a in FindObjectsByType<Animator>(FindObjectsSortMode.None))
+                    if (a.GetComponentInParent<PlayerRig>() == null)
+                        a.enabled = false;
+                foreach (var pa in FindObjectsByType<KR.Gameplay.World.PersonAnimator>(FindObjectsSortMode.None))
+                    pa.enabled = false;
+            }
+            if (Has("-noCity"))
+            {
+                off.Add("city scatter");
+                foreach (var c in FindObjectsByType<KR.Gameplay.World.InstancedScatter>(FindObjectsSortMode.None))
+                    c.enabled = false;
+            }
+            if (Has("-noLights"))
+            {
+                off.Add("lights");
+                foreach (var l in FindObjectsByType<KR.Gameplay.World.StreetLightPool>(FindObjectsSortMode.None))
+                    l.enabled = false;
+                foreach (var l in FindObjectsByType<KR.Gameplay.World.TrafficSignalSystem>(FindObjectsSortMode.None))
+                    l.enabled = false;
+            }
+            if (Has("-noPhysics"))
+            {
+                off.Add("physics");
+                Physics.simulationMode = SimulationMode.Script;
+            }
+            return string.Join(", ", off);
         }
 
         static float Length(System.Collections.Generic.List<Vector3> path)
@@ -258,6 +304,7 @@ namespace KR.Gameplay.Diagnostics
                .Append("Device: ").Append(SystemInfo.deviceModel).Append(" | GPU: ").Append(SystemInfo.graphicsDeviceName)
                .Append(" | ").Append(SystemInfo.graphicsDeviceType).Append(" | VR: ").Append(VrRig.Active).Append('\n')
                .Append("Quality: ").Append(QualitySettings.names[QualitySettings.GetQualityLevel()])
+               .Append(" | off: ").Append(string.IsNullOrEmpty(Without) ? "nothing" : Without)
                .Append(" | LOD bias ").Append(QualitySettings.lodBias.ToString("0.##", ci))
                .Append(" | display ").Append(PerformanceOverlay.TargetHz.ToString("0", ci)).Append(" Hz (budget ")
                .Append(budget.ToString("0.0", ci)).Append(" ms, ").Append(VrRig.Active ? "vsync" : "uncapped").Append(") | dev build: ").Append(Debug.isDebugBuild).Append('\n')
