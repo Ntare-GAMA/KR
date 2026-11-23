@@ -47,6 +47,21 @@ namespace KR.Gameplay.World
         public static bool Sheltered { get; set; }
         bool _wasSheltered;
 
+        // Raindrops that enter this collider vanish (the player's car: owner 2026-11-23, "the rain is falling inside
+        // the car"). The particle trigger test is a cheap shape check per drop, no physics.
+        public void KeepRainOut(Collider shelter)
+        {
+            if (rain == null || shelter == null)
+                return;
+            var trigger = rain.trigger;
+            trigger.enabled = true;
+            trigger.enter = ParticleSystemOverlapAction.Kill;
+            trigger.inside = ParticleSystemOverlapAction.Kill;
+            trigger.exit = ParticleSystemOverlapAction.Ignore;
+            trigger.outside = ParticleSystemOverlapAction.Ignore;
+            trigger.AddCollider(shelter);
+        }
+
         public void Configure(WindZone windZone, Terrain ground, DayNightCycle dayNight, ParticleSystem rainParticles)
         {
             wind = windZone;

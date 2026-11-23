@@ -63,17 +63,21 @@ namespace KR.Gameplay.Player
         }
 
         static bool _introPlayed;
-        AudioClip _playlist;
+        AudioClip _playlist, _pendingIntro;
 
         void Setup(PlayerRig rig, AudioClip clip, AudioClip intro)
         {
             _rig = rig;
             _playlist = clip;
+            // The intro waits until you first sit in the car, so it is heard at full in-car volume (on foot the radio
+            // plays at 30 % and softer still during conversations, which made the station sound quiet; owner
+            // 2026-11-23). Until then the playlist plays quietly.
+            _pendingIntro = intro != null && intro != clip ? intro : null;
             var go = new GameObject("Radio");
             go.transform.SetParent(transform, false);
             _src = go.AddComponent<AudioSource>();
-            _src.clip = intro != null ? intro : clip;
-            _src.loop = intro == null;
+            _src.clip = clip;
+            _src.loop = true;
             _src.playOnAwake = false;
             _src.spatialBlend = 0f;     // in the cabin it is all around you
             _src.priority = 32;
@@ -140,6 +144,19 @@ namespace KR.Gameplay.Player
             if (GamePause.Paused)
                 target *= 0.3f;
             _src.volume = Mathf.MoveTowards(_src.volume, target, Time.unscaledDeltaTime * 0.8f);
+
+            if (driving && _pendingIntro != null && v > 0.001f)
+            {
+                _introPlayed = true;
+                _src.Stop();
+                _src.clip = _pendingIntro;
+                _src.loop = false;
+                _src.time = 0f;
+                _src.volume = target;   // straight in at the car's level
+                _src.Play();
+                _pendingIntro = null;
+                return;
+            }
 
             if (v > 0.001f && !_src.isPlaying && _src.clip != _playlist && _introPlayed && _src.time <= 0f && !GamePause.Paused)
                 NextClip();
