@@ -49,6 +49,10 @@ namespace KR.Gameplay.Story
 
         public bool Ringing => _active != null && Time.time < _ringUntil;
         public bool OnCall => _active != null;
+        // The caller and what they are saying now (null between lines), for the small call card (CallOverlay).
+        public string Caller => _active?.from;
+        public string CurrentLine => _active != null && _line >= 0 && _line < _active.lines.Length ? _active.lines[_line] : null;
+        public float CallStarted { get; private set; }
 
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]
         static void Hook()
@@ -65,6 +69,7 @@ namespace KR.Gameplay.Story
                 return;
             rig.gameObject.AddComponent<Phone>();
             rig.gameObject.AddComponent<Wallet>();
+            rig.gameObject.AddComponent<CallOverlay>();
         }
 
         // Something to remember (shown on the phone until the end of the session).
@@ -137,7 +142,8 @@ namespace KR.Gameplay.Story
             if (kb != null && kb.pKey.wasPressedThisFrame && !VrRig.Active)
                 _open = !_open;
             UpdateCalls();
-            bool show = (_open || _active != null) && !VrRig.Active;
+            // A call shows the small call card (CallOverlay), not the whole phone (owner 2026-11-23).
+            bool show = _open && !VrRig.Active;
             if (_canvas.gameObject.activeSelf != show)
                 _canvas.gameObject.SetActive(show);
             if (show)
@@ -156,9 +162,11 @@ namespace KR.Gameplay.Story
                         _active = c;
                         _line = -1;
                         _ringUntil = Time.time + 3.5f;
+                        CallStarted = _ringUntil;
                         _ring.Play();
                         Buzz();
-                        _rig.Toast($"Your phone is ringing: {c.from}.", 3f);
+                        if (VrRig.Active)
+                            _rig.Toast($"Your phone is ringing: {c.from}.", 3f);
                         break;
                     }
                 return;
@@ -177,7 +185,8 @@ namespace KR.Gameplay.Story
                 _active = null;
                 return;
             }
-            _rig?.Toast($"{_active.from} (phone): {_active.lines[_line]}", 4.5f);
+            if (VrRig.Active)
+                _rig?.Toast($"{_active.from} (phone): {_active.lines[_line]}", 4.5f);
             _nextLine = Time.time + 4.8f;
         }
 
