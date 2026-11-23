@@ -65,6 +65,17 @@ namespace KR.Gameplay.Player
         // P (park) holds the car and is the only gear you can get out in; the right stick click cycles P, D, R.
         public string Gear => !Driven || _park ? "P" : _reverse ? "R" : "D";
         public bool Parked => !Driven || _park;
+        public enum GearSel { P, R, D }
+        public GearSel Selected => _park ? GearSel.P : _reverse ? GearSel.R : GearSel.D;
+        // Set when the gear changes (the lever and the driver's hand show it).
+        public event System.Action<GearSel> GearChanged;
+        public Transform SteeringWheel => steeringWheel;
+        // The steering wheel as it sits straight ahead (world space): the frame hands turn it in.
+        public Quaternion WheelRest => (steeringWheel != null && steeringWheel.parent != null ? steeringWheel.parent.rotation : transform.rotation) * _wheelBase;
+        // Steering-wheel degrees at full lock right now (less at speed, as the road-wheel lock is).
+        public float WheelLock => Mathf.Lerp(maxSteer, highSpeedSteer, Mathf.Clamp01(Mathf.Abs(Speed) / maxSpeed)) * steeringRatio;
+        // Steering-wheel angle (degrees, + to the right) while the driver's hands turn it; NaN: the stick steers.
+        public float HandWheelAngle { get; set; } = float.NaN;
         public event System.Action<string> Message;
         // Where the driver's eyes are: above the hip point and a little forward, low enough that the whole
         // windscreen is in view rather than the headlining.
@@ -137,25 +148,15 @@ namespace KR.Gameplay.Player
             float brake = Driven ? RigInput.Brake : 0f;
             float steerIn = Driven ? RigInput.Steer : 0f;
 
+            // The button cycles P -> D -> R -> P (the gear lever can also be moved by hand: SelectGear).
             if (Driven && RigInput.GearPressed)
-            {
-                if (Mathf.Abs(Speed) < 0.8f)
-                {
-                    // P -> D -> R -> P
-                    if (_park) { _park = false; _reverse = false; }
-                    else if (!_reverse) _reverse = true;
-                    else { _reverse = false; _park = true; }
-                    Message?.Invoke(_park ? "Gear P: parked. You can get out now." : _reverse
-                        ? "Gear R: reverse. The accelerator now drives backwards." : "Gear D: drive.");
-                }
-                else
-                    Message?.Invoke("Stop first, then change gear.");
-            }
+                SelectGear(_park ? GearSel.D : !_reverse ? GearSel.R : GearSel.P);
 
             if (_park && accel > 0.3f && !_parkHint)
             {
                 _parkHint = true;
-                Message?.Invoke(VrRig.Active ? "In P. Click the right stick for D to drive." : "In P. Press R for D to drive.");
+                Message?.Invoke(!VrRig.Active ? "In P. Press R for D to drive."
+                    : Comfort.HandSteering ? "In P. Take the gear lever with your right hand and pull it back to D." : "In P. Click the right stick for D to drive.");
             }
             if (accel < 0.1f)
                 _parkHint = false;
@@ -165,8 +166,29 @@ namespace KR.Gameplay.Player
             _brake = brake;
 
             float lockAngle = Mathf.Lerp(maxSteer, highSpeedSteer, Mathf.Clamp01(Mathf.Abs(Speed) / maxSpeed));
-            _steer = Mathf.MoveTowards(_steer, steerIn * lockAngle, steerRate * maxSteer * Time.deltaTime);
+            if (Driven && !float.IsNaN(HandWheelAngle))
+                _steer = Mathf.Clamp(HandWheelAngle / steeringRatio, -lockAngle, lockAngle);   // your hands turn it directly
+            else
+                _steer = Mathf.MoveTowards(_steer, steerIn * lockAngle, steerRate * maxSteer * Time.deltaTime);
             AnimateCabin();
+        }
+
+        // Changes gear if the car is (nearly) stopped; false, with a message, if it is moving.
+        public bool SelectGear(GearSel g)
+        {
+            if (!Driven || g == Selected)
+                return g == Selected;
+            if (Mathf.Abs(Speed) >= 0.8f)
+            {
+                Message?.Invoke("Stop first, then change gear.");
+                return false;
+            }
+            _park = g == GearSel.P;
+            _reverse = g == GearSel.R;
+            Message?.Invoke(_park ? "Gear P: parked. You can get out now." : _reverse
+                ? "Gear R: reverse. The accelerator now drives backwards." : "Gear D: drive.");
+            GearChanged?.Invoke(g);
+            return true;
         }
 
         void FixedUpdate()
@@ -312,7 +334,9 @@ namespace KR.Gameplay.Player
         void AnimateCabin()
         {
             if (steeringWheel != null)
-                steeringWheel.localRotation = _wheelBase * Quaternion.AngleAxis(-_steer * steeringRatio, Vector3.forward);
+                // The pivot's local Z points at the driver and local X to the car's left, so a positive angle moves
+                // the top of the rim towards the car's right: clockwise as the driver sees it, a right turn.
+                steeringWheel.localRotation = _wheelBase * Quaternion.AngleAxis(_steer * steeringRatio, Vector3.forward);
             if (accelerator != null)
                 accelerator.localRotation = _accBase * Quaternion.AngleAxis(-Mathf.Abs(_throttle) * 18f, Vector3.right);
             if (brake != null)
