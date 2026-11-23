@@ -17,6 +17,10 @@ namespace KR.Gameplay.Story
     // Responders set out from out of your sight (behind you or behind buildings) and switch the siren off once they
     // are on the scene; the beacons keep flashing. No siren is ever heard without its vehicle.
     // Both vehicles are copies of the city's own police car and ambulance, made once at the start and reused.
+    // Knocking down a person on foot kills them (owner 2026-11-23: "a person, that's killing"): two paramedics (copies
+    // of anyone in the city) wheel the stretcher, and a detainee van (a copy of the city's van) comes with the police.
+    // Stopped and caught: the officer arrests you and you are taken away in the van; the milestone fails. Driving off
+    // first ("if I fail to stop"): the fine for refusing to stop is multiplied, caught later or not.
     public sealed class EmergencyResponse : MonoBehaviour
     {
         const float AmbulanceSpeed = 17f, PoliceTop = 27f, CatchRadius = 25f, LoseDistance = 320f, LoseSeconds = 15f;
@@ -35,7 +39,10 @@ namespace KR.Gameplay.Story
         PlayerRig _rig;
         Navigator _nav;
         StoryDirector _director;
-        Responder _ambulance, _police;
+        Responder _ambulance, _police, _van;
+        Transform[] _medics = new Transform[0];
+        bool _killed, _fled, _arresting, _vanLeaving;
+        float _vanReplan;
         Material _red, _blue, _off;
         readonly List<Vector3> _zebras = new List<Vector3>();
         Vector3 _victim;
@@ -79,6 +86,8 @@ namespace KR.Gameplay.Story
                     traffic = t;
             _ambulance = Make(traffic, "Ambulance", "Ambulance (responding)");
             _police = Make(traffic, "Police", "Police car (responding)");
+            _van = Make(traffic, "Van", "Detainee van (police)") ?? Make(traffic, "Police", "Detainee van (police)");
+            _medics = Medics(2);
 
             _zebras.AddRange(ZebraCentres());
 
@@ -163,7 +172,41 @@ namespace KR.Gameplay.Story
             r.beacons = beacons.ToArray();
             r.siren = SoundBank.Loop(go.transform, "siren", true, 8f, 140f);   // heard only once the vehicle is close enough to see
             go.SetActive(false);
+            // Traffic stops for it (and passes it once it is parked at the scene); ignored while it is hidden.
+            RoadNetworkTraffic.AddObstacle(go.transform, 1.1f);
             return r;
+        }
+
+        // Two paramedics: copies of people from the city (anyone not in uniform and not a story character), body and
+        // animation only, hidden until the ambulance needs them.
+        Transform[] Medics(int count)
+        {
+            var pool = new List<PersonAnimator>();
+            foreach (var p in Object.FindObjectsByType<PersonAnimator>(FindObjectsSortMode.None))
+            {
+                string n = p.name;
+                if (n.Contains("olice") || n.Contains("fficer") || p.GetComponent<Npc>() != null ||
+                    p.GetComponentInParent<RoadNetworkTraffic>() != null || p.GetComponentInParent<Rigidbody>() != null)
+                    continue;
+                pool.Add(p);
+            }
+            var list = new List<Transform>();
+            for (int i = 0; i < count && pool.Count > 0; i++)
+            {
+                var template = pool[Random.Range(0, pool.Count)];
+                pool.Remove(template);
+                var go = Instantiate(template.gameObject, transform);
+                go.name = $"Paramedic {i + 1}";
+                foreach (var mb in go.GetComponentsInChildren<MonoBehaviour>(true))
+                    if (!(mb is PersonAnimator))
+                        Destroy(mb);
+                go.SetActive(false);
+                RoadNetworkTraffic.AddObstacle(go.transform, 0.4f);
+                list.Add(go.transform);
+            }
+            if (list.Count == 0)
+                Debug.LogWarning("[Emergency] No people in the city to copy as paramedics; the stretcher moves on its own.");
+            return list.ToArray();
         }
 
         void OnPersonHit(Vector3 where, bool onFoot)
@@ -193,9 +236,27 @@ namespace KR.Gameplay.Story
                 _policeLeaveAt = 0f;
                 _director?.SetFlag(_crossing ? "hit_on_crossing" : "hit_pedestrian");
             }
-            _rig.Toast(_crossing
-                ? "You hit someone on a zebra crossing. An ambulance is on its way, and so are the police. Stop the car."
-                : "An ambulance is on its way, and so are the police. Stop the car.", 6f);
+            if (onFoot)
+            {
+                _killed = true;
+                _fled = false;
+                _arresting = false;
+                _director?.SetFlag("killed_person");
+                if (_van != null && !_van.active)
+                {
+                    _vanLeaving = false;
+                    Dispatch(_van, _rig.Car.transform.position, 220f, 380f);
+                }
+                _rig.Toast(_crossing
+                    ? "You hit someone on a zebra crossing and killed them. Stop the car: an ambulance, the police and a detainee van are coming."
+                    : "You hit someone and killed them. Stop the car: an ambulance, the police and a detainee van are coming.", 7f);
+            }
+            else
+            {
+                // A rider knocked off a moto: a crash with a vehicle, so a fine; the police still come.
+                _director?.ChargeFine(RuleId.HitVehicle);
+                _rig.Toast("An ambulance is on its way, and so are the police. Stop the car.", 6f);
+            }
         }
 
         // Starts a responder on the street network some way from the target and routes it there.
@@ -298,6 +359,8 @@ namespace KR.Gameplay.Story
             Flash(_police);
             UpdateAmbulance(dt);
             UpdatePolice(dt);
+            UpdateVan(dt);
+            Flash(_van);
             if (_officer != null && _rig != null)
                 _officer.Tick(dt, _rig.CurrentMode == PlayerRig.Mode.Driving ? _rig.Car.transform.position : _rig.Player.transform.position);
         }
@@ -314,25 +377,46 @@ namespace KR.Gameplay.Story
             var face = Quaternion.LookRotation(Flat(beside - rear) + body.forward * 1e-3f);
             stretcher.blanket.SetActive(false);
             stretcher.root.SetActive(true);
+            foreach (var m in _medics)
+                if (m != null)
+                    m.gameObject.SetActive(true);
             yield return Roll(stretcher.root.transform, rear, beside, face, 3f);
+            // The crew either side of the person, looking down at them.
+            for (int k = 0; k < _medics.Length; k++)
+                if (_medics[k] != null)
+                {
+                    var side = face * Vector3.right * (k == 0 ? -0.9f : 0.9f);
+                    var at = GroundAt(beside + side);
+                    _medics[k].SetPositionAndRotation(at, Quaternion.LookRotation(Flat(beside - at) + face * Vector3.forward * 1e-3f));
+                }
             yield return new WaitForSeconds(3f);
             if (victim != null)
                 CarImpacts.Collect(victim);
             stretcher.blanket.SetActive(true);
             if (_rig != null && (_rig.Player.transform.position - _victim).sqrMagnitude < 80f * 80f)
-                _rig.Toast("They are lifted onto the stretcher and taken to hospital.", 5f);
+                _rig.Toast("The paramedics lift them onto the stretcher and cover them.", 5f);
             yield return new WaitForSeconds(1.5f);
             yield return Roll(stretcher.root.transform, beside, rear, face, 3f);
             stretcher.root.SetActive(false);
+            foreach (var m in _medics)
+                if (m != null)
+                    m.gameObject.SetActive(false);
             yield return new WaitForSeconds(2f);
             _ambulanceLeaveAt = Time.time;
         }
 
-        static System.Collections.IEnumerator Roll(Transform t, Vector3 from, Vector3 to, Quaternion facing, float seconds)
+        System.Collections.IEnumerator Roll(Transform t, Vector3 from, Vector3 to, Quaternion facing, float seconds)
         {
+            var dir = Flat(to - from);
+            var walk = dir.sqrMagnitude > 0.01f ? Quaternion.LookRotation(dir) : facing;
             for (float k = 0f; k < 1f; k += Time.deltaTime / seconds)
             {
-                t.SetPositionAndRotation(GroundAt(Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, k))), facing);
+                var p = GroundAt(Vector3.Lerp(from, to, Mathf.SmoothStep(0f, 1f, k)));
+                t.SetPositionAndRotation(p, facing);
+                // One paramedic at each end of the stretcher, walking with it.
+                for (int i = 0; i < _medics.Length; i++)
+                    if (_medics[i] != null)
+                        _medics[i].SetPositionAndRotation(GroundAt(p + facing * Vector3.forward * (i == 0 ? 1.25f : -1.25f)), walk);
                 yield return null;
             }
             t.SetPositionAndRotation(to, facing);
@@ -388,9 +472,7 @@ namespace KR.Gameplay.Story
             return _stretcher = new StretcherParts { root = root, blanket = cover };
         }
 
-        static Vector3 GroundAt(Vector3 p) =>
-            Physics.Raycast(p + Vector3.up * 3f, Vector3.down, out var hit, 8f, 1 << 0, QueryTriggerInteraction.Ignore) &&
-            hit.collider.attachedRigidbody == null ? hit.point : p;
+        static Vector3 GroundAt(Vector3 p) => Floor.At(p, 1.5f, 5f);
 
         // 0: on the way; >0: with the patient until that time; -1: driving away.
         void UpdateAmbulance(float dt)
@@ -405,7 +487,7 @@ namespace KR.Gameplay.Story
                     _ambulanceLeaveAt = float.MaxValue;   // with the patient until the stretcher is back in
                     if (r.siren != null) r.siren.Stop();   // on the scene: beacons only
                     if (_rig != null && (_rig.Player.transform.position - _victim).sqrMagnitude < 80f * 80f)
-                        _rig.Toast("The ambulance has arrived. The crew bring a stretcher for them.", 5f);
+                        _rig.Toast("The ambulance has arrived. Two paramedics bring a stretcher.", 5f);
                     StartCoroutine(PickUp(r, CarImpacts.LastVictim));
                 }
             }
@@ -466,6 +548,13 @@ namespace KR.Gameplay.Story
             }
             float distance = Vector3.Distance(r.body.position, you);
             float yourSpeed = _rig.CurrentMode == PlayerRig.Mode.Driving ? Mathf.Abs(_rig.Car.Speed) : 0f;
+            // Driving away from the person you killed before the police got to you: a hit and run.
+            if (_killed && !_fled && Flat(you - _victim).magnitude > 60f)
+            {
+                _fled = true;
+                _director?.SetFlag("hit_and_run");
+                _rig.Toast("You drove off after killing someone. The fines are multiplied. Stop for the police.", 6f);
+            }
 
             // Re-plan towards you every second and a half; close in directly once near.
             _replan -= dt;
@@ -501,6 +590,11 @@ namespace KR.Gameplay.Story
                 r.speed = 0f;
                 if (r.siren != null) r.siren.Stop();
                 _director?.SetFlag("stopped_by_police_after_hit");
+                if (_killed)
+                {
+                    Arrest(r, you);
+                    return;
+                }
                 string said = "Police. Stay where you are. You knocked someone down" + (_crossing ? " on a zebra crossing" : "") +
                               ". The ambulance is with them. You did right to stop.";
                 string offence = _crossing ? "Hitting a pedestrian on a zebra crossing" : "Hitting a pedestrian";
@@ -535,8 +629,113 @@ namespace KR.Gameplay.Story
                 if (r.siren != null) r.siren.Stop();
                 _director?.SetFlag("fled_hit");
                 _director?.Rules?.ReportRefusedStop(you);
+                if (_killed)
+                {
+                    _killed = false;
+                    _director?.ChargeFine(RuleId.RefuseStop, StoryDirector.LeaveSceneMultiplier,
+                                          "You drove off after killing someone and were not caught: the fine is tripled.");
+                    SendVanAway();
+                }
                 _rig.Toast("You got away from the police, for now. Leaving someone you hit and refusing to stop for the police are serious offences.", 7f);
             }
+        }
+
+        // ---------- arrest after a killing ----------
+
+        void Arrest(Responder r, Vector3 you)
+        {
+            _arresting = true;
+            string where = _crossing ? " on a zebra crossing" : "";
+            var lines = new[]
+            {
+                $"Police. Stay where you are. You knocked someone down{where} and they have died.",
+                "Your driving licence and your identity card, please.",
+                "NTARE Shiloh, you are under arrest. Step out of the car.",
+                "You are coming with us in the van.",
+            };
+            if (_officer != null)
+                _officer.GetOut(r.body, you, lines, i =>
+                {
+                    if (i == 1)
+                        Wallet.Instance?.Show(5f, Wallet.Card.Licence, Wallet.Card.Identity);
+                    else if (i == lines.Length - 1)
+                        StartCoroutine(TakenAway(LineWait()));
+                });
+            else
+            {
+                _rig.Toast(lines[0] + " " + lines[2], 7f);
+                StartCoroutine(TakenAway(4f));
+            }
+        }
+
+        static float LineWait() => 5f;
+
+        // Waits for the last words and for the van to pull up (at most 25 s), then the cut: you are taken away.
+        System.Collections.IEnumerator TakenAway(float words)
+        {
+            yield return new WaitForSeconds(words);
+            float until = Time.time + 25f;
+            while (_van != null && _van.active && Time.time < until && _rig != null &&
+                   Flat(_van.body.position - (_rig.CurrentMode == PlayerRig.Mode.Driving ? _rig.Car.transform.position : _rig.Player.transform.position)).magnitude > 14f)
+                yield return null;
+            bool fled = _fled;
+            ArrestScreen.Show("ARRESTED",
+                "You killed a person with the car. The police take you away in the detainee van." +
+                (fled ? "\nYou drove off first: the fine for refusing to stop is tripled." : "") +
+                "\nThe milestone is over.", 4f, () =>
+                {
+                    _officer?.Hide();
+                    if (_rig != null)
+                        _rig.TakeAway(_rig.StartSpot, _rig.StartYaw);
+                    if (fled)
+                        _director?.ChargeFine(RuleId.RefuseStop, StoryDirector.LeaveSceneMultiplier, "You drove off after killing someone.");
+                    _director?.Arrested();
+                    if (_police != null && _police.active)
+                        Stand(_police);
+                    if (_van != null && _van.active)
+                        Stand(_van);
+                });
+            _killed = _fled = _arresting = false;
+        }
+
+        // The van comes to wherever you are; after the arrest (or once you got away) it drives off and is put away.
+        void UpdateVan(float dt)
+        {
+            var r = _van;
+            if (r == null || !r.active || _rig == null)
+                return;
+            if (_vanLeaving)
+            {
+                if (Drive(r, 14f, 10f, dt))
+                    Stand(r);
+                return;
+            }
+            Vector3 you = _rig.CurrentMode == PlayerRig.Mode.Driving ? _rig.Car.transform.position : _rig.Player.transform.position;
+            float distance = Flat(r.body.position - you).magnitude;
+            _vanReplan -= dt;
+            if (_vanReplan <= 0f)
+            {
+                _vanReplan = 2f;
+                if (distance > 40f)
+                    Plan(r, you);
+                else
+                {
+                    r.route.Clear();
+                    r.next = 0;
+                    r.route.Add(you - (you - r.body.position).normalized * 9f);
+                }
+            }
+            if (Drive(r, distance < 30f ? 6f : 22f, 3f, dt) && r.siren != null && r.siren.isPlaying)
+                r.siren.Stop();   // pulled up: beacons only
+        }
+
+        void SendVanAway()
+        {
+            if (_van == null || !_van.active)
+                return;
+            _vanLeaving = true;
+            if (_van.siren != null) _van.siren.Stop();
+            Plan(_van, _van.body.position + _van.body.forward * 300f);
         }
 
         // Moves along the route at up to topSpeed; true once at the end (within arrive metres of it).
@@ -556,8 +755,22 @@ namespace KR.Gameplay.Story
                 r.next = r.route.Count;
                 return true;
             }
+            // Never into another emergency vehicle or your car (owner 2026-11-23: "the police car is passing through
+            // the ambulance"): stop a few metres behind whatever is ahead; near the end of the route that counts as
+            // arrived, so it parks behind it instead of waiting there for ever.
+            float clear = Clearance(r);
+            if (clear < 1f)
+            {
+                r.speed = Mathf.MoveTowards(r.speed, 0f, 14f * dt);
+                if (last && remaining < arrive + 14f)
+                {
+                    r.next = r.route.Count;
+                    return true;
+                }
+                return false;
+            }
             // Slow for the end of the route and for sharp turns.
-            float target = topSpeed;
+            float target = Mathf.Min(topSpeed, Mathf.Sqrt(2f * 7f * clear));
             if (last)
                 target = Mathf.Min(target, Mathf.Sqrt(2f * 6f * Mathf.Max(0f, remaining - arrive)));
             float turn = Vector3.Angle(Flat(r.body.forward), to);
@@ -569,6 +782,31 @@ namespace KR.Gameplay.Story
                 Place(r, r.body.position + dir * r.speed * dt, dir);
             }
             return false;
+        }
+
+        // Free metres ahead of r before another responder or your car (2.6 m wide corridor, 14 m long, keeping
+        // a 5 m gap); float.MaxValue when the way is clear.
+        float Clearance(Responder r)
+        {
+            float room = float.MaxValue;
+            var p = r.body.position;
+            var f = Flat(r.body.forward).normalized;
+            void Check(Transform other, float halfLength)
+            {
+                if (other == null || other == r.body || !other.gameObject.activeInHierarchy)
+                    return;
+                var d = Flat(other.position - p);
+                float along = Vector3.Dot(d, f);
+                float lateral = Mathf.Abs(d.x * f.z - d.z * f.x);
+                if (along > 0.5f && along < 14f + halfLength && lateral < 2.6f)
+                    room = Mathf.Min(room, along - halfLength - 5f);
+            }
+            if (_ambulance != null && _ambulance.active) Check(_ambulance.body, 2.5f);
+            if (_police != null && _police.active) Check(_police.body, 2.5f);
+            if (_van != null && _van.active) Check(_van.body, 2.5f);
+            if (_rig != null && _rig.Car != null)
+                Check(_rig.Car.transform, 2.3f);
+            return room;
         }
 
         // On the road surface (never on another vehicle), level with it.

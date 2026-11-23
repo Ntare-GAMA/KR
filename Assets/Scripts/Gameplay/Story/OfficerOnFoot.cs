@@ -62,6 +62,7 @@ namespace KR.Gameplay.Story
                 if (!(mb is PersonAnimator))
                     Object.Destroy(mb);
             go.SetActive(false);
+            RoadNetworkTraffic.AddObstacle(go.transform, 0.4f);   // traffic stops for the officer on the road
             return new OfficerOnFoot(go.transform, SpeechBubble.Create(parent));
         }
 
@@ -83,6 +84,14 @@ namespace KR.Gameplay.Story
             _step = Step.ToYou;
         }
 
+        // Back in the car at once (the screen is black: you are being taken away).
+        public void Hide()
+        {
+            _anim?.SetTalking(false, Vector3.zero);
+            _body.gameObject.SetActive(false);
+            _step = Step.Hidden;
+        }
+
         public void Tick(float dt, Vector3 you)
         {
             switch (_step)
@@ -102,7 +111,11 @@ namespace KR.Gameplay.Story
                     {
                         _index++;
                         _until = Time.time + LineSeconds;
-                        _say.Say(_body, 1.95f, _lines[_index], LineSeconds);
+                        // On a desktop the words go on the call card (police blue), not a big board over their head.
+                        if (CallOverlay.Available)
+                            CallOverlay.Talk("Police officer", "/// POLICE ON SCENE", _lines[_index], LineSeconds + 0.6f);
+                        else
+                            _say.Say(_body, 1.95f, _lines[_index], LineSeconds);
                         _onLine?.Invoke(_index);
                     }
                     else if (Time.time > _until)
@@ -142,8 +155,8 @@ namespace KR.Gameplay.Story
                 _body.rotation = Quaternion.RotateTowards(_body.rotation, Quaternion.LookRotation(to), 180f * Time.deltaTime);
         }
 
-        static Vector3 Ground(Vector3 p) =>
-            Physics.Raycast(p + Vector3.up * 3f, Vector3.down, out var hit, 8f, 1 << 0, QueryTriggerInteraction.Ignore) &&
-            hit.collider.attachedRigidbody == null ? hit.point : p;
+        // On the walkable floor there (any layer: the ALU forecourt is not on the default one, owner 2026-11-23:
+        // "the officer ... should step on the ground not mid-air").
+        static Vector3 Ground(Vector3 p) => Floor.At(p, 1.2f, 4f);
     }
 }
