@@ -18,6 +18,10 @@ namespace KR.Gameplay.Story
 
         public static Wallet Instance { get; private set; }
 
+        // True while the cards or a ticket are on screen (the briefing panel waits so they never overlap).
+
+        public static bool Showing => Instance != null && Instance._canvas != null && Instance._canvas.gameObject.activeSelf;
+
         Canvas _canvas;
         readonly Dictionary<Card, RectTransform> _cards = new Dictionary<Card, RectTransform>();
         RectTransform _ticket;
@@ -81,12 +85,24 @@ namespace KR.Gameplay.Story
             UI.KrTheme.Stretch(head.rectTransform, 0f);
             head.rectTransform.offsetMin = new Vector2(18f, 0f);
             head.text = title;
-            // A photo square (plain, no face), the name, the issuer and the role.
+            // The holder's photo (owner-supplied portrait, Resources/Story/Portraits/player_photo, owner 2026-11-23: "on
+            // the space of the photo or image use this one named LANE 2650"), or a plain square with an initial.
             var photo = UI.KrTheme.Panel(card.transform, "Photo", new Color32(200, 196, 188, 255));
             UI.KrTheme.Place(photo.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 22f), new Vector2(130f, 170f));
-            var silhouette = UI.KrTheme.Label(photo.transform, "Silhouette", 96, UI.KrTheme.Weight.Bold, new Color32(150, 146, 140, 255), TextAnchor.MiddleCenter);
-            UI.KrTheme.Stretch(silhouette.rectTransform, 0f);
-            silhouette.text = "N";
+            var portrait = Resources.Load<Texture2D>("Story/Portraits/player_photo");
+            if (portrait != null)
+            {
+                var img = UI.KrTheme.Node("Portrait", photo.transform).gameObject.AddComponent<RawImage>();
+                img.texture = portrait;
+                img.raycastTarget = false;
+                UI.KrTheme.Stretch(img.rectTransform, 3f);
+            }
+            else
+            {
+                var silhouette = UI.KrTheme.Label(photo.transform, "Silhouette", 96, UI.KrTheme.Weight.Bold, new Color32(150, 146, 140, 255), TextAnchor.MiddleCenter);
+                UI.KrTheme.Stretch(silhouette.rectTransform, 0f);
+                silhouette.text = "N";
+            }
             var body = UI.KrTheme.Label(card.transform, "Details", 24, UI.KrTheme.Weight.SemiBold, new Color32(30, 30, 34, 255), TextAnchor.UpperLeft);
             UI.KrTheme.Place(body.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(166f, 22f), new Vector2(280f, 180f));
             body.text = $"<size=20>NAME</size>\n<b><size=30>{PlayerName}</size></b>\n<size=20>{issuer}</size>\n<color=#{ColorUtility.ToHtmlStringRGB(band)}><b>{role}</b></color>";
