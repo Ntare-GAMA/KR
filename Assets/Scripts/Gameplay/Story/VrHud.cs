@@ -106,11 +106,16 @@ namespace KR.Gameplay.Story
 
         void LateUpdate()
         {
+            // The Wallet page holds the real cards up in front of you while it is open.
+            if (VrRig.Active && Wallet.Instance != null)
+                Wallet.Instance.ShowAll(_open && _page == Page.Wallet);
             if (_canvas == null || rig == null || director == null)
+                return;
+            if (_leaving)
                 return;
             bool driving = rig.CurrentMode == PlayerRig.Mode.Driving;
             bool parked = driving && rig.Car != null && rig.Car.Parked;
-            if (RigInput.MenuPressed && (!driving || parked) && (!rig.Busy || _open))
+            if (RigInput.MenuPressed && (!driving || parked) && (!rig.Busy || _open) && !ComfortPicker.Showing)
                 _open = !_open;
             if (driving && !parked)
                 _open = false;
@@ -173,7 +178,7 @@ namespace KR.Gameplay.Story
         {
             Page.Journal => _places != null ? _places.Catalog.places.Length : 0,
             Page.Photos => director.Photos.Count,
-            Page.Settings => 12,
+            Page.Settings => SettingsRows().Length,
             _ => 0,
         };
 
@@ -290,29 +295,71 @@ namespace KR.Gameplay.Story
                 _photo.texture = _photoTex;
         }
 
-        string Settings()
+        // The Settings rows, in order (Use() acts on the same index).
+        enum Row
+        {
+            ComfortCheck, Turning, Vignette, Walking, Steering, TextSize, Seated, Recentre,
+            Resolution, DisplayMode, Destination, Tour, Radio, Overlay, Benchmark, QuitToMenu,
+        }
+
+        Row[] _rowsCache;
+        Row[] SettingsRows()
+        {
+            if (_rowsCache != null)
+                return _rowsCache;
+            var list = new List<Row>();
+            foreach (Row r in System.Enum.GetValues(typeof(Row)))
+                if (r != Row.DisplayMode || DisplaySettings.HasMonitor)
+                    list.Add(r);
+            return _rowsCache = list.ToArray();
+        }
+
+        static bool HeadsetResolution => VrRig.Active || !DisplaySettings.HasMonitor;
+
+        string RowText(Row r)
         {
             var c = director.ComfortSettings;
-            string dest = _nav == null ? "-" : _nav.OnTour ? "on the Kimironko tour" : _nav.Choice < 0 ? "follow the milestone" : _nav.Places[_nav.Choice].name;
-            string[] rows =
+            switch (r)
             {
-                $"Turning: {(c.turn == 0 ? "snap 30°" : c.turn == 1 ? "snap 45°" : "smooth")}",
-                $"Comfort vignette: {(c.vignette == 0 ? "off" : c.vignette == 1 ? "low" : "high")}",
-                $"Walking: {(c.teleport ? "teleport (aim with the left stick)" : "stick")}",
-                $"Text size: {(c.largeText ? "large" : "normal")}",
-                $"Seated play: {(c.seated ? "on (view raised)" : "off")}",
-                "Recentre view",
-                $"Choose a destination (now: {dest})",
-                "Start the Kimironko tour",
-                $"Car radio: {CarRadio.VolumeText}  (plays all game; in the car: right stick up/down)",
-                $"Performance overlay: {(KR.Gameplay.Diagnostics.PerformanceOverlay.Visible ? "on" : "off")}",
-                KR.Gameplay.Diagnostics.BenchmarkRun.Running ? "FPS benchmark running..." : "Run the FPS benchmark (90 s route)",
-                "Quit to main menu",
-            };
+                case Row.ComfortCheck: return "Comfort check (presets against motion sickness)";
+                case Row.Turning: return $"Turning: {(c.turn == 0 ? "snap 30°" : c.turn == 1 ? "snap 45°" : "smooth")}";
+                case Row.Vignette: return $"Comfort vignette: {(c.vignette == 0 ? "off" : c.vignette == 1 ? "low" : "high")}";
+                case Row.Walking: return $"Walking: {(c.teleport ? "teleport (aim with the left stick)" : "stick")}";
+                case Row.Steering: return $"Steering: {(c.stickSteer ? "left stick" : "hands on the wheel and gear lever")}";
+                case Row.TextSize: return $"Text size: {(c.largeText ? "large" : "normal")}";
+                case Row.Seated: return $"Seated play: {(c.seated ? "on (view raised)" : "off")}";
+                case Row.Recentre: return "Recentre view";
+                case Row.Resolution:
+                    return HeadsetResolution
+                        ? $"Render resolution: {DisplaySettings.VrScaleText}  (lower is smoother)"
+                        : $"Screen resolution: {DisplaySettings.ResolutionText}";
+                case Row.DisplayMode: return $"Display: {DisplaySettings.ModeText}";
+                case Row.Destination:
+                    string dest = _nav == null ? "-" : _nav.OnTour ? "on the Kimironko tour" : _nav.Choice < 0 ? "follow the milestone" : _nav.Places[_nav.Choice].name;
+                    return $"Choose a destination (now: {dest})";
+                case Row.Tour: return "Start the Kimironko tour";
+                case Row.Radio: return $"Car radio: {CarRadio.VolumeText}";
+                case Row.Overlay: return $"Performance overlay: {(KR.Gameplay.Diagnostics.PerformanceOverlay.Visible ? "on" : "off")}";
+                case Row.Benchmark: return KR.Gameplay.Diagnostics.BenchmarkRun.Running ? "FPS benchmark running..." : "Run the FPS benchmark (90 s route)";
+                default: return "<color=#ff6278>Quit to main menu</color>  (your progress is saved)";
+            }
+        }
+
+        string Settings()
+        {
+            var rows = SettingsRows();
             _sb.Clear();
             _sb.Append("<b>Settings</b>\n\n");
-            for (int i = 0; i < rows.Length; i++)
-                _sb.Append(i == _row ? "<color=#3ee6ff>›</color> <b>" : "   ").Append(rows[i]).Append(i == _row ? "</b>\n" : "\n");
+            // A window of rows around the selection, so the list never runs off the bottom of the panel.
+            const int Window = 10;
+            int from = Mathf.Clamp(_row - Window / 2, 0, Mathf.Max(0, rows.Length - Window));
+            int to = Mathf.Min(rows.Length, from + Window);
+            if (from > 0)
+                _sb.Append("<color=#999999>   ▲ more</color>\n");
+            for (int i = from; i < to; i++)
+                _sb.Append(i == _row ? "<color=#3ee6ff>›</color> <b>" : "   ").Append(RowText(rows[i])).Append(i == _row ? "</b>\n" : "\n");
+            if (to < rows.Length)
+                _sb.Append("<color=#999999>   ▼ more</color>\n");
             return _sb.ToString();
         }
 
@@ -320,28 +367,46 @@ namespace KR.Gameplay.Story
         {
             if (_page != Page.Settings)
                 return;
+            var rows = SettingsRows();
+            if (_row < 0 || _row >= rows.Length)
+                return;
             var c = director.ComfortSettings;
-            switch (_row)
+            switch (rows[_row])
             {
-                case 0: c.turn = (c.turn + 1) % 3; break;
-                case 1: c.vignette = (c.vignette + 1) % 3; break;
-                case 2: c.teleport = !c.teleport; break;
-                case 3: c.largeText = !c.largeText; break;
-                case 4: c.seated = !c.seated; break;
-                case 5: Comfort.RecenterRequested = true; break;
-                case 6:
-                    var picker = FindFirstObjectByType<DestinationPicker>();
+                case Row.ComfortCheck:
+                    var picker = director.GetComponent<ComfortPicker>();
                     if (picker != null)
                     {
                         _open = false;
                         GamePause.SetPanel(false);
                         picker.Show();
                     }
+                    return;
+                case Row.Turning: c.turn = (c.turn + 1) % 3; break;
+                case Row.Vignette: c.vignette = (c.vignette + 1) % 3; break;
+                case Row.Walking: c.teleport = !c.teleport; break;
+                case Row.Steering: c.stickSteer = !c.stickSteer; break;
+                case Row.TextSize: c.largeText = !c.largeText; break;
+                case Row.Seated: c.seated = !c.seated; break;
+                case Row.Recentre: Comfort.RecenterRequested = true; break;
+                case Row.Resolution:
+                    if (HeadsetResolution) DisplaySettings.NextVrScale();
+                    else DisplaySettings.NextResolution();
                     break;
-                case 7: StartTour(); break;
-                case 8: CarRadio.Volume = CarRadio.Volume >= 0.95f ? 0f : CarRadio.Volume + 0.1f; break;
-                case 9: KR.Gameplay.Diagnostics.PerformanceOverlay.Visible = !KR.Gameplay.Diagnostics.PerformanceOverlay.Visible; break;
-                case 10:
+                case Row.DisplayMode: DisplaySettings.NextMode(); break;
+                case Row.Destination:
+                    var dp = FindFirstObjectByType<DestinationPicker>();
+                    if (dp != null)
+                    {
+                        _open = false;
+                        GamePause.SetPanel(false);
+                        dp.Show();
+                    }
+                    break;
+                case Row.Tour: StartTour(); break;
+                case Row.Radio: CarRadio.Volume = CarRadio.Volume >= 0.95f ? 0f : CarRadio.Volume + 0.1f; break;
+                case Row.Overlay: KR.Gameplay.Diagnostics.PerformanceOverlay.Visible = !KR.Gameplay.Diagnostics.PerformanceOverlay.Visible; break;
+                case Row.Benchmark:
                     var bench = FindFirstObjectByType<KR.Gameplay.Diagnostics.BenchmarkRun>();
                     if (bench != null && !KR.Gameplay.Diagnostics.BenchmarkRun.Running)
                     {
@@ -350,23 +415,45 @@ namespace KR.Gameplay.Story
                         bench.Begin();
                     }
                     break;
-                case 11: QuitToMenu(); return;
+                case Row.QuitToMenu: QuitToMenu(); return;
             }
             director.ApplyComfort();
         }
 
-        // Back to the KR main menu (headset build; the PC build has no menu scene).
+        // Back to the KR main menu. Saves the run first, fades out, unpauses everything and loads the menu in the
+        // background (a blocking load froze the headset while the whole city was unloaded, which looked as if
+        // nothing happened, and the run in progress was not saved).
+        bool _leaving;
         void QuitToMenu()
         {
             const string menu = "Quest Menu";
+            if (_leaving)
+                return;
             if (!Application.CanStreamedLevelBeLoaded(menu))
             {
-                rig.Toast("The main menu is only in the headset build.", 3f);
+                rig.Toast("The main menu is not in this build.", 3f);
                 return;
             }
+            _leaving = true;
             _open = false;
-            GamePause.SetPanel(false);
-            UnityEngine.SceneManagement.SceneManager.LoadScene(menu);
+            if (_canvas != null)
+                _canvas.gameObject.SetActive(false);
+            director.SaveRun();
+            GamePause.Clear();
+            rig.Toast("Saving and going back to the main menu…", 10f);
+            VrRig.Fade(0.4f);
+            StartCoroutine(LoadMenu(menu));
+        }
+
+        System.Collections.IEnumerator LoadMenu(string menu)
+        {
+            yield return new WaitForSecondsRealtime(0.3f);
+            var op = UnityEngine.SceneManagement.SceneManager.LoadSceneAsync(menu, UnityEngine.SceneManagement.LoadSceneMode.Single);
+            if (op == null)
+            {
+                _leaving = false;
+                rig.Toast("Could not load the main menu.", 4f);
+            }
         }
 
         void StartTour()
