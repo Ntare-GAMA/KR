@@ -64,7 +64,8 @@ namespace KR.Gameplay.Player
             get
             {
                 var kb = Keyboard.current;
-                float s = Stick(XRController.leftHand).x;
+                // With hand steering in the headset the wheel is turned by hand, not the stick.
+                float s = Comfort.HandSteering && VrRig.Active ? 0f : Stick(XRController.leftHand).x;
                 if (kb != null)
                 {
                     if (kb.dKey.isPressed || kb.rightArrowKey.isPressed) s += 1f;
@@ -136,9 +137,11 @@ namespace KR.Gameplay.Player
         public static bool UsePressed { get { Refresh(); return _use; } }
         public static bool ConfirmPressed { get { Refresh(); return _confirm; } }
         public static bool BeltPressed { get { Refresh(); return _belt; } }
-        // Horn (held): H, or the left grip while driving (both hands are on the wheel).
+        // Horn (held): H; in the headset a hand pressed on the middle of the wheel (hand steering), or the left grip
+        // (stick steering, where both hands stay on the wheel).
         public static bool Horn =>
-            Keyboard.current != null && Keyboard.current.hKey.isPressed || Axis(XRController.leftHand, "grip") > 0.7f;
+            Keyboard.current != null && Keyboard.current.hKey.isPressed ||
+            (Comfort.HandSteering && VrRig.Active ? WheelGrab.Horn : Axis(XRController.leftHand, "grip") > 0.7f);
 
         // Edge detection once per frame, so several readers see the same press.
         static void Refresh()
