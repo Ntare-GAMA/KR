@@ -28,6 +28,7 @@ namespace KR.Gameplay.Player
         float _angle = AngleP, _changedAt = -10f;   // starts in P
         bool _held, _wasGrip;
         DrivableCar.GearSel _aimed;
+        DrivableCar.GearSel? _shown;
 
         public bool Held => _held;
         public Transform Knob => _knob;
@@ -78,20 +79,31 @@ namespace KR.Gameplay.Player
             Shape(PrimitiveType.Cylinder, _pivot, new Vector3(0f, LeverLength * 0.5f, 0f), new Vector3(0.022f, LeverLength * 0.5f, 0.022f), new Color(0.12f, 0.12f, 0.13f));
             _knob = Shape(PrimitiveType.Sphere, _pivot, new Vector3(0f, LeverLength, 0f), new Vector3(0.05f, 0.06f, 0.06f), new Color(0.09f, 0.08f, 0.08f));
 
-            // The gate letters beside the lever, facing up and back towards the driver.
+            // The gate letters beside the lever on a dark plate, facing up and back towards the driver, big enough to
+            // read at a glance (owner 2026-11-23: "the marks ... on the gear shifter should be seen clearly").
             var plate = new GameObject("Gear gate", typeof(RectTransform));
             plate.transform.SetParent(root, false);
-            plate.transform.localPosition = new Vector3(0.075f, 0.014f, 0f);
-            plate.transform.localRotation = Quaternion.Euler(70f, 0f, 0f);
+            plate.transform.localPosition = new Vector3(0.075f, 0.03f, 0f);
+            plate.transform.localRotation = Quaternion.Euler(62f, 0f, 0f);
             var canvas = plate.AddComponent<Canvas>();
             canvas.renderMode = RenderMode.WorldSpace;
-            ((RectTransform)plate.transform).sizeDelta = new Vector2(60f, 200f);
-            plate.transform.localScale = Vector3.one * 0.0009f;
+            ((RectTransform)plate.transform).sizeDelta = new Vector2(80f, 240f);
+            plate.transform.localScale = Vector3.one * 0.0008f;   // a 6 x 19 cm plate, letters about 5 cm
+            var backing = new GameObject("Plate", typeof(RectTransform), typeof(CanvasRenderer));
+            backing.transform.SetParent(plate.transform, false);
+            var back = backing.AddComponent<Image>();
+            back.color = new Color(0.02f, 0.02f, 0.025f, 0.92f);
+            back.raycastTarget = false;
+            var br = back.rectTransform;
+            br.anchorMin = Vector2.zero;
+            br.anchorMax = Vector2.one;
+            br.offsetMin = br.offsetMax = Vector2.zero;
             var go = new GameObject("Letters", typeof(RectTransform), typeof(CanvasRenderer));
             go.transform.SetParent(plate.transform, false);
             _gate = go.AddComponent<Text>();
             _gate.font = KR.Gameplay.UI.KrTheme.Font(KR.Gameplay.UI.KrTheme.Weight.Bold);
-            _gate.fontSize = 46;
+            _gate.fontSize = 64;
+            _gate.lineSpacing = 0.95f;
             _gate.alignment = TextAnchor.MiddleCenter;
             _gate.supportRichText = true;
             _gate.horizontalOverflow = HorizontalWrapMode.Overflow;
@@ -147,10 +159,15 @@ namespace KR.Gameplay.Player
             _pivot.localRotation = Quaternion.Euler(_angle, 0f, 0f);
 
             var sel = _car.Selected;
-            _gate.text = Letter("P", sel == DrivableCar.GearSel.P) + "\n" + Letter("R", sel == DrivableCar.GearSel.R) + "\n" + Letter("D", sel == DrivableCar.GearSel.D);
+            if (sel != _shown)
+            {
+                _shown = sel;
+                _gate.text = Letter("P", sel == DrivableCar.GearSel.P) + "\n" + Letter("R", sel == DrivableCar.GearSel.R) + "\n" + Letter("D", sel == DrivableCar.GearSel.D);
+            }
         }
 
-        static string Letter(string g, bool on) => on ? $"<color=#ff4b4b>{g}</color>" : $"<color=#5a5a5a>{g}</color>";
+        // The selected gear bright red and larger; the others light grey, still easy to read.
+        static string Letter(string g, bool on) => on ? $"<size=76><color=#ff3b3b>{g}</color></size>" : $"<color=#c8c8c8>{g}</color>";
 
         void HandInput(ref float goal)
         {
