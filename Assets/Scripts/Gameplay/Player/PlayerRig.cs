@@ -249,6 +249,14 @@ namespace KR.Gameplay.Player
                 : "Right trigger accelerate, left trigger brake, left stick steer, right stick click P/D/R gear, B handbrake, left stick click lights, A get out (in P).", 8f);
         }
 
+        // A different starting place for this session (the area chosen in the main menu): where you appear, where
+        // the first milestone starts and where you are brought back to.
+        public void SetStart(Vector3 spot, float yaw)
+        {
+            StartSpot = spot;
+            StartYaw = yaw;
+        }
+
         // Taken away (arrested): out of the car wherever it is, and on foot at the given spot. The car is parked
         // near you again the next time you walk (KeepCarNear).
         public void TakeAway(Vector3 to, float yaw)
