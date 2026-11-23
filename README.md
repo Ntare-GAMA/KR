@@ -26,16 +26,18 @@ You play an ALU student racing deadlines through Rush Week: visit a friend, drin
 
 | | Left controller | Right controller |
 |---|---|---|
-| Thumbstick | Walk (or aim a teleport); steer in the car; menus and replies | Snap or smooth turn |
-| Thumbstick click | Run; headlights in the car | Gear P / D / R (when stopped) |
+| Thumbstick | Walk (or aim a teleport); menus and replies; steers only with "Steering: left stick" | Snap or smooth turn; in the car indicators (left/right) and radio (up/down) |
+| Thumbstick click | Run; headlights in the car | Gear P / D / R with "Steering: left stick" |
 | Trigger | Brake | Accelerate; camera shutter when walking |
-| Grip | Hold things: pick up, carry and throw; pull door handles; horn in the car | Hold things the same way; with nothing in reach, raises the photo camera |
+| Grip | Hold things: pick up, carry and throw; pull door handles; in the car hold the steering-wheel rim | The same; in the car hold the rim or the gear lever; walking with nothing in reach, raises the photo camera |
 | Buttons | X start milestone / talk / select, Y seatbelt | A get in / out of the car (out only in P), B handbrake |
 | Menu ☰ | Info panel: Status, Journal, Progress, Photos, Settings (pauses the game) | |
 
+Hands (driving, the default "Steering: hands on the wheel and gear lever"): grip the rim and turn the wheel with your hands (with both hands the turns are averaged; let go and it returns to straight as you roll). The gear lever is on the console by your right knee: grip it and push it forward for P, the middle for R, pull it back for D (only when stopped). Press the middle of the wheel for the horn. The first time you sit in the car, the Comfort check offers three presets against motion sickness (also in Settings).
+
 Hands (walking): squeeze the grip near a cup, book, bottle, fruit or ball to pick it up; open the hand to drop it, or swing and open to throw. Take a building's door handle and pull to open it and go in. In a restaurant, bring the food or drink to your mouth to eat or sip. Each grab gives a short buzz.
 
-Desktop (Editor testing): G picks up what you look at (G again puts it down, right-click throws), F3 performance overlay, F9 FPS benchmark, WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it, C camera and click to shoot, M full map, N destination list (arrows pick a category and a place, Enter sets it; directions show on the minimap and as a line on the ground).
+Desktop (Editor testing): G picks up what you look at (G again puts it down, right-click throws), F3 performance overlay, F9 FPS benchmark, WASD walk/drive, mouse look, E car, Enter start / talk / select, B seatbelt, R gear, L lights, Space handbrake, Tab info panel, arrows navigate it (Settings has the screen resolution, display mode and Quit to main menu), C camera and click to shoot, M full map, N destination list (arrows pick a category and a place, Enter sets it; directions show on the minimap and as a line on the ground).
 
 ## Requirements
 
