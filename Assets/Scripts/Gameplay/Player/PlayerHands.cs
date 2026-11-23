@@ -130,15 +130,49 @@ namespace KR.Gameplay.Player
 
             if (car != null)
             {
-                // On the rim: fingers point away from the driver into the wheel, back of the hand outwards.
+                if (_wheel == null || _wheel.gameObject != car.gameObject)
+                {
+                    _wheel = car.GetComponent<WheelGrab>();
+                    _shifter = car.GetComponent<GearShifter>();
+                }
+                if (_wheel != null && _wheel.Active)
+                {
+                    // Hand steering: a hand holding the rim sits there; the right hand on the gear knob sits on it;
+                    // a free hand follows its controller.
+                    var l = _wheel.TargetFor(true);
+                    var r = _wheel.TargetFor(false);
+                    if (l != null) Hold(_left, l, true, wheelGrip);
+                    else Follow(_left, rig.VrLeftHand, true, RigInput.HandClosed(true));
+                    if (_shifter != null && _shifter.Held) OnKnob(_right, car);
+                    else if (r != null) Hold(_right, r, false, wheelGrip);
+                    else Follow(_right, rig.VrRightHand, false, RigInput.HandClosed(false));
+                    return;
+                }
+                // On the rim: fingers point away from the driver into the wheel, back of the hand outwards. The right
+                // hand goes to the gear lever for a moment when the gear changes (R key or right stick click).
                 Hold(_left, car.LeftGrip, true, wheelGrip);
-                Hold(_right, car.RightGrip, false, wheelGrip);
+                if (_shifter != null && _shifter.SinceChange < 0.8f)
+                    OnKnob(_right, car);
+                else
+                    Hold(_right, car.RightGrip, false, wheelGrip);
             }
             else
             {
                 Follow(_left, rig.VrLeftHand, true, RigInput.HandClosed(true));
                 Follow(_right, rig.VrRightHand, false, RigInput.HandClosed(false));
             }
+        }
+
+        WheelGrab _wheel;
+        GearShifter _shifter;
+
+        // Palm on top of the gear knob, fingers forward.
+        void OnKnob(Side s, DrivableCar car)
+        {
+            if (s == null || _shifter == null || _shifter.Knob == null)
+                return;
+            var t = car.transform;
+            Place(s, _shifter.Knob.position + t.up * 0.035f, Quaternion.LookRotation(t.forward, t.up), 0.8f);
         }
 
         // Steering-wheel grip. Grip frames are children of the steering-wheel pivot (local Z towards the driver,
@@ -149,7 +183,9 @@ namespace KR.Gameplay.Player
                 return;
             var wheel = grip.parent != null ? grip.parent : grip;
             Vector3 fingers = -wheel.forward;
-            Vector3 back = left ? wheel.right : -wheel.right;
+            // Back of the hand outwards from the hub (at 9 and 3 o'clock that is the wheel's left and right).
+            Vector3 radial = Vector3.ProjectOnPlane(grip.position - wheel.position, wheel.forward);
+            Vector3 back = radial.sqrMagnitude > 1e-4f ? radial.normalized : left ? wheel.right : -wheel.right;
             Place(s, grip.position, Quaternion.LookRotation(fingers, back), closed);
         }
 
