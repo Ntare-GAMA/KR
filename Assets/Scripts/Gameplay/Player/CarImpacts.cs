@@ -247,6 +247,8 @@ namespace KR.Gameplay.Player
             who.collected = false;
             if (onFoot)
             {
+                // Lying on the road: traffic stops for them and goes round (owner 2026-11-23).
+                KR.Gameplay.World.RoadNetworkTraffic.AddObstacle(who.root, 0.6f);
                 LastVictim = who.root;
                 _lastVictim = who;
                 _instance = this;
@@ -306,6 +308,7 @@ namespace KR.Gameplay.Player
                                 if (r != null) r.enabled = true;
                         who.hidden = null;
                         who.collected = false;
+                        KR.Gameplay.World.RoadNetworkTraffic.RemoveObstacle(who.root);
                         if (who.traffic != null && who.index >= 0)
                             who.traffic.Halt(who.index, 0.1f);
                     }
@@ -325,6 +328,7 @@ namespace KR.Gameplay.Player
             }
             else
                 yield return new WaitForSeconds(LieSeconds);
+            KR.Gameplay.World.RoadNetworkTraffic.RemoveObstacle(who.root);   // up again (or taken away)
             if (anim != null)
                 anim.enabled = true;
             foreach (var m in who.movers)

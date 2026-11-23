@@ -10,6 +10,11 @@ namespace KR.Gameplay.World
     // bodies block each other the lower index has right of way, so junctions never deadlock. Cars also stop at
     // red signals. Wheels spin with speed and bodies pitch under braking and acceleration; walkers' animation
     // speed follows their pace. Two-way paths turn bodies around at the end; one-way paths wrap to the start.
+    // Things outside the traffic (the player's parked car, an accident's police car and ambulance, an officer or
+    // someone lying on the road) are registered as obstacles: cars stop for them too, and after waiting behind one
+    // that is not moving (or a halted car) they pass it slowly in the other lane once that is clear, indicating out
+    // and back in (owner 2026-11-23: "they should wait or pass besides the scene but on the road ... and also have
+    // indicators").
     public sealed class RoadNetworkTraffic : MonoBehaviour
     {
         [Serializable]
@@ -79,6 +84,67 @@ namespace KR.Gameplay.World
         readonly Dictionary<long, List<int>> _cells = new Dictionary<long, List<int>>();
         Vector3[] _pos;
         Vector3[] _fwd;
+        // Overtaking a stopped obstacle: lateral shift now and wanted (negative = towards the road's centre, left),
+        // seconds waited behind it, and the indicator (-1 left, +1 right) with when it stops.
+        float[] _shift, _shiftTarget, _waited, _blinkUntil;
+        int[] _blink;
+        readonly Dictionary<int, Renderer[]> _blinkers = new Dictionary<int, Renderer[]>();
+        static Material _amber;
+        const float PassShift = 3.3f, WaitBeforePass = 2.5f, PassSpeed = 5f;
+
+        // ---------- Obstacles from outside the traffic ----------
+
+        sealed class Obstacle
+        {
+            public Transform body;
+            public float half;        // half its width across the road
+            public Vector3 last;
+            public bool still;
+        }
+
+        static readonly List<Obstacle> Obstacles = new List<Obstacle>();
+        static int _obstacleFrame = -1;
+
+        // Cars stop for this body (and pass it once it is not moving); halfWidth is half its width.
+        public static void AddObstacle(Transform body, float halfWidth)
+        {
+            if (body == null)
+                return;
+            foreach (var o in Obstacles)
+                if (o.body == body)
+                {
+                    o.half = halfWidth;
+                    return;
+                }
+            Obstacles.Add(new Obstacle { body = body, half = halfWidth, last = body.position, still = true });
+        }
+
+        public static void RemoveObstacle(Transform body)
+        {
+            for (int i = Obstacles.Count - 1; i >= 0; i--)
+                if (Obstacles[i].body == body || Obstacles[i].body == null)
+                    Obstacles.RemoveAt(i);
+        }
+
+        static void UpdateObstacles(float dt)
+        {
+            if (_obstacleFrame == Time.frameCount)
+                return;
+            _obstacleFrame = Time.frameCount;
+            for (int i = Obstacles.Count - 1; i >= 0; i--)
+            {
+                var o = Obstacles[i];
+                if (o.body == null)
+                {
+                    Obstacles.RemoveAt(i);
+                    continue;
+                }
+                var p = o.body.position;
+                float limit = 0.4f * dt;
+                o.still = (p - o.last).sqrMagnitude <= limit * limit + 1e-6f;
+                o.last = p;
+            }
+        }
 
         const float CellSize = 16f;
         // Within this distance of the camera, bodies follow the real surface (lane cross-slope, pitch, roll).
@@ -214,6 +280,11 @@ namespace KR.Gameplay.World
             _animBase = new float[n];
             _pos = new Vector3[n];
             _fwd = new Vector3[n];
+            _shift = new float[n];
+            _shiftTarget = new float[n];
+            _waited = new float[n];
+            _blinkUntil = new float[n];
+            _blink = new int[n];
             for (int i = 0; i < n; i++)
             {
                 var car = cars[i];
@@ -379,6 +450,7 @@ namespace KR.Gameplay.World
                 return;
             var cam = Camera.main;
             _cam = cam != null ? cam.transform.position : Vector3.zero;
+            UpdateObstacles(dt);
 
             // Snapshot positions and headings into a spatial hash.
             foreach (var list in _cells.Values)
@@ -436,12 +508,17 @@ namespace KR.Gameplay.World
                     foreach (int j in _carsOnPath[car.path])
                     {
                         var other = cars[j];
-                        if (j != i && other.reverse == car.reverse && Mathf.Abs(other.offset - car.offset) < 1f && other.distance > u)
+                        if (j != i && other.reverse == car.reverse && Mathf.Abs(other.offset - car.offset) < 1f && other.distance > u &&
+                            !(_shiftTarget[i] != 0f && Halted(j)))   // passing a halted car: the corridor decides
                             room = Mathf.Min(room, other.distance - u - gap);
                     }
-                room = Mathf.Min(room, CorridorRoom(i));
+                room = Mathf.Min(room, CorridorRoom(i, out bool stillAhead));
+                if (!upright)
+                    Overtake(i, room, stillAhead, dt);
 
                 float target = Time.time < _haltUntil[i] ? 0f : car.speed * SpeedScale;
+                if (_shiftTarget[i] != 0f || Mathf.Abs(_shift[i]) > 0.2f)
+                    target = Mathf.Min(target, PassSpeed);
                 if (room < 30f)
                     target = Mathf.Min(target, Mathf.Max(0f, room) * 0.6f);
                 float before = _current[i];
@@ -457,13 +534,150 @@ namespace KR.Gameplay.World
                 }
                 Place(i, car, cum, total);
                 Animate(i, car, accel, dt);
+                if (_blink[i] != 0)
+                    Blink(i);
             }
         }
 
+        // ---------- Passing a stopped obstacle ----------
+
+        void Overtake(int i, float room, bool stillAhead, float dt)
+        {
+            if (_shiftTarget[i] == 0f)
+            {
+                if (stillAhead && room < 8f && _current[i] < 1f && !Halted(i))
+                    _waited[i] += dt;
+                else
+                    _waited[i] = 0f;
+                if (_waited[i] > WaitBeforePass && Mathf.Abs(_shift[i]) < 0.2f && LaneClear(i, -PassShift))
+                {
+                    _shiftTarget[i] = -PassShift;
+                    _waited[i] = 0f;
+                    Signal(i, -1, 3.5f);
+                }
+            }
+            else if (!StillInLane(i, -_shift[i]))
+            {
+                // Past it: back into the lane.
+                _shiftTarget[i] = 0f;
+                Signal(i, 1, 3f);
+            }
+            // Sideways a little faster than a third of the forward speed, so the car steers out rather than slides.
+            float rate = 0.35f + _current[i] * 0.35f;
+            _shift[i] = Mathf.MoveTowards(_shift[i], _shiftTarget[i], rate * dt);
+        }
+
+        // Where p is from car i: along its heading, and to its right (negative: left).
+        void Relative(int i, Vector3 p, out float along, out float lateral)
+        {
+            Vector3 d = p - _pos[i];
+            var f = _fwd[i];
+            along = d.x * f.x + d.z * f.z;
+            lateral = d.x * f.z - d.z * f.x;
+        }
+
+        // Nothing moving in the lane `shift` to the right (negative: left), from 12 m behind to 45 m ahead.
+        bool LaneClear(int i, float shift)
+        {
+            for (int j = 0; j < cars.Length; j++)
+            {
+                if (j == i || Halted(j) || cars[j].body == null)
+                    continue;
+                Relative(i, _pos[j], out float along, out float lateral);
+                if (along > -12f && along < 45f && Mathf.Abs(lateral - shift) < corridor + 0.4f)
+                    return false;
+            }
+            if (Player != null && Player.gameObject.activeInHierarchy)
+            {
+                Relative(i, Player.position, out float along, out float lateral);
+                if (along > -12f && along < 45f && Mathf.Abs(lateral - shift) < corridor + 0.4f)
+                    return false;
+            }
+            return true;
+        }
+
+        // A halted car or a still obstacle in the lane `shift` to the right, from beside the car to the corridor's end.
+        bool StillInLane(int i, float shift)
+        {
+            float back = -(_half[i].y + 3f);
+            for (int j = 0; j < cars.Length; j++)
+            {
+                if (j == i || !Halted(j) || cars[j].body == null)
+                    continue;
+                Relative(i, _pos[j], out float along, out float lateral);
+                if (along > back - _half[j].y && along < lookAhead && Mathf.Abs(lateral - shift) < _half[i].x + _half[j].x + 0.5f)
+                    return true;
+            }
+            foreach (var o in Obstacles)
+            {
+                if (o.body == null || !o.body.gameObject.activeInHierarchy)
+                    continue;
+                Relative(i, o.body.position, out float along, out float lateral);
+                if (along > back - o.half && along < lookAhead && Mathf.Abs(lateral - shift) < _half[i].x + o.half + 0.5f)
+                    return true;
+            }
+            return false;
+        }
+
+        void Signal(int i, int side, float seconds)
+        {
+            _blink[i] = side;
+            _blinkUntil[i] = Time.time + seconds;
+        }
+
+        // Small amber lamps on the signalling side, front and back corners, flashing about 80 times a minute.
+        // Made the first time that car signals, then reused.
+        void Blink(int i)
+        {
+            var body = cars[i].body;
+            if (body == null)
+                return;
+            if (!_blinkers.TryGetValue(i, out var lamps))
+            {
+                if (_amber == null)
+                {
+                    var shader = Shader.Find("Universal Render Pipeline/Unlit");
+                    _amber = new Material(shader != null ? shader : Shader.Find("Sprites/Default")) { name = "Traffic indicator" };
+                    var amber = new Color(1f, 0.5f, 0.05f);
+                    _amber.color = amber;
+                    if (_amber.HasProperty("_BaseColor"))
+                        _amber.SetColor("_BaseColor", amber);
+                }
+                var h = _half[i];
+                lamps = new Renderer[4];
+                for (int k = 0; k < 4; k++)
+                {
+                    var go = GameObject.CreatePrimitive(PrimitiveType.Cube);
+                    Destroy(go.GetComponent<Collider>());
+                    go.name = "Indicator";
+                    go.transform.SetParent(body, false);
+                    float x = (k & 1) == 0 ? -h.x : h.x, z = (k & 2) == 0 ? h.y - 0.1f : -h.y + 0.1f;
+                    go.transform.localPosition = new Vector3(x, 0.75f, z);
+                    go.transform.localScale = new Vector3(0.12f, 0.08f, 0.12f);
+                    var r = go.GetComponent<Renderer>();
+                    r.sharedMaterial = _amber;
+                    r.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+                    r.enabled = false;
+                    lamps[k] = r;
+                }
+                _blinkers[i] = lamps;
+            }
+            bool done = Time.time > _blinkUntil[i];
+            bool on = !done && Mathf.Repeat(Time.time, 0.75f) < 0.38f;
+            for (int k = 0; k < 4; k++)
+                lamps[k].enabled = on && ((k & 1) == 0 ? _blink[i] < 0 : _blink[i] > 0);
+            if (done)
+                _blink[i] = 0;
+        }
+
         // Free distance before the nearest body in the corridor ahead (crossing, oncoming in-lane, or same way).
-        float CorridorRoom(int i)
+        float CorridorRoom(int i, out bool still)
         {
             float room = float.MaxValue;
+            still = false;
+            // While passing, still things in the home lane no longer block: only what is in the lane being moved into.
+            float towards = _shiftTarget[i] - _shift[i];
+            bool passing = _shiftTarget[i] != 0f;
             Vector3 p = _pos[i], f = _fwd[i];
             int cx = Mathf.FloorToInt(p.x / CellSize), cz = Mathf.FloorToInt(p.z / CellSize);
             for (int dx = -1; dx <= 1; dx++)
@@ -474,8 +688,19 @@ namespace KR.Gameplay.World
                         continue;
                     foreach (int j in cell)
                     {
-                        if (j == i || !InCorridor(i, j, out float along))
+                        if (j == i)
                             continue;
+                        if (passing && Halted(j))
+                        {
+                            Relative(i, _pos[j], out float a, out float lat);
+                            if (a > 0.2f && a < lookAhead && Mathf.Abs(lat - towards) < corridor)
+                                room = Mathf.Min(room, a - avoidGap);
+                            continue;
+                        }
+                        if (!InCorridor(i, j, out float along))
+                            continue;
+                        if (Halted(j))
+                            still = true;
                         // Mutual block (typically two cars meeting at a junction): the lower index goes first, but only
                         // while the other is still well ahead or off to the side; never into a body right in its path.
                         if (InCorridor(j, i, out _) && i < j)
@@ -495,6 +720,22 @@ namespace KR.Gameplay.World
                 float along = Vector3.Dot(d, f);
                 if (along > 0.2f && along < lookAhead && Mathf.Abs(f.x * d.z - f.z * d.x) < corridor + 0.4f)
                     room = Mathf.Min(room, along - avoidGap * 0.7f);
+            }
+            foreach (var o in Obstacles)
+            {
+                if (o.body == null || !o.body.gameObject.activeInHierarchy)
+                    continue;
+                var op = o.body.position;
+                if ((op.y - p.y) * (op.y - p.y) > 9f)
+                    continue;   // on a bridge above or a road below
+                Relative(i, op, out float along, out float lateral);
+                if (passing && o.still)
+                    lateral -= towards;
+                if (along < -o.half || along > lookAhead + o.half || Mathf.Abs(lateral) > _half[i].x + o.half + 0.3f)
+                    continue;
+                room = Mathf.Min(room, along - o.half - 3f);
+                if (o.still)
+                    still = true;
             }
             return room;
         }
@@ -550,7 +791,8 @@ namespace KR.Gameplay.World
 
             var flat = new Vector3(dir.x, 0f, dir.z).normalized;
             var side = new Vector3(flat.z, 0f, -flat.x);    // right of travel
-            pos += side * car.offset;
+            float offset = car.offset + (_shift != null ? _shift[index] : 0f);
+            pos += side * offset;
             var rot = Quaternion.LookRotation(upright ? flat : dir.normalized);
 
             if (_terrain != null && (pos - _cam).sqrMagnitude < SnapRange * SnapRange)
@@ -565,7 +807,7 @@ namespace KR.Gameplay.World
                 else
                 {
                     // Height under each wheel on the carriageway plane, then pitch and roll to fit all four.
-                    Vector3 centre = pos - side * car.offset;
+                    Vector3 centre = pos - side * offset;
                     float half = paths[car.path].halfWidth;
                     var h = _half[index];
                     float Surface(float along, float lateral)
@@ -581,8 +823,8 @@ namespace KR.Gameplay.World
                         }
                         return close && SurfaceAt(c + side * lateral, plane, out float wheel) ? wheel : plane;
                     }
-                    float fl = Surface(h.y, car.offset - h.x), fr = Surface(h.y, car.offset + h.x);
-                    float bl = Surface(-h.y, car.offset - h.x), br = Surface(-h.y, car.offset + h.x);
+                    float fl = Surface(h.y, offset - h.x), fr = Surface(h.y, offset + h.x);
+                    float bl = Surface(-h.y, offset - h.x), br = Surface(-h.y, offset + h.x);
                     // A wheel over a kerb or a verge never lifts the car into the air: it sinks into it a little.
                     float low = Mathf.Min(Mathf.Min(fl, fr), Mathf.Min(bl, br)) + 0.25f;
                     fl = Mathf.Min(fl, low); fr = Mathf.Min(fr, low); bl = Mathf.Min(bl, low); br = Mathf.Min(br, low);
