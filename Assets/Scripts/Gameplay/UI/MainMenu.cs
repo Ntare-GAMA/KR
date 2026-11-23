@@ -20,9 +20,9 @@ namespace KR.Gameplay.UI
         [SerializeField] string storyScene = "PC Only - Story Kimironko Kibagabaga";
         [SerializeField] float distance = 2.3f;
 
-        enum Action { Play, Settings, Credits }
+        enum Action { Play, Settings, Credits, Welcome }
         enum Focus { Tiles, Play, More }
-        enum Modal { None, More, Settings, Credits, Loading }
+        enum Modal { None, More, Settings, Credits, Loading, Welcome }
 
         sealed class TileDef
         {
@@ -37,6 +37,8 @@ namespace KR.Gameplay.UI
         {
             new TileDef { key = "story", title = "Story Mode", tag = "VR", subtitle = "Rush Week in Kigali",
                 body = "Live a week in Kimironko, Kibagabaga and the ALU campus. Meet people, drive the city and finish your group project before the deadline.", action = Action.Play },
+            new TileDef { key = "howto", title = "How to Play", tag = "START HERE", subtitle = "The game and its controls",
+                body = "What Rush Week is about, how to walk, talk, drive with your hands on the wheel and gear lever, and how to stay comfortable in VR.", action = Action.Welcome },
             new TileDef { key = "kimironko", title = "Kimironko", tag = "AREA", subtitle = "Streets, shops and the market",
                 body = "Busy streets, shops, cafés and the market stall where Mzee Gakuba sells fabric. Your week starts here.", action = Action.Play },
             new TileDef { key = "kibagabaga", title = "Kibagabaga", tag = "AREA", subtitle = "Up the hill",
@@ -70,8 +72,12 @@ namespace KR.Gameplay.UI
         {
             GamePause.SetPanel(false);
             _save = StorySaveFile.Load();
+            GamePause.Clear();
             foreach (var t in _tiles)
                 t.still = Resources.Load<Texture2D>("UI/Stills/" + t.key);
+            foreach (var t in _tiles)
+                if (t.still == null)
+                    t.still = _tiles[0].still;
             var creditsAsset = Resources.Load<TextAsset>("UI/credits");
             _credits = creditsAsset != null ? creditsAsset.text.Split('\n') : new[] { "Credits file missing." };
             Build();
@@ -81,6 +87,9 @@ namespace KR.Gameplay.UI
             // The FPS benchmark (-benchmark) goes straight into the city.
             if (System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-benchmark") >= 0)
                 StartCoroutine(LoadStory());
+            // First launch on this device: the welcome screen (it stays on the How to Play tile afterwards).
+            else if (PlayerPrefs.GetInt(WelcomeKey, 0) < WelcomeVersion)
+                OpenModal(Modal.Welcome);
         }
 
         // ---------- layout ----------
@@ -303,7 +312,8 @@ namespace KR.Gameplay.UI
             _title.text = t.title.ToUpperInvariant();
             _tagline.text = t.subtitle;
             _body.text = t.body;
-            _playText.text = t.action == Action.Play ? (_save.sessions > 0 ? "Continue" : "Play") : t.action == Action.Settings ? "Open settings" : "Show credits";
+            _playText.text = t.action == Action.Play ? (_save.sessions > 0 ? "Continue" : "Play") : t.action == Action.Settings ? "Open settings"
+                : t.action == Action.Welcome ? "How to play" : "Show credits";
             for (int i = 0; i < _tiles.Count; i++)
             {
                 bool on = i == _tile;
@@ -364,6 +374,7 @@ namespace KR.Gameplay.UI
                 case Action.Play: StartCoroutine(LoadStory()); break;
                 case Action.Settings: OpenModal(Modal.Settings); break;
                 case Action.Credits: OpenModal(Modal.Credits); break;
+                case Action.Welcome: OpenModal(Modal.Welcome); break;
             }
         }
 
@@ -380,13 +391,19 @@ namespace KR.Gameplay.UI
             _modal.gameObject.SetActive(true);
             _dim.SetActive(true);
             _loadFill.transform.parent.gameObject.SetActive(m == Modal.Loading);
-            _modal.sizeDelta = m == Modal.Credits ? new Vector2(1500f, 900f) : new Vector2(1000f, m == Modal.Loading ? 360f : 600f);
+            _modal.sizeDelta = m == Modal.Credits || m == Modal.Welcome ? new Vector2(1500f, 920f)
+                : new Vector2(1000f, m == Modal.Loading ? 360f : m == Modal.Settings ? 820f : 600f);
             RenderModal();
             Hints();
         }
 
         void CloseModal()
         {
+            if (_modalState == Modal.Welcome)
+            {
+                PlayerPrefs.SetInt(WelcomeKey, WelcomeVersion);
+                PlayerPrefs.Save();
+            }
             _modalState = Modal.None;
             _modal.gameObject.SetActive(false);
             _dim.SetActive(false);
@@ -417,16 +434,33 @@ namespace KR.Gameplay.UI
                     }
                     break;
                 case Modal.Settings:
-                    _row = (_row - ny + 7) % 7;
+                    var rows = SettingRows();
+                    _row = (_row - ny + rows.Length) % rows.Length;
                     if (RigInput.ConfirmPressed)
                     {
-                        if (_row == 6)
+                        if (rows[_row] == Setting.Back)
                         {
                             CloseModal();
                             return;
                         }
-                        ChangeSetting(_row);
+                        ChangeSetting(rows[_row]);
                     }
+                    break;
+                case Modal.Welcome:
+                    int nx = RigInput.NavX;
+                    if (nx != 0)
+                        _scroll = Mathf.Clamp(_scroll + nx, 0, WelcomePages.Length - 1);
+                    if (RigInput.ConfirmPressed)
+                    {
+                        if (_scroll >= WelcomePages.Length - 1)
+                        {
+                            CloseModal();
+                            return;
+                        }
+                        _scroll++;
+                    }
+                    if (nx != 0)
+                        Buzz();
                     break;
                 case Modal.Credits:
                     _scroll = Mathf.Clamp(_scroll - ny * 6, 0, Mathf.Max(0, _credits.Length - 14));
@@ -442,21 +476,118 @@ namespace KR.Gameplay.UI
             RenderModal();
         }
 
-        void ChangeSetting(int row)
+        enum Setting { Turning, Vignette, Walking, Steering, TextSize, Seated, Radio, Resolution, DisplayMode, Back }
+
+        static Setting[] _settingRows;
+        static Setting[] SettingRows()
+        {
+            if (_settingRows != null)
+                return _settingRows;
+            var list = new List<Setting>();
+            foreach (Setting r in System.Enum.GetValues(typeof(Setting)))
+                if (r != Setting.DisplayMode || DisplaySettings.HasMonitor)
+                    list.Add(r);
+            return _settingRows = list.ToArray();
+        }
+
+        static bool HeadsetResolution => VrRig.Active || XRSettings.isDeviceActive || !DisplaySettings.HasMonitor;
+
+        void ChangeSetting(Setting row)
         {
             _save ??= new StorySave();
             _save.comfort ??= new ComfortSave();
             var c = _save.comfort;
             switch (row)
             {
-                case 0: c.turn = (c.turn + 1) % 3; break;
-                case 1: c.vignette = (c.vignette + 1) % 3; break;
-                case 2: c.teleport = !c.teleport; break;
-                case 3: c.largeText = !c.largeText; break;
-                case 4: c.seated = !c.seated; break;
-                case 5: CarRadio.Volume = CarRadio.Volume >= 0.95f ? 0f : CarRadio.Volume + 0.1f; return;
+                case Setting.Turning: c.turn = (c.turn + 1) % 3; break;
+                case Setting.Vignette: c.vignette = (c.vignette + 1) % 3; break;
+                case Setting.Walking: c.teleport = !c.teleport; break;
+                case Setting.Steering: c.stickSteer = !c.stickSteer; break;
+                case Setting.TextSize: c.largeText = !c.largeText; break;
+                case Setting.Seated: c.seated = !c.seated; break;
+                case Setting.Radio: CarRadio.Volume = CarRadio.Volume >= 0.95f ? 0f : CarRadio.Volume + 0.1f; return;
+                case Setting.Resolution:
+                    if (HeadsetResolution) DisplaySettings.NextVrScale();
+                    else DisplaySettings.NextResolution();
+                    return;
+                case Setting.DisplayMode: DisplaySettings.NextMode(); return;
             }
             StorySaveFile.Write(_save);
+        }
+
+        string SettingText(Setting r, ComfortSave c)
+        {
+            string v(string x) => $"   <color={KrTheme.MutedHex}>{x}</color>";
+            switch (r)
+            {
+                case Setting.Turning: return "Turning" + v(c.turn == 0 ? "snap 30°" : c.turn == 1 ? "snap 45°" : "smooth");
+                case Setting.Vignette: return "Comfort vignette" + v(c.vignette == 0 ? "off" : c.vignette == 1 ? "low" : "high");
+                case Setting.Walking: return "Walking" + v(c.teleport ? "teleport" : "stick");
+                case Setting.Steering: return "Steering" + v(c.stickSteer ? "left stick" : "hands on the wheel and gear lever");
+                case Setting.TextSize: return "Text size" + v(c.largeText ? "large" : "normal");
+                case Setting.Seated: return "Seated play" + v(c.seated ? "on" : "off");
+                case Setting.Radio: return "Car radio" + v(CarRadio.VolumeText);
+                case Setting.Resolution:
+                    return HeadsetResolution ? "Render resolution" + v(DisplaySettings.VrScaleText + " (lower is smoother)")
+                                             : "Screen resolution" + v(DisplaySettings.ResolutionText);
+                case Setting.DisplayMode: return "Display" + v(DisplaySettings.ModeText);
+                default: return "Back";
+            }
+        }
+
+        // ---------- welcome / how to play ----------
+
+        const string WelcomeKey = "kr.welcome.seen";
+        const int WelcomeVersion = 1;
+
+        static readonly (string title, string vr, string desk)[] WelcomePages =
+        {
+            ("WELCOME TO KIGALI RUSH",
+             "It is Rush Week. You are a student at ALU in Kigali, living in Kimironko and Kibagabaga.\n\n" +
+             "Each milestone (visit someone, share a tea, read, learn) runs against the clock. Walk the streets, talk to people, " +
+             "and drive across the city while keeping to Rwanda's road rules: the police are watching, and a crash brings the police and an ambulance.\n\n" +
+             "Your phone reminds you of plans and rings with calls. Your wallet holds your student card, ID and driving licence.",
+             null),
+            ("ON FOOT",
+             "Left stick: walk. With teleport on, push it forward, aim the arc and let go to step there.\n" +
+             "Right stick: turn.\n" +
+             "Grip: pick things up, open doors (pull the handle), hold your car's door handle to get in.\n" +
+             "X: talk to someone (\"X Talk\" shows above them), choose in menus, start a milestone.\n" +
+             "A: get in the car, sit down or stand up.\n" +
+             "Menu button (☰): the info panel: status, journal, phone, wallet, settings. The game pauses while it is open.",
+             "W A S D: walk    Shift: run    Mouse: look\nE: get in the car, sit or stand    G (or right click): grab\n" +
+             "Enter: talk, choose, start a milestone    Tab: info panel    M: map    P: phone    I: wallet    C: camera"),
+            ("DRIVING",
+             "Steer with your hands: squeeze a grip with your hand on the rim and turn the wheel. Let go and it comes back to straight.\n" +
+             "Gears: take the lever by your right knee with the right grip. Push it forward for P, the middle for R, pull it back for D (only when stopped).\n" +
+             "Right trigger: accelerate.    Left trigger: brake.    B: handbrake.\n" +
+             "Y: seatbelt.    Left stick click: headlights.    Right stick left/right: indicators.    Right stick up/down: radio.\n" +
+             "Press the middle of the wheel: horn.    A: get out (in P).\n" +
+             "Prefer the sticks? Settings, Steering: left stick (then the right stick click changes gear).",
+             "W: accelerate    S: brake    A D: steer    R: gear P, D, R    Space: handbrake\n" +
+             "B: seatbelt    L: lights    Z X: indicators    H: horn    - +: radio    E: get out (in P)"),
+            ("STAY COMFORTABLE",
+             "The first time you sit in the car, the Comfort check offers three presets. Gentle is the calmest.\n\n" +
+             "Sit on a real chair while you drive, look ahead down the road, and brake and turn gently.\n" +
+             "Teleport walking, snap turns and the comfort vignette all help. Change them any time in Settings.\n" +
+             "If you feel unwell, stop and take the headset off: the game pauses until you put it back on.\n\n" +
+             "To leave: menu button, Settings, Quit to main menu (your progress is saved). In the main menu, ••• then Quit KR.",
+             null),
+        };
+
+        void RenderWelcome()
+        {
+            bool vr = VrRig.Active || XRSettings.isDeviceActive;
+            var page = WelcomePages[Mathf.Clamp(_scroll, 0, WelcomePages.Length - 1)];
+            _sb.Append($"<size=60><b>{page.title}</b></size>\n\n<size=33>");
+            _sb.Append(page.vr);
+            if (!vr && page.desk != null)
+                _sb.Append($"\n\n<color={KrTheme.AccentHex}>On a keyboard</color>\n").Append(page.desk);
+            _sb.Append("</size>\n\n<size=26>");
+            for (int i = 0; i < WelcomePages.Length; i++)
+                _sb.Append(i == _scroll ? $"<color={KrTheme.AccentHex}>●</color> " : $"<color={KrTheme.MutedHex}>○</color> ");
+            string x = vr ? "X" : "Enter";
+            _sb.Append($"   <color={KrTheme.MutedHex}>Left stick left/right: pages    {x}: {(_scroll >= WelcomePages.Length - 1 ? "start" : "next")}</color></size>");
         }
 
         void RenderModal()
@@ -471,16 +602,14 @@ namespace KR.Gameplay.UI
                 case Modal.Settings:
                     var c = _save.comfort ?? new ComfortSave();
                     Header("SETTINGS");
-                    Rows(new[]
-                    {
-                        $"Turning   <color={KrTheme.MutedHex}>{(c.turn == 0 ? "snap 30°" : c.turn == 1 ? "snap 45°" : "smooth")}</color>",
-                        $"Comfort vignette   <color={KrTheme.MutedHex}>{(c.vignette == 0 ? "off" : c.vignette == 1 ? "low" : "high")}</color>",
-                        $"Walking   <color={KrTheme.MutedHex}>{(c.teleport ? "teleport" : "stick")}</color>",
-                        $"Text size   <color={KrTheme.MutedHex}>{(c.largeText ? "large" : "normal")}</color>",
-                        $"Seated play   <color={KrTheme.MutedHex}>{(c.seated ? "on" : "off")}</color>",
-                        $"Car radio   <color={KrTheme.MutedHex}>{CarRadio.VolumeText}</color>",
-                        "Back",
-                    });
+                    var rows = SettingRows();
+                    var labels = new string[rows.Length];
+                    for (int i = 0; i < rows.Length; i++)
+                        labels[i] = SettingText(rows[i], c);
+                    Rows(labels);
+                    break;
+                case Modal.Welcome:
+                    RenderWelcome();
                     break;
                 case Modal.Credits:
                     Header("CREDITS");
