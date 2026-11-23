@@ -145,7 +145,7 @@ namespace KR.Gameplay.Player
             {
                 bool near = car != null && !car.Driven &&
                             (car.transform.position - player.transform.position).sqrMagnitude < tuning.interactRadius * tuning.interactRadius;
-                Prompt = near ? (VrRig.Active ? "A  Get in the car" : "E  Get in the car") : null;
+                Prompt = near ? (VrRig.Active ? "Pull the door handle (or A)  Get in the car" : "E  Get in the car  (or G on the door handle)") : null;
                 if (near && use)
                     EnterCar();
             }
@@ -157,7 +157,8 @@ namespace KR.Gameplay.Player
                     if (Mathf.Abs(car.Speed) > 0.5f)
                         Toast("Stop the car first.");
                     else if (!car.Parked)
-                        Toast(VrRig.Active ? "Shift to P first: click the right stick until the screen shows P." : "Shift to P first: press R until P shows.");
+                        Toast(!VrRig.Active ? "Shift to P first: press R until P shows."
+                            : Comfort.HandSteering ? "Shift to P first: push the gear lever all the way forward." : "Shift to P first: click the right stick until the screen shows P.");
                     else
                         ExitCar();
                 }
@@ -224,6 +225,18 @@ namespace KR.Gameplay.Player
             return false;
         }
 
+        // Getting in from outside without the button (the driver's door pulled open by hand). False if the car is
+        // not right here or someone else has the controls.
+        public bool GetInCar()
+        {
+            if (CurrentMode != Mode.Walking || car == null || car.Driven || Busy)
+                return false;
+            if ((car.transform.position - player.transform.position).sqrMagnitude > (tuning.interactRadius + 1f) * (tuning.interactRadius + 1f))
+                return false;
+            EnterCar();
+            return true;
+        }
+
         void EnterCar()
         {
             VrRig.Fade(0.35f);
@@ -231,8 +244,9 @@ namespace KR.Gameplay.Player
             car.SetDriven(true);
             RoadNetworkTraffic.Player = car.transform;
             CurrentMode = Mode.Driving;
-            Toast(VrRig.Active ? "Right trigger accelerate, left trigger brake, left stick steer, right stick click P/D/R gear, B handbrake, left stick click lights, A get out (in P)."
-                              : "W accelerate, S brake, A/D steer, R gear P/D/R, Space handbrake, L lights, E get out (in P).", 7f);
+            Toast(!VrRig.Active ? "W accelerate, S brake, A/D steer, R gear P/D/R, Space handbrake, L lights, E get out (in P)."
+                : Comfort.HandSteering ? "Grip the wheel rim and turn it with your hands. Gear lever by your right knee: grip it, pull back for D. Right trigger accelerate, left trigger brake, B handbrake, Y seatbelt, A get out (in P)."
+                : "Right trigger accelerate, left trigger brake, left stick steer, right stick click P/D/R gear, B handbrake, left stick click lights, A get out (in P).", 8f);
         }
 
         void ExitCar()
