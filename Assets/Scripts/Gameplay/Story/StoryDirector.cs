@@ -173,10 +173,13 @@ namespace KR.Gameplay.Story
             Comfort.Teleport = c.teleport;
             Comfort.LargeText = c.largeText;
             Comfort.Seated = c.seated;
+            Comfort.HandSteering = !c.stickSteer;
             Save();
         }
 
         public void SaveNow() => Save();
+        // Leaving Story Mode for the main menu: the run in progress is kept, as when the app is closed.
+        public void SaveRun() => PersistRun();
 
         // ---------- mission results from other systems ----------
 
@@ -377,6 +380,7 @@ namespace KR.Gameplay.Story
             State = Phase.Rushing;
             if (Current.startAtPoint && motor != null)
             {
+                VrRig.Fade(0.4f);   // a cut, never a glide, when the milestone moves you
                 // The first milestone starts at home: that is now the spot beside your car.
                 if (rig != null && (Current.startPoint - rig.Home).sqrMagnitude < 4f)
                     motor.Teleport(rig.StartSpot, rig.StartYaw);

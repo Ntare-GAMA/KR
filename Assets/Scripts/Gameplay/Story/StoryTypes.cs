@@ -161,6 +161,9 @@ namespace KR.Gameplay.Story
         public int version;            // 1: the comfortable defaults have been applied once to an older save
         public bool largeText;
         public bool seated;            // raises the view for seated play
+        public bool stickSteer;        // false: in the headset you turn the wheel and move the gear lever by hand
+        public bool asked;             // the comfort picker has been shown once (on the driver's seat)
+        public int preset = -1;        // the last comfort preset chosen (-1 none, 0 gentle, 1 balanced, 2 free)
     }
 
     [Serializable]
