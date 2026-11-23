@@ -249,6 +249,21 @@ namespace KR.Gameplay.Player
                 : "Right trigger accelerate, left trigger brake, left stick steer, right stick click P/D/R gear, B handbrake, left stick click lights, A get out (in P).", 8f);
         }
 
+        // Taken away (arrested): out of the car wherever it is, and on foot at the given spot. The car is parked
+        // near you again the next time you walk (KeepCarNear).
+        public void TakeAway(Vector3 to, float yaw)
+        {
+            if (CurrentMode == Mode.Driving && car != null)
+            {
+                car.SelectGear(DrivableCar.GearSel.P);
+                ExitCar();
+            }
+            player.Teleport(to, yaw);
+            _lastFeet = to;
+            if (car != null && (car.transform.position - to).sqrMagnitude > 60f * 60f)
+                ParkCarNear(to, yaw);
+        }
+
         void ExitCar()
         {
             VrRig.Fade(0.35f);

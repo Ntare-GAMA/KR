@@ -105,6 +105,7 @@ namespace KR.Gameplay.Story
             _nextLine = Time.time + 1.5f;
             _nextHoot = Time.time + Random.Range(3f, 6f);
             director?.SetFlag("crash");
+            director?.ChargeFine(RuleId.HitVehicle);   // hitting anything but a person is a fine (owner 2026-11-23)
             // A real police car comes to the scene (no siren without a vehicle).
             var police = FindFirstObjectByType<EmergencyResponse>();
             if (police != null)
@@ -198,6 +199,8 @@ namespace KR.Gameplay.Story
             {
                 director?.SetFlag("left_crash");
                 rig.Toast("You left the scene of a crash. Always stop, help and exchange details.", 6f);
+                // The crash fine was charged once at the hit; leaving makes it LeaveSceneMultiplier times in all.
+                director?.ChargeFine(RuleId.HitVehicle, StoryDirector.LeaveSceneMultiplier - 1f, "You left the scene: the fine is tripled.");
                 Finish();
             }
         }

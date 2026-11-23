@@ -129,6 +129,44 @@ namespace KR.Gameplay.Story
             BadgeEarned?.Invoke(id);
         }
 
+        // ---------- collisions (owner 2026-11-23) ----------
+        // "hitting anything else are fines, but a person, that's killing"; "if I fail to stop the fines should be
+        // multiplied". Fines are charged whether or not you are on a timed milestone and also on a learner licence.
+
+        // Leaving the scene of a crash (or driving off after hitting someone) multiplies the fine by this.
+        public const float LeaveSceneMultiplier = 3f;
+
+        // Charges the rule's fine times multiplier (and its demerit points), says so, and saves.
+        public void ChargeFine(RuleId id, float multiplier = 1f, string extra = null)
+        {
+            var rule = week != null ? week.Rule(id) : null;
+            if (rule == null)
+                return;
+            int fine = Mathf.RoundToInt(rule.fineFrw * multiplier);
+            _save.finesFrw += fine;
+            _save.demeritPoints += rule.demeritPoints;
+            if (State == Phase.Rushing || State == Phase.Dwelling)
+                Penalty += rule.timePenalty;
+            string amount = fine > 0 ? $"FRW {fine:N0}" + (rule.fromOrder ? "" : " (game placeholder amount)") : "amount to be set by the Minister's Order";
+            string times = multiplier > 1.01f ? $" x{multiplier:0.#}" : "";
+            Notify($"Fine{times}: {rule.title}, {amount}.{(string.IsNullOrEmpty(extra) ? "" : " " + extra)}", 6f);
+            Save();
+        }
+
+        // Arrested after killing someone: the milestone ends (failed) and the story remembers it.
+        public void Arrested()
+        {
+            SetFlag("arrested_killed_person");
+            var rule = week != null ? week.Rule(RuleId.KilledPerson) : null;
+            if (rule != null && (State == Phase.Rushing || State == Phase.Dwelling || State == Phase.PoliceStop))
+                Fail(rule);
+            else
+            {
+                Notify("Arrested: you killed a person with the car.", 8f);
+                Save();
+            }
+        }
+
         public void SetFlag(string flag)
         {
             if (string.IsNullOrEmpty(flag) || _save.flags.Contains(flag))

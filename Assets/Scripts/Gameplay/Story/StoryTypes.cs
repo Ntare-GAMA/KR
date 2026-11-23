@@ -11,6 +11,7 @@ namespace KR.Gameplay.Story
     {
         DriveOnRight, ObeyOfficer, RefuseStop, NoLicence, RedSignal, Speeding, HelmetOnMoto, Seatbelt, AlcoholLimit,
         StopSign,   // appended: the values above are serialised by number
+        HitObject, HitVehicle, KilledPerson,   // collisions (owner 2026-11-23); appended likewise
     }
 
     [Serializable]
