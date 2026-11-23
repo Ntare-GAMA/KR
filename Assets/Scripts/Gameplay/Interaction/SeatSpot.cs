@@ -107,8 +107,11 @@ namespace KR.Gameplay.Interaction
             Debug.Log($"[Seats] {n} seats on the city's benches and chairs.");
         }
 
+        Restaurant[] Restaurants = System.Array.Empty<Restaurant>();
+
         void Start()
         {
+            Restaurants = FindObjectsByType<Restaurant>(FindObjectsSortMode.None);
             _rig = GetComponent<PlayerRig>();
             _prompt = SpeechBubble.Create(transform);
         }
@@ -126,6 +129,10 @@ namespace KR.Gameplay.Interaction
             _near = null;
             if (_rig.CurrentMode != PlayerRig.Mode.Walking || _rig.Busy || GamePause.Paused || _rig.Player.Seated)
                 return;
+            // Inside a restaurant the table service seats you (its own A prompt); the chairs there are not offered.
+            foreach (var r in Restaurants)
+                if (r != null && r.Inside)
+                    return;
             var you = _rig.Player.transform.position;
             float best = Reach * Reach;
             foreach (var s in SeatSpot.All)

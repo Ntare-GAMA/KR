@@ -191,12 +191,14 @@ namespace KR.Gameplay.Story
             if (Near(exitDoor.position, 1.6f))
             {
                 _prompt.Say(exitDoor, 2.2f, $"<b>{Key}</b>  Leave {_door.PlaceName}", 0.3f);
-                if (RigInput.ConfirmPressed && !runner.Talking)
+                if (Pressed && !runner.Talking)
                     Leave();
             }
         }
 
-        string Key => VrRig.Active ? "X" : "Enter";
+        // In the headset A (as for every other seat and door) or X; Enter on a desktop.
+        string Key => VrRig.Active ? "A" : "Enter";
+        static bool Pressed => RigInput.ConfirmPressed || VrRig.Active && RigInput.UsePressed;
 
         bool Near(Vector3 p, float r)
         {
@@ -235,11 +237,18 @@ namespace KR.Gameplay.Story
             // You sit when you are ready.
             while (!_seated)
             {
-                if (rig.CurrentMode == PlayerRig.Mode.Walking && Near(_seat.seat.position, 1.5f) && !runner.Talking)
+                // In the headset you can sit from anywhere in the room (teleporting right up to a chair is awkward):
+                // the screen fades and you are in your seat. On a desktop, walk up to the table.
+                if (rig.CurrentMode == PlayerRig.Mode.Walking && (VrRig.Active || Near(_seat.seat.position, 2.5f)) && !runner.Talking)
                 {
                     _prompt.Say(_seat.plate, 0.4f, $"<b>{Key}</b>  Sit down", 0.3f);
-                    if (RigInput.ConfirmPressed)
+                    if (VrRig.Active && !Near(_seat.seat.position, 2.5f))
+                        rig.Hint($"{Key}  Sit at your table");
+                    if (Pressed)
+                    {
+                        VrRig.Fade(0.4f);
                         SitDown();
+                    }
                 }
                 yield return null;
             }
@@ -299,7 +308,7 @@ namespace KR.Gameplay.Story
                     SeatedHint(VrRig.Active
                         ? $"Pick it up and bring it to your mouth  <size=80%>(or <b>{Key}</b>)</size>"
                         : $"<b>{Key}</b>  {(next ? "Eat" : "Drink")}   (G picks it up)");
-                    int which = _bitFood && _dishBites > 0 ? 1 : _bitDrink && _drinkSips > 0 ? 2 : RigInput.ConfirmPressed ? (next ? 1 : 2) : 0;
+                    int which = _bitFood && _dishBites > 0 ? 1 : _bitDrink && _drinkSips > 0 ? 2 : Pressed ? (next ? 1 : 2) : 0;
                     _bitFood = _bitDrink = false;
                     if (which != 0)
                     {
@@ -344,7 +353,7 @@ namespace KR.Gameplay.Story
                 if (_seated)
                 {
                     SeatedHint($"<b>{Key}</b>  {label}");
-                    if (RigInput.ConfirmPressed)
+                    if (Pressed)
                         yield break;
                 }
                 else if (!_inside)

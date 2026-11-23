@@ -24,6 +24,21 @@ namespace KR.Gameplay.Player
             arcMaterial = material;
         }
 
+        // Any floor you could walk on: the roads and the ground, and also building, restaurant and campus floors
+        // (owner 2026-11-23: inside a restaurant the arc only ever showed red). Never a vehicle, a person, a slope
+        // steeper than 35 degrees or a small piece of furniture (a table, a chair, a bench top).
+        bool Walkable(RaycastHit hit)
+        {
+            var col = hit.collider;
+            if (Vector3.Angle(hit.normal, Vector3.up) >= 35f || col.isTrigger || col.attachedRigidbody != null ||
+                col is CapsuleCollider || col is CharacterController)
+                return false;
+            if (((1 << col.gameObject.layer) & _ground) != 0)
+                return true;
+            var size = col.bounds.size;
+            return size.x >= 2.5f || size.z >= 2.5f;
+        }
+
         void Start()
         {
             _ground = LayerMask.GetMask("KR Ground");
@@ -82,7 +97,7 @@ namespace KR.Gameplay.Player
                 if (Physics.Linecast(p, next, out var hit, ~(1 << 2), QueryTriggerInteraction.Ignore))
                 {
                     _points[n++] = hit.point;
-                    bool walkable = ((1 << hit.collider.gameObject.layer) & _ground) != 0 && Vector3.Angle(hit.normal, Vector3.up) < 35f;
+                    bool walkable = Walkable(hit);
                     var from = rig.Player.transform.position;
                     bool close = Vector2.Distance(new Vector2(hit.point.x, hit.point.z), new Vector2(from.x, from.z)) <= maxStep;
                     bool clear = !Physics.CheckCapsule(hit.point + Vector3.up * 0.4f, hit.point + Vector3.up * 1.6f, 0.25f,
