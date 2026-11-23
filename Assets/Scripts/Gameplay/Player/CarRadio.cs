@@ -4,7 +4,9 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Player
 {
-    // The car radio (Resources/Audio/Radio/radio). It plays for the whole game, from a random point in the mix, and
+    // The car radio. The station's intro (Resources/Audio/Radio/intro, about 4 minutes) plays first, from the start,
+    // once per session; then the playlist (Resources/Audio/Radio/radio) from a random point, looping (owner
+    // 2026-11-23: "use them and mix ... once you're done, use the rest of the music"). It plays for the whole game and
     // loops; turning the volume down to 0 switches it off, and that choice is remembered (PlayerPrefs, shared
     // with the main menu and the in-game Settings).
     //   In the car: at the volume you set. Right stick up/down (- and + keys) changes it in steps of 10 %; the
@@ -54,19 +56,24 @@ namespace KR.Gameplay.Player
             if (rig == null || rig.Car == null || rig.Car.GetComponent<CarRadio>() != null)
                 return;
             var clip = Resources.Load<AudioClip>("Audio/Radio/radio");
-            if (clip == null)
+            var intro = Resources.Load<AudioClip>("Audio/Radio/intro");
+            if (clip == null && intro == null)
                 return;
-            rig.Car.gameObject.AddComponent<CarRadio>().Setup(rig, clip);
+            rig.Car.gameObject.AddComponent<CarRadio>().Setup(rig, clip != null ? clip : intro, _introPlayed ? null : intro);
         }
 
-        void Setup(PlayerRig rig, AudioClip clip)
+        static bool _introPlayed;
+        AudioClip _playlist;
+
+        void Setup(PlayerRig rig, AudioClip clip, AudioClip intro)
         {
             _rig = rig;
+            _playlist = clip;
             var go = new GameObject("Radio");
             go.transform.SetParent(transform, false);
             _src = go.AddComponent<AudioSource>();
-            _src.clip = clip;
-            _src.loop = true;
+            _src.clip = intro != null ? intro : clip;
+            _src.loop = intro == null;
             _src.playOnAwake = false;
             _src.spatialBlend = 0f;     // in the cabin it is all around you
             _src.priority = 32;
@@ -80,10 +87,32 @@ namespace KR.Gameplay.Player
 
         void Begin()
         {
+            if (_src.clip != _playlist)
+            {
+                // The intro, from its start; the playlist follows when it ends.
+                _introPlayed = true;
+                _src.Play();
+                return;
+            }
             // A random point of the mix, so every session does not start on the same song.
             _src.Play();
             if (_src.clip.length > 60f)
                 _src.time = Random.Range(0f, _src.clip.length - 30f);
+        }
+
+        // The intro has ended: on to the playlist.
+        void NextClip()
+        {
+            if (_playlist == null)
+            {
+                _src.loop = true;   // only the intro is there: it loops
+                _src.Play();
+                return;
+            }
+            _src.clip = _playlist;
+            _src.loop = true;
+            _src.time = 0f;
+            Begin();
         }
 
         void OnDestroy()
@@ -112,7 +141,9 @@ namespace KR.Gameplay.Player
                 target *= 0.3f;
             _src.volume = Mathf.MoveTowards(_src.volume, target, Time.unscaledDeltaTime * 0.8f);
 
-            if (v > 0.001f && !_src.isPlaying)
+            if (v > 0.001f && !_src.isPlaying && _src.clip != _playlist && _introPlayed && _src.time <= 0f && !GamePause.Paused)
+                NextClip();
+            else if (v > 0.001f && !_src.isPlaying)
             {
                 if (_src.time > 0f)
                     _src.UnPause();
