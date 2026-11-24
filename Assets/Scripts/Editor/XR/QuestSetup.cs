@@ -1,7 +1,6 @@
 using System;
 using System.IO;
 using System.Linq;
-using KR.Editor.Kigali;
 using UnityEditor;
 using UnityEditor.Build;
 using UnityEditor.XR.Management;
@@ -22,6 +21,7 @@ namespace KR.Editor.XR
     {
         // TODO: choose the final package name before any store upload; it can never change afterwards.
         const string PackageName = "com.kigalirush.storyvr";
+        const string StoryScene = "Assets/Scenes/PC Only - Story Kimironko Kibagabaga.unity";
         const string OpenXRLoader = "UnityEngine.XR.OpenXR.OpenXRLoader";
         const string MobileRp = "Assets/Settings/Mobile_RPAsset.asset";
 
@@ -51,7 +51,7 @@ namespace KR.Editor.XR
             PlayerSettings.SetGraphicsAPIs(BuildTarget.Android, new[] { GraphicsDeviceType.Vulkan });
             PlayerSettings.SetMobileMTRendering(android, true);
             EditorUserBuildSettings.androidBuildSubtarget = MobileTextureSubtarget.ASTC;
-            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(StoryModeBuilder.ScenePath, true) };
+            EditorBuildSettings.scenes = new[] { new EditorBuildSettingsScene(StoryScene, true) };
         }
 
         // XR Plug-in Management with the OpenXR loader, the Meta Quest feature and the Touch controller profile.
@@ -134,7 +134,7 @@ namespace KR.Editor.XR
             string apk = Path.GetFullPath(Path.Combine(Application.dataPath, "..", "Builds", "Quest", "KigaliRushVR.apk"));
             var report = BuildPipeline.BuildPlayer(new BuildPlayerOptions
             {
-                scenes = new[] { StoryModeBuilder.ScenePath },
+                scenes = new[] { StoryScene },
                 locationPathName = apk,
                 target = BuildTarget.Android,
                 options = BuildOptions.None,
