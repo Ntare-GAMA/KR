@@ -5,7 +5,7 @@ namespace KR.Gameplay.Story
 {
     // Daily traffic pace: rush hours slow every vehicle down, so jams build where queues already form at signals
     // and junctions. The default curve is a placeholder shape (morning and evening peaks, a midday market bump);
-    // replace it with the owner's 15-minute junction counts (story-mode-plan.md section 1.2).
+    // replace it with real 15-minute junction counts (story-mode-plan.md section 1.2).
     public sealed class TrafficRhythm : MonoBehaviour
     {
         [SerializeField] RoadNetworkTraffic traffic;

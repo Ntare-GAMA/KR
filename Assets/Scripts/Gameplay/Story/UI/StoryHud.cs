@@ -91,7 +91,7 @@ namespace KR.Gameplay.Story
 
             switch (director.State)
             {
-                case StoryDirector.Phase.Briefing when m != null && !Wallet.Showing && !ArrestScreen.Showing:   // never over the cards (owner 2026-11-23)
+                case StoryDirector.Phase.Briefing when m != null && !Wallet.Showing && !ArrestScreen.Showing:   // never over the cards
                     Panel(new Rect(w / 2 - 330, h / 2 - 150, 660, 300));
                     GUI.Label(new Rect(w / 2 - 310, h / 2 - 140, 620, 40), $"{director.DayName}: {m.title}", _big);
                     GUI.Label(new Rect(w / 2 - 310, h / 2 - 92, 620, 120), m.brief, _body);

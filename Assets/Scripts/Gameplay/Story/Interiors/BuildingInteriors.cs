@@ -6,9 +6,8 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Story
 {
-    // Every building in the city can be entered (owner request 2026-11-21: "make the insides of the buildings
-    // accessible; one should open the ways and navigate through them"). There are thousands of buildings, so the
-    // insides are made when you go in, sized to the building you chose:
+    // Every building in the city can be entered. There are thousands of buildings, so the insides are made when
+    // you go in, sized to the building you chose:
     //   - doors appear on the buildings near you, on the side facing the street (a pool of ten, reused);
     //   - take the handle and pull the door open (or press E / A at it) and you step into a furnished interior
     //     built inside that building's walls (InteriorBuilder), with things on the tables you can pick up;

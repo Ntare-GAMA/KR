@@ -129,9 +129,9 @@ namespace KR.Gameplay.Story
             BadgeEarned?.Invoke(id);
         }
 
-        // ---------- collisions (owner 2026-11-23) ----------
-        // "hitting anything else are fines, but a person, that's killing"; "if I fail to stop the fines should be
-        // multiplied". Fines are charged whether or not you are on a timed milestone and also on a learner licence.
+        // ---------- collisions ----------
+        // Hitting a pole, wall, sign or car is a fine; hitting a person is fatal; driving off multiplies the fine.
+        // Fines are charged whether or not you are on a timed milestone and also on a learner licence.
 
         // Leaving the scene of a crash (or driving off after hitting someone) multiplies the fine by this.
         public const float LeaveSceneMultiplier = 3f;

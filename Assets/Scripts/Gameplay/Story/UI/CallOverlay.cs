@@ -5,14 +5,12 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Story
 {
-    // A phone call on a desktop: a small neon call card on the left of the screen instead of the whole phone (owner
-    // 2026-11-23: "more of the cyber punk call feature, small and futuristic not the whole view of a phone").
-    // It slides in with a short flicker; while ringing the caller's badge pulses, once connected a live timer runs and
-    // a voice meter moves while they speak, with their words under the name. Slides out when the call ends.
-    // In the headset calls stay as messages in view (the card is a screen overlay).
-    // The same card carries what the police say to you face to face (Talk), in police blue (owner 2026-11-23: "the
-    // police comments and speech with the player should ... replicate the call view of the phone"). The card grows
-    // with the words, so a long line always stays inside it.
+    // A phone call on a desktop: a small neon call card on the left of the screen instead of the whole phone. It
+    // slides in with a short flicker; while ringing the caller's badge pulses, once connected a live timer runs and a
+    // voice meter moves while they speak, with their words under the name. Slides out when the call ends. In the
+    // headset calls stay as messages in view (the card is a screen overlay). The same card carries what the police say
+    // to you face to face (Talk), in police blue. The card grows with the words, so a long line always stays inside
+    // it.
     public sealed class CallOverlay : MonoBehaviour
     {
         static CallOverlay _instance;

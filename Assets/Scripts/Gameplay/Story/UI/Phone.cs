@@ -8,11 +8,11 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Story
 {
-    // The player's phone (owner, 2026-11-22: "the player should have a phone too, which acts as a reminder and in
-    // case of calls"). Reminders: the current milestone, where to go and the time left, plus anything the story
-    // adds (Remind). Calls: friends ring at set times of the game day; the phone rings and buzzes and the call
-    // plays hands-free (no button needed, so it never takes a button another action uses). P opens the phone on a
-    // desktop; on the headset it is the Phone page of the info panel. Added with the player when the scene loads.
+    // The player's phone. Reminders: the current milestone, where to go and the time left, plus anything the
+    // story adds (Remind). Calls: friends ring at set times of the game day; the phone rings and buzzes and the
+    // call plays hands-free (no button needed, so it never takes a button another action uses). P opens the phone
+    // on a desktop; on the headset it is the Phone page of the info panel. Added with the player when the scene
+    // loads.
     public sealed class Phone : MonoBehaviour
     {
         sealed class Call
@@ -142,7 +142,7 @@ namespace KR.Gameplay.Story
             if (kb != null && kb.pKey.wasPressedThisFrame && !VrRig.Active)
                 _open = !_open;
             UpdateCalls();
-            // A call shows the small call card (CallOverlay), not the whole phone (owner 2026-11-23).
+            // A call shows the small call card (CallOverlay), not the whole phone.
             bool show = _open && !VrRig.Active;
             if (_canvas.gameObject.activeSelf != show)
                 _canvas.gameObject.SetActive(show);

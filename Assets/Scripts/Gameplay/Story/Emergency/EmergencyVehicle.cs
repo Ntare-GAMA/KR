@@ -152,9 +152,8 @@ namespace KR.Gameplay.Story
                 _next = _route.Count;
                 return true;
             }
-            // Never into another emergency vehicle or your car (owner 2026-11-23: "the police car is passing through
-            // the ambulance"): stop a few metres behind whatever is ahead; near the end of the route that counts as
-            // arrived, so it parks behind it instead of waiting there for ever.
+            // Never into another emergency vehicle or your car: stop a few metres behind whatever is ahead; near the
+            // end of the route that counts as arrived, so it parks behind it instead of waiting there for ever.
             if (clear < 1f)
             {
                 Speed = Mathf.MoveTowards(Speed, 0f, 14f * dt);

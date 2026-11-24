@@ -155,8 +155,8 @@ namespace KR.Gameplay.Story
                 _body.rotation = Quaternion.RotateTowards(_body.rotation, Quaternion.LookRotation(to), 180f * Time.deltaTime);
         }
 
-        // On the walkable floor there (any layer: the ALU forecourt is not on the default one, owner 2026-11-23:
-        // "the officer ... should step on the ground not mid-air").
+        // On the walkable floor there (any layer: the ALU forecourt is not on the default one), so the officer
+        // stands on the ground, never in mid-air.
         static Vector3 Ground(Vector3 p) => Floor.At(p, 1.2f, 4f);
     }
 }

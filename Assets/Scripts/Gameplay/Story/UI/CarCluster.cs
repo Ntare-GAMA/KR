@@ -5,9 +5,8 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Story
 {
-    // The car's instrument cluster (owner decision 2026-11-21: the satnav and driving information sit where a
-    // car's dashboard normally shows speed and mileage, behind the steering wheel). A digital cluster over the
-    // PolyDrive car's own gauge housing, seen through the top of the steering wheel:
+    // The car's instrument cluster. A digital cluster over the PolyDrive car's own gauge housing, seen through
+    // the top of the steering wheel:
     //   left     speed (large), limit, gear P R D, indicator arrows, belt and lights, odometer and trip;
     //   middle   the satnav map, heading up;
     //   right    the clock or the milestone countdown, directions, coach and messages; the radio level.

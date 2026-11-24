@@ -4,9 +4,9 @@ using UnityEngine;
 
 namespace KR.Gameplay.Story
 {
-    // The game's time of day in Kigali. Every session starts in the morning and the clock runs on from there
-    // (owner decision 2026-11-17), faster than real time so a session sees the day turn to evening.
-    // Falls back to the real Kigali time (UTC+2, no daylight saving) when there is no sky in the scene.
+    // The game's time of day in Kigali. Every session starts in the morning and the clock runs on from
+    // there, faster than real time so a session sees the day turn to evening. Falls back to the real Kigali
+    // time (UTC+2, no daylight saving) when there is no sky in the scene.
     public static class KigaliTime
     {
         public static DateTime Now

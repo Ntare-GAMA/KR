@@ -4,8 +4,8 @@ namespace KR.Gameplay.Story
 {
     public enum VenueKind { None, Bank, Clinic, Hotel, Restaurant, School, Shop, Pharmacy, Police, Market, Office }
 
-    // What kind of place a name and map group describe, and the look of conversations held there (owner,
-    // 2026-11-22: "it should have a theme based on which location i have arrived at"). Colours only, no logos.
+    // What kind of place a name and map group describe, and the look of conversations held there. Colours
+    // only, no logos.
     public static class Venue
     {
         public struct Theme

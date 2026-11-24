@@ -5,10 +5,10 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Story
 {
-    // Hitting anything that is not a person or another vehicle (a pole, a wall, a sign, a parked object) is a fine
-    // (owner 2026-11-23: "hitting anything else, are fines"). People are CarImpacts and EmergencyResponse; other
-    // vehicles are AccidentScene. The road itself (surfaces, kerbs, the ground) never counts, nor a scrape: only a
-    // knock at 9 km/h or more, against something standing, once per object every few seconds.
+    // Hitting anything that is not a person or another vehicle (a pole, a wall, a sign, a parked object) is a
+    // fine. People are CarImpacts and EmergencyResponse; other vehicles are AccidentScene. The road itself
+    // (surfaces, kerbs, the ground) never counts, nor a scrape: only a knock at 9 km/h or more, against something
+    // standing, once per object every few seconds.
     public sealed class ImpactFines : MonoBehaviour
     {
         const float MinImpact = 2.5f, Cooldown = 4f;

@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Story
 {
-    // Where information appears (owner decision 2026-11-17: nothing in your personal space):
+    // Where information appears:
     //   in the car     the instrument cluster behind the steering wheel holds everything (CarCluster): speed,
     //                  limit, gear, indicators, mileage, satnav map, directions, the milestone clock, the coach
     //                  and messages. Nothing else is shown while driving.

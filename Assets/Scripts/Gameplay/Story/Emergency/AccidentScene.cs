@@ -105,7 +105,7 @@ namespace KR.Gameplay.Story
             _nextLine = Time.time + 1.5f;
             _nextHoot = Time.time + Random.Range(3f, 6f);
             director?.SetFlag("crash");
-            director?.ChargeFine(RuleId.HitVehicle);   // hitting anything but a person is a fine (owner 2026-11-23)
+            director?.ChargeFine(RuleId.HitVehicle);   // hitting anything but a person is a fine
             // A real police car comes to the scene (no siren without a vehicle).
             var police = FindFirstObjectByType<EmergencyResponse>();
             if (police != null)

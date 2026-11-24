@@ -4,9 +4,8 @@ using UnityEngine;
 
 namespace KR.Gameplay.Story
 {
-    // The insides of named places (owner, 2026-11-22: a bank where you sit, talk to a receptionist and wait for a
-    // teller; clinics, hospitals and hotels you can go into and deal with people). The layout gives the staff and
-    // customers their spots (VenueLife puts people there and runs the routine) and the seats you can use.
+    // The insides of named places. The layout gives the staff and customers their spots (VenueLife puts people
+    // there and runs the routine) and the seats you can use.
     public sealed partial class InteriorBuilder
     {
         // Where people stand or sit in this interior: a role (reception, teller1, nurse, guest...), a world

@@ -6,8 +6,7 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Story
 {
-    // Where the story begins, from the main-menu tile you chose (owner 2026-11-23: "if i choose to play at the school
-    // through alu campus, i should arrive there ... that's where i should start from").
+    // Where the story begins, from the main-menu tile you chose.
     //   ALU Campus: on foot by the ALU car park (the campus gate), your car parked beside you.
     //   Kibagabaga: on the street outside Maman Fils's house, car beside you.
     //   Kimironko, Story Mode, Your Car: at home beside the car, as before.

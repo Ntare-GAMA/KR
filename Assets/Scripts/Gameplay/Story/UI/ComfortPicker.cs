@@ -6,11 +6,10 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Story
 {
-    // Comfort check on the driver's seat (owner feedback 2026-11-23: "seat should give the user which settings are
-    // easy for them to reduce motion sickness"). The first time you sit in the car in the headset the game pauses and
-    // this panel offers three comfort presets and the two choices that matter most in the car, each explained; pick
-    // one with the left stick and X. It can be opened again from Settings ("Comfort check"). Every choice is saved
-    // and can be changed one by one on the Settings page.
+    // Comfort check on the driver's seat. The first time you sit in the car in the headset the game pauses and this
+    // panel offers three comfort presets and the two choices that matter most in the car, each explained; pick one
+    // with the left stick and X. It can be opened again from Settings ("Comfort check"). Every choice is saved and
+    // can be changed one by one on the Settings page.
     public sealed class ComfortPicker : MonoBehaviour
     {
         static readonly (string name, string what)[] Presets =

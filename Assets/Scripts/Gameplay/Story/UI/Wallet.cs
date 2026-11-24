@@ -6,10 +6,9 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Story
 {
-    // The player's cards (owner, 2026-11-22: "a student card and an ID, with NTARE Shiloh as the name", and a driving
-    // licence the police ask for). Game props only: no real institution logo, no real national-ID or licence design
-    // or number. Shown with I on a desktop (the Wallet page of the info panel on the headset), and handed over when
-    // staff or an officer ask for them (Show). Tickets the police write are kept here too (Ticket).
+    // The player's cards. Game props only: no real institution logo, no real national-ID or licence design or number.
+    // Shown with I on a desktop (the Wallet page of the info panel on the headset), and handed over when staff or an
+    // officer ask for them (Show). Tickets the police write are kept here too (Ticket).
     public sealed class Wallet : MonoBehaviour
     {
         public const string PlayerName = "NTARE Shiloh";
@@ -85,8 +84,7 @@ namespace KR.Gameplay.Story
             UI.KrTheme.Stretch(head.rectTransform, 0f);
             head.rectTransform.offsetMin = new Vector2(18f, 0f);
             head.text = title;
-            // The holder's photo (owner-supplied portrait, Resources/Story/Portraits/player_photo, owner 2026-11-23: "on
-            // the space of the photo or image use this one named LANE 2650"), or a plain square with an initial.
+            // The holder's photo (Resources/Story/Portraits/player_photo), or a plain square with an initial.
             var photo = UI.KrTheme.Panel(card.transform, "Photo", new Color32(200, 196, 188, 255));
             UI.KrTheme.Place(photo.rectTransform, new Vector2(0f, 0f), new Vector2(0f, 0f), new Vector2(18f, 22f), new Vector2(130f, 170f));
             var portrait = Resources.Load<Texture2D>("Story/Portraits/player_photo");

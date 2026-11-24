@@ -11,7 +11,7 @@ namespace KR.Gameplay.Story
     {
         DriveOnRight, ObeyOfficer, RefuseStop, NoLicence, RedSignal, Speeding, HelmetOnMoto, Seatbelt, AlcoholLimit,
         StopSign,   // appended: the values above are serialised by number
-        HitObject, HitVehicle, KilledPerson,   // collisions (owner 2026-11-23); appended likewise
+        HitObject, HitVehicle, KilledPerson,   // collisions; appended likewise
     }
 
     [Serializable]
@@ -157,7 +157,7 @@ namespace KR.Gameplay.Story
     public sealed class ComfortSave
     {
         public int turn;               // 0 snap 30, 1 snap 45, 2 smooth
-        public int vignette = 2;       // 0 off, 1 low, 2 high (high by default: owner reported motion sickness)
+        public int vignette = 2;       // 0 off, 1 low, 2 high (high by default against motion sickness)
         public bool teleport = true;   // walk by teleport instead of the stick (the most comfortable way in VR)
         public int version;            // 1: the comfortable defaults have been applied once to an older save
         public bool largeText;

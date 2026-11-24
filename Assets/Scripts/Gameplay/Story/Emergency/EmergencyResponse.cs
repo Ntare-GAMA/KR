@@ -6,23 +6,22 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Story
 {
-    // When you knock someone down (owner decision 2026-11-21, especially on a zebra crossing): an ambulance sets out
-    // at once from a little way off and drives to them with its siren and beacons, stays while they are looked after,
-    // then leaves; a police car comes for you, also with siren and beacons, and follows you through the streets.
+    // When you knock someone down: an ambulance sets out at once from a little way off and drives to them with its
+    // siren and beacons, stays while they are looked after, then leaves; a police car comes for you, also with siren
+    // and beacons, and follows you through the streets.
     //   Stop (and stay stopped) when it reaches you: you are caught. The officer's stop is recorded (flag).
     //   Get far enough away and stay out of reach for a while: you got away, but fleeing is refusing to stop for
     //   the police (the RefuseStop rule), and the story remembers it (flag "fled_hit").
-    //   Caught or not, an officer gets out (a copy of the city's patrol officer), walks over and speaks to you.
-    // After a crash between cars (AccidentScene) a police car drives to the scene instead, and its officer comes over.
-    // Responders set out from out of your sight (behind you or behind buildings) and switch the siren off once they
-    // are on the scene; the beacons keep flashing. No siren is ever heard without its vehicle.
-    // Both vehicles are copies of the city's own police car and ambulance, made once at the start and reused.
-    // Knocking down a person on foot kills them (owner 2026-11-23: "a person, that's killing"): two paramedics (copies
-    // of anyone in the city) wheel the stretcher, and a detainee van (a copy of the city's van) comes with the police.
-    // Stopped and caught: the officer arrests you and you are taken away in the van; the milestone fails. Driving off
-    // first ("if I fail to stop"): the fine for refusing to stop is multiplied, caught later or not.
-    // This class decides who is sent where and what happens on arrival; EmergencyVehicle drives each vehicle and
-    // AmbulanceCrew plays the paramedics' stretcher scene.
+    //   Caught or not, an officer gets out (a copy of the city's patrol officer), walks over and speaks to you. After
+    //   a crash between cars (AccidentScene) a police car drives to the scene instead, and its officer comes over.
+    //   Responders set out from out of your sight (behind you or behind buildings) and switch the siren off once they
+    //   are on the scene; the beacons keep flashing. No siren is ever heard without its vehicle. Both vehicles are
+    //   copies of the city's own police car and ambulance, made once at the start and reused. Knocking down a person
+    //   on foot kills them: two paramedics (copies of anyone in the city) wheel the stretcher, and a detainee van (a
+    //   copy of the city's van) comes with the police. Stopped and caught: the officer arrests you and you are taken
+    //   away in the van; the milestone fails. Driving off first: the fine for refusing to stop
+    //   is multiplied, caught later or not. This class decides who is sent where and what happens on arrival;
+    //   EmergencyVehicle drives each vehicle and AmbulanceCrew plays the paramedics' stretcher scene.
     public sealed class EmergencyResponse : MonoBehaviour
     {
         const float AmbulanceSpeed = 17f, PoliceTop = 27f, CatchRadius = 25f, LoseDistance = 320f, LoseSeconds = 15f;

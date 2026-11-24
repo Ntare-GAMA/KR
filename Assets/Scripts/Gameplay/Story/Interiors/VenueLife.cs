@@ -5,8 +5,7 @@ using UnityEngine;
 
 namespace KR.Gameplay.Story
 {
-    // Everyday life inside a named place (owner, 2026-11-22: "go to a bank, sit, talk to a receptionist, wait at the
-    // teller"). Puts staff and customers on the layout's spots and runs the routine:
+    // Everyday life inside a named place. Puts staff and customers on the layout's spots and runs the routine:
     //   Bank:   reception gives you a ticket; sit and wait; your number is called to a counter; the teller asks for
     //           your ID (or your student card to open a student account) and serves you.
     //   Clinic: reception registers you with your ID; wait; the nurse calls you into Room 1.
