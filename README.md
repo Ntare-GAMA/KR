@@ -74,6 +74,23 @@ Open this folder in Unity Hub (Add, Add project from disk, pick the folder that 
 
 Assemblies: `KR.Core`, `KR.Gameplay`, `KR.Editor`, `KR.Editor.XR`, `KR.Tests.EditMode`.
 
+## Code architecture
+
+How the code is organised, with the classes that show each principle:
+
+| Principle or pattern | Where | Why |
+|---|---|---|
+| **Separate assemblies (layers)** | `KR.Core` ← `KR.Gameplay` ← `KR.Editor`; tests in `KR.Tests.EditMode` | Core has no game code; editor tools never ship; each layer compiles on its own. |
+| **Interfaces (dependency inversion, open/closed)** | `IGrabbable` (`Grabbable`, `DoorHandle`), `IHandDriver` (`HandDrivers.cs`) used by `HandInteractor` | The hand works with anything you can hold or pull and with each input device, without knowing their classes. New grabbable things need no change to the hand. |
+| **Single responsibility** | `EmergencyResponse` decides who is sent and what happens; `EmergencyVehicle` drives one vehicle; `AmbulanceCrew` plays the stretcher scene; `OfficerOnFoot` walks and talks | Each class has one reason to change. |
+| **Observer (C# events)** | `DrivableCar.GearChanged`, `CarImpacts.PersonHit`, `RoadRulesMonitor.Violation`, `Grabbable.Grabbed`, `SeatSpot.SatDown`, `ConversationRunner.Finished`, `StoryDirector.BadgeEarned` | The gear lever, the police, the fines and the HUD react to the car and the player without the car knowing about them. |
+| **Data-driven design (ScriptableObjects)** | `StoryWeek`, `MilestoneDefinition`, `PlaceCatalog`, `StreetNetwork`, `PlayerTuning`, `InteractionTuning` | Story content, places, fines and tuning values are assets, not code. |
+| **Object pooling** | `HeadlightPool`, `StreetLightPool`, traffic cars, emergency vehicles made once and reused | No creating or destroying objects while playing: 0 KB garbage per frame on the Quest. |
+| **Self-registering systems** | `[RuntimeInitializeOnLoadMethod]` hooks (for example `EmergencyResponse`, `GearShifter`, `CarMirrors`, `QuestPerformance`) | Each system attaches itself when the scene loads, so the scene does not need hand wiring and systems can be removed independently. |
+| **Unit tests** | `RoadGraphTests`, `StoryRulesTests`, `InteractionTests`, `FrameStatsTests` (20 tests) | Route finding, road rules, grabbing and frame statistics are checked without playing. |
+
+Known debt: `RoadNetworkTraffic` (traffic driving, overtaking and obstacles) and `StoryDirector` (milestones, fines and flags) are still large and would be split next, the same way as `EmergencyResponse`.
+
 ## Building
 
 Everything generated is rebuilt from data with the **Kigali Rush** menu in the Unity Editor, or from the command line (`-batchmode -executeMethod ...`).
@@ -134,6 +151,8 @@ On the headset: walk, drive, open the info panel (left ☰), and on Settings swi
 - **Overlay:** F3 on a desktop, or Settings → Performance overlay on the headset. It shows FPS, frame time against the display budget (13.9 ms at 72 Hz), main-thread time, draw calls, batches, SetPass calls, triangles, GC allocation per frame and memory. Draw-call counters need a development build.
 - **Benchmark:** F9, Settings → Run the FPS benchmark, or `KigaliRushStory.exe -benchmark` (add `-lodBias 1000` for a "LODs off" comparison). It follows the same 818 m street route every time, at 10:00 in calm weather with the clock held. It writes a per-second CSV and a summary (average FPS, 1% and 0.1% lows, share of frames over budget, draw calls) to `persistentDataPath/Benchmarks`. On the Quest, fetch the results with `adb pull /sdcard/Android/data/<package>/files/Benchmarks`.
 - **Scene report:** Kigali Rush → Performance → Scene report (`BatchTasks.PerfReport`), which writes `Logs/perf_report.txt` with renderers, triangles, LOD groups, static flags and instancing per group, and the textures without mipmaps.
+- **Measured (Quest Pro, 22 Nov 2026, before the 24 Nov changes):** 40.0 FPS average against the 72 Hz target, 1% low 23.9, main thread about 26 ms of a 13.9 ms budget, about 1,009 draw calls, 24 SetPass calls, 438k triangles, 0 KB garbage per frame. The limit is the number of draw calls on the CPU, not triangles. Full write-up with charts: [`DOCS/Performance Considerations.docx`](DOCS/Performance%20Considerations.docx).
+- **Unity Profiler on the headset:** Kigali Rush → Build → Build and run on Quest (Profiler) makes a development build that connects to the Profiler (or add `-development` to the batch build). Then Window → Analysis → Profiler and pick the Quest as the target.
 - **Profiler markers:** `KR.Traffic`, `KR.Interiors`, `KR.InstancedCity.Draw`, `KR.StreetLights`, `KR.Signals`, `KR.Story`, `KR.Emergency`, `KR.CrossingWalkers`, `KR.Headlights`, `KR.DayNight`.
 - **Techniques in the build:**
   - IL2CPP on ARM64;
@@ -142,7 +161,10 @@ On the headset: walk, drive, open the info panel (left ☰), and on Settings swi
   - GPU instancing (the instanced city scatter and instanced materials);
   - static batching (roads, road edges, road markings);
   - 27,391 LOD groups (parked cars get a low-poly LOD1);
-  - per-layer cull distances;
+  - per-layer cull distances (tightened on the Quest on 24 Nov: details 90 m, street dressing 150 m, trees 180 m, houses 320 m);
+  - a lighter rear-view mirror on the Quest (no trees or small details, 110 m, every third frame);
+  - dynamic batching off on purpose (the SRP Batcher replaces it in URP);
+  - no baked occlusion culling, on purpose (open hillside streets with long sightlines; distance culling and fog instead);
   - object pools (traffic, building doors, street lamps and headlights);
   - mipmapped ASTC textures (only skyboxes and UI have none);
   - interiors made only when you go in.
