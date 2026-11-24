@@ -86,7 +86,14 @@ namespace AmplifyCreations.PrototypeCollection.StreetProps
 			)
 		};
 
+		// Kigali Rush: deferred, because this static constructor can run while Unity restores the window (inside the
+		// ScriptableObject constructor), where Application.productName is not allowed.
 		static StartScreen()
+		{
+			EditorApplication.delayCall += CheckStartUp;
+		}
+
+		static void CheckStartUp()
 		{
 			if ( !EditorPrefs.HasKey( Preferences.PrefStartUp ) )
 			{
@@ -95,7 +102,7 @@ namespace AmplifyCreations.PrototypeCollection.StreetProps
 
 			if ( EditorPrefs.GetBool( Preferences.PrefStartUp ) )
 			{
-				EditorApplication.delayCall += Init;
+				Init();
 			}
 		}
 
