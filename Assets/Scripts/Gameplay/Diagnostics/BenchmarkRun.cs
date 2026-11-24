@@ -10,8 +10,8 @@ using UnityEngine.InputSystem;
 
 namespace KR.Gameplay.Diagnostics
 {
-    // A repeatable FPS benchmark: the same 1.1 km street route every time, from the player's start spot beside the
-    // car, carried along at 12 m/s at eye height (about 90 s) with the city, traffic, people and lights all running.
+    // A repeatable FPS benchmark: the same street route every time (818 m on the current map), from the player's start
+    // spot beside the car, carried along at 12 m/s at eye height (about 70 s) with the city, traffic, people and lights all running.
     // The first 3 s are a warm-up and are not counted. It writes a per-second CSV and a summary (average FPS, 1%
     // and 0.1% lows, share of frames over the budget, draw calls) to persistentDataPath/Benchmarks and the log.
     // Start it with F9, the Settings page on the headset, or the -benchmark command line (quits when done).
