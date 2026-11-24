@@ -28,7 +28,7 @@ namespace KR.Gameplay.Story
         [Tooltip("True only when the fine and points come from an official text (the law or the Minister's Order); false = game placeholder.")] public bool fromOrder;
     }
 
-    // Same review fields as the quiz records (CLAUDE.md section 9): only a human reviewer approves a card.
+    // Same review fields as the quiz records (project brief, section 9): only a human reviewer approves a card.
     [Serializable]
     public sealed class KnowledgeCard
     {

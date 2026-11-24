@@ -559,7 +559,7 @@ namespace KR.Editor.Kigali
                 sources = new[] { "OpenStreetMap: 'Kibagabaga Cell Office', way 206839949", "TODO: verify against Gasabo District's list" } },
         };
 
-        // Written by the team: local, generic and non-political (CLAUDE.md section 4). Events are fictional.
+        // Written by the team: local, generic and non-political (project brief, section 4). Events are fictional.
         static string[] News() => new[]
         {
             "Kimironko: traders expect a busy market day. Allow extra time around the taxi park at midday.",

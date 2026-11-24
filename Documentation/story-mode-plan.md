@@ -1,13 +1,13 @@
 # Kigali Rush: Story Mode plan (Kimironko and Kibagabaga)
 
-Status: draft for the owner, 2026-11-16. Nothing here overrides `CLAUDE.md` until the owner updates it.
+Status: draft for the owner, 2026-11-16. Nothing here overrides the project brief until the owner updates it.
 Marked **TODO: verify** wherever a fact, licence or rule still needs checking against an official source.
 
 ---
 
 ## 0. Decisions needed first (scope and rules)
 
-This request goes beyond the current brief (`CLAUDE.md` §2 rule 7, §4). Each item below needs an owner decision before it is built.
+This request goes beyond the current brief (the project brief §2 rule 7, §4). Each item below needs an owner decision before it is built.
 
 | # | Request | Conflict / risk | Proposed decision |
 |---|---|---|---|
@@ -34,7 +34,7 @@ This request goes beyond the current brief (`CLAUDE.md` §2 rule 7, §4). Each i
 | Missing buildings | **Google Open Buildings v3** footprints | CC BY 4.0 (**TODO: verify** current version) | Merge in only where OSM is sparse; log as a new register row. |
 | Street-level reference | **Mapillary** images of Kimironko and Kibagabaga | CC BY-SA 4.0. Use as reference only, never as textures. | Check coverage for KG 11 Ave, Kimironko market and taxi park, and the Kibagabaga hospital area. |
 | Your own reference (best source) | **Your phone photos and video**: every facade type, the market, taxi park, roundabouts, the campus (with permission) | Yours | Shoot a fixed checklist (§1.6) at morning, midday, evening and night. |
-| Aerial | **Drone survey** of the campus and market area | Yours, but needs **Rwanda Civil Aviation Authority** authorisation (**TODO: verify** current rules) | Optional. Never use Google or Bing imagery (`CLAUDE.md` §3). |
+| Aerial | **Drone survey** of the campus and market area | Yours, but needs **Rwanda Civil Aviation Authority** authorisation (**TODO: verify** current rules) | Optional. Never use Google or Bing imagery (the project brief §3). |
 
 ### 1.2 Traffic, road rules and jams
 
@@ -109,7 +109,7 @@ All business and institution names here are placeholders to be renamed.
 | Sat | Umuganda morning, then free roam | Roads restricted until the end (**TODO: verify** hours). Plan around it. | Civic life (factual, non-political) |
 
 ### 2.3 Other players
-- **v1, offline-safe:** a ghost of the fastest player per milestone, plus a weekly milestone leaderboard behind `ILeaderboardService`, with replay validation as in `CLAUDE.md` §6.
+- **v1, offline-safe:** a ghost of the fastest player per milestone, plus a weekly milestone leaderboard behind `ILeaderboardService`, with replay validation as in the project brief §6.
 - **v2:** shared world presence (other students visible on the map, emotes, study-group invites) using Unity Netcode and Relay. Costs and moderation need deciding first.
 
 ### 2.4 Cars and people stay in balance

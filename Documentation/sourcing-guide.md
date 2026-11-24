@@ -1,7 +1,7 @@
 # Kigali Rush: Sourcing Guide
 
 Where every asset, tool, data source and reference comes from, and where it goes in the project.
-Rules this follows (from CLAUDE.md §3): no non-commercial licences, no AI-generated art in shipped assets,
+Rules this follows (from the project brief, §3): no non-commercial licences, no AI-generated art in shipped assets,
 no commercial map imagery, every third-party item logged in `asset-register.csv` before import.
 
 Status legend: **OK** = licence suits commercial use (still re-read on download day) · **VERIFY** = check terms before use · **AVOID**.
@@ -48,7 +48,7 @@ Last checked: 2026-11-01. Licences change, so record the licence URL and access 
 | **ShareTextures** (sharetextures.com) | CC0 | Extra PBR sets | OK, but re-check per asset |
 | **Your own photos** | You own them | Facade albedo, signage, kerbs, the red-earth verges typical of Kigali, local paving | OK, and best for "recognisable without a caption" |
 | Fab / Megascans | Fab Standard Licence (Epic says usable in any engine) | Only if a CC0 source lacks something | VERIFY. Legacy Quixel claims may be Unreal-only. Download under a Fab Standard grant and save the licence page. |
-| Google Earth/Maps, Bing, Apple Maps, Street View, 3D Tiles | Proprietary | Nothing | **AVOID** (CLAUDE.md §3) |
+| Google Earth/Maps, Bing, Apple Maps, Street View, 3D Tiles | Proprietary | Nothing | **AVOID** (project brief §3) |
 | Mapillary / KartaView street imagery | CC BY-SA | Visual reference only, never as textures | VERIFY |
 | Pixabay, Freepik, "free texture" sites with mixed or AI content | Mixed | — | **AVOID**: risk of AI-generated or unclear provenance |
 
@@ -129,7 +129,7 @@ TMP font assets: build with a dynamic fallback to Noto Sans. Check strings in al
 
 ## 7. Quiz sources (drafts only; a human approves)
 
-Use primary or official sources first. Claude drafts with `reviewStatus: draft` only.
+Use primary or official sources first. Drafts are written with `reviewStatus: draft` only.
 
 | Tier | Source | Use for |
 |---|---|---|
