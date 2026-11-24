@@ -298,8 +298,8 @@ namespace KR.Gameplay.UI
                 if (_focus == Focus.More)
                     OpenModal(Modal.More);
                 else
-                    // The area tiles start the story in that area (owner 2026-11-23: "if i choose ... alu campus, i
-                    // should arrive there"); Story Mode and Your Car start at home beside the car.
+                    // The area tiles start the story in that area; Story Mode and Your Car start at home beside the
+                    // car.
                     KR.Gameplay.Story.StoryStart.Area = _tiles[_tile].key;
                     Activate(_tiles[_tile].action);
             }

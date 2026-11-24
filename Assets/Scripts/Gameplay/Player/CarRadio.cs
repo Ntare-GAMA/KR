@@ -5,10 +5,9 @@ using UnityEngine.SceneManagement;
 namespace KR.Gameplay.Player
 {
     // The car radio. The station's intro (Resources/Audio/Radio/intro, about 4 minutes) plays first, from the start,
-    // once per session; then the playlist (Resources/Audio/Radio/radio) from a random point, looping (owner
-    // 2026-11-23: "use them and mix ... once you're done, use the rest of the music"). It plays for the whole game and
-    // loops; turning the volume down to 0 switches it off, and that choice is remembered (PlayerPrefs, shared
-    // with the main menu and the in-game Settings).
+    // once per session; then the playlist (Resources/Audio/Radio/radio) from a random point, looping. It plays for the
+    // whole game and loops; turning the volume down to 0 switches it off, and that choice is remembered (PlayerPrefs,
+    // shared with the main menu and the in-game Settings).
     //   In the car: at the volume you set. Right stick up/down (- and + keys) changes it in steps of 10 %; the
     //   vehicle screen shows the level.
     //   On foot: it carries on quietly in the background.
@@ -70,8 +69,8 @@ namespace KR.Gameplay.Player
             _rig = rig;
             _playlist = clip;
             // The intro waits until you first sit in the car, so it is heard at full in-car volume (on foot the radio
-            // plays at 30 % and softer still during conversations, which made the station sound quiet; owner
-            // 2026-11-23). Until then the playlist plays quietly.
+            // plays at 30 % and softer still during conversations, which made the station sound quiet).
+            // Until then the playlist plays quietly.
             _pendingIntro = intro != null && intro != clip ? intro : null;
             var go = new GameObject("Radio");
             go.transform.SetParent(transform, false);

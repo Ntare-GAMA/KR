@@ -4,10 +4,10 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Interaction
 {
-    // The driver's door of your car opens with your hand (owner, 2026-11-22: "my hands have to grab the door"):
-    // take the handle, pull, and the door swings out with your hand; past 40 degrees you get in and the door shuts
-    // behind you. The car model's front-left door meshes (Door_FL_*, the driver's side in Rwanda) are hung on a
-    // hinge made at their front edge. A (E on a desktop) still gets you in as before.
+    // The driver's door of your car opens with your hand: take the handle, pull, and the door swings out with your
+    // hand; past 40 degrees you get in and the door shuts behind you. The car model's front-left door meshes
+    // (Door_FL_*, the driver's side in Rwanda) are hung on a hinge made at their front edge. A (E on a desktop)
+    // still gets you in as before.
     public sealed class CarDoor : MonoBehaviour
     {
         PlayerRig _rig;

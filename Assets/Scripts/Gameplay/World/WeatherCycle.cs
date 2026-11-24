@@ -47,8 +47,8 @@ namespace KR.Gameplay.World
         public static bool Sheltered { get; set; }
         bool _wasSheltered;
 
-        // Raindrops that enter this collider vanish (the player's car: owner 2026-11-23, "the rain is falling inside
-        // the car"). The particle trigger test is a cheap shape check per drop, no physics.
+        // Raindrops that enter this collider vanish (the player's car, so no rain falls
+        // inside it). The particle trigger test is a cheap shape check per drop, no physics.
         public void KeepRainOut(Collider shelter)
         {
             if (rain == null || shelter == null)

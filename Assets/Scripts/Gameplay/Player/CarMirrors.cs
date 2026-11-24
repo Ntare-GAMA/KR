@@ -16,9 +16,8 @@ namespace KR.Gameplay.Player
     // The glass positions come from CarGeometry (measured in the Editor). Added to the car when the scene loads.
     public sealed class CarMirrors : MonoBehaviour
     {
-        // The three mirrors share one image, so each shows only a slice of it: the image must be large enough that
-        // a slice is still sharp (owner, 2026-11-22: the mirrors looked blurry at 512 x 192). Smaller on the headset,
-        // where it costs more.
+        // The three mirrors share one image, so each shows only a slice of it: the image must be large enough that a
+        // slice is still sharp. Smaller on the headset, where it costs more.
         static int Width => VrRig.Active ? 1280 : 1792;
         static int Height => VrRig.Active ? 480 : 672;
         const float VerticalFov = 22f, Far = 160f, QuestFar = 110f;

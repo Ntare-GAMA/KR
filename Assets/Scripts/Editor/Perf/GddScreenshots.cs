@@ -10,10 +10,10 @@ using UnityEngine;
 
 namespace KR.Editor.Perf
 {
-    // The screenshots for the GDD's Performance Considerations section, taken from the open Editor (owner 2026-11-24).
-    // Menu: Kigali Rush > Performance > Capture GDD screenshots. Leave the mouse alone until it says it is done
-    // (about a minute): it selects things, opens windows, enters Play mode, then saves each view as a PNG in
-    // DOCS/performance and leaves Play mode.
+    // The screenshots for the GDD's Performance Considerations section, taken from the open Editor. Menu: Kigali Rush
+    // > Performance > Capture GDD screenshots. Leave the mouse alone until it says it is done (about a minute): it
+    // selects things, opens windows, enters Play mode, then saves each view as a PNG in DOCS/performance and leaves
+    // Play mode.
     //   1 LOD Group on a parked car, 2 texture import settings (Inspector),
     //   4 Profiler (CPU, Timeline) while playing, 5 Game view with Stats, 6 Frame Debugger.
     // Player Settings (Other Settings > IL2CPP, ARM64) is taken by hand: its foldout cannot be opened from a script.

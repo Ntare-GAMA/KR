@@ -85,7 +85,7 @@ namespace KR.Gameplay.Player
             _hasTired = animator.HasState(0, TiredHash);
         }
 
-        // ---------- Animation states (built by PlayerBuilder from the Mixamo set) ----------
+        // ---------- Animation states (built in the Editor from the Mixamo set) ----------
 
 
         public bool HasState(string state) => animator != null && animator.HasState(0, Animator.StringToHash(state));

@@ -5,8 +5,7 @@ using UnityEngine.SceneManagement;
 namespace KR.Gameplay.Player
 {
     // While you are out of your car, traffic treats it as an obstacle: it stops behind it and passes it in the other
-    // lane, instead of driving through it (owner 2026-11-23, after an accident: "the cars shouldn't be able to pass
-    // through"). While you drive it, the traffic already gives way to it as the player.
+    // lane, instead of driving through it. While you drive it, the traffic already gives way to it as the player.
     public sealed class ParkedCarObstacle : MonoBehaviour
     {
         PlayerRig _rig;

@@ -6,9 +6,9 @@ namespace KR.Gameplay.World
 {
     // People who stand still (staff, people chatting, the story's characters) were placed on the ground as it was
     // when the city was built; where a floor or a plinth was added later (the new ALU halls), their feet ended up
-    // under it (owner, 2026-11-22: "people who are in the ground"). Once the scene has loaded, each standing person
-    // is set on the walkable surface under them, if that is up to a metre above their feet. People moved by a
-    // script (walkers, wanderers, traffic) keep their own placement.
+    // under it. Once the scene has loaded, each standing person is set on the walkable surface under them, if that
+    // is up to a metre above their feet. People moved by a script (walkers, wanderers, traffic) keep their own
+    // placement.
     public sealed class PeopleGrounder : MonoBehaviour
     {
         [RuntimeInitializeOnLoadMethod(RuntimeInitializeLoadType.AfterSceneLoad)]

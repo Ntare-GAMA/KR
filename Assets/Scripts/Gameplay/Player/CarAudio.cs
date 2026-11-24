@@ -153,8 +153,8 @@ namespace KR.Gameplay.Player
         void OnCollisionEnter(Collision c)
         {
             // How much the knock actually changed the car's speed (m/s): kerbs, poles brushed in passing, bumps and
-            // the road surface hardly move a 1.5 t car, so they stay silent. No breaking glass, ever (owner
-            // decision 2026-11-21): small knocks are a soft body thump, only a real smash plays the crash.
+            // the road surface hardly move a 1.5 t car, so they stay silent. No breaking glass, ever: small knocks
+            // are a soft body thump, only a real smash plays the crash.
             float hit = _rb != null && _rb.mass > 0f ? c.impulse.magnitude / _rb.mass : c.relativeVelocity.magnitude;
             if (hit < 1.5f || Time.time - _lastHit < 0.8f)
                 return;

@@ -2,8 +2,8 @@ using UnityEngine;
 
 namespace KR.Gameplay.Player
 {
-    // Measurements of the player's car (Resources/Car/car_parts.json, written in the Editor by
-    // KR.Editor.Batch.CarParts.Export because the car mesh is not readable in a build). Car-local space, metres.
+    // Measurements of the player's car (Resources/Car/car_parts.json, measured in the Editor
+    // because the car mesh is not readable in a build). Car-local space, metres.
     public static class CarGeometry
     {
         [System.Serializable]

@@ -7,8 +7,8 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Interaction
 {
-    // Somewhere you can sit: a chair, a bench, a sofa, a waiting-room seat (owner, 2026-11-22: "i should be able to
-    // sit outside"). The transform is the seat: its position is where you sit, its forward is the way you face.
+    // Somewhere you can sit: a chair, a bench, a sofa, a waiting-room seat. The transform is the seat: its position
+    // is where you sit, its forward is the way you face.
     public sealed class SeatSpot : MonoBehaviour
     {
         static readonly List<SeatSpot> AllSeats = new List<SeatSpot>();

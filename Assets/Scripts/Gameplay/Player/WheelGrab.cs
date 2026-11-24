@@ -3,12 +3,12 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Player
 {
-    // Steering with your hands in the headset (owner feedback 2026-11-23: "the user should rotate or spin the wheel,
-    // not the controllers"). Squeeze a grip with your hand on the rim and that hand holds the wheel; move it round the
-    // rim and the wheel turns with it (both hands: their turns are averaged). Let go and the wheel slowly returns
-    // towards straight ahead while the car moves, as a real one does. Press the middle of the wheel (the hub) with
-    // either hand for the horn. The controllers keep the pedals (triggers), handbrake, lights, belt and the door.
-    // Off in Settings ("Steering: left stick") and on a desktop: nothing here runs and the stick or keys steer.
+    // Steering with your hands in the headset. Squeeze a grip with your hand on the rim and that hand holds the wheel;
+    // move it round the rim and the wheel turns with it (both hands: their turns are averaged). Let go and the wheel
+    // slowly returns towards straight ahead while the car moves, as a real one does. Press the middle of the wheel
+    // (the hub) with either hand for the horn. The controllers keep the pedals (triggers), handbrake, lights, belt and
+    // the door. Off in Settings ("Steering: left stick") and on a desktop: nothing here runs and the stick or keys
+    // steer.
     public sealed class WheelGrab : MonoBehaviour
     {
         const float Reach = 0.13f;          // how far from the rim a hand can take hold (m)

@@ -5,9 +5,9 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.World
 {
-    // Parked cars were placed level, so on Kigali's slopes one end floated (owner, 2026-11-22: "cars whose tyres
-    // are in the air"). When the scene loads, each parked car is tilted to the ground under its four wheels and set
-    // down on it, a few hundred cars per frame so loading does not stall.
+    // Parked cars were placed level, so on Kigali's slopes one end floated. When the scene loads, each parked car
+    // is tilted to the ground under its four wheels and set down on it, a few hundred cars per frame so loading
+    // does not stall.
     public sealed class ParkedCarSettler : MonoBehaviour
     {
         const int PerFrame = 200;

@@ -149,8 +149,7 @@ namespace KR.Gameplay.Player
             float steerIn = Driven ? RigInput.Steer : 0f;
 
             // The button cycles P -> D -> R -> P (the gear lever can also be moved by hand: SelectGear). In the headset
-            // with hand steering, your right hand has to be at the gear lever (owner 2026-11-23: "i should be near the
-            // gear shifter to change it, once i press the button for that, it should immediately happen").
+            // with hand steering, your right hand has to be at the gear lever.
             if (Driven && RigInput.GearPressed)
             {
                 var lever = GetComponent<GearShifter>();

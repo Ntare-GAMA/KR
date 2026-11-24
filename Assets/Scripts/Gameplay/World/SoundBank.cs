@@ -5,7 +5,7 @@ namespace KR.Gameplay.World
 {
     // Every short sound effect by name ("plate_down", "sip", "police_whistle"...), each with one or more takes
     // picked at random so repeats don't sound identical. Played through a small pool of reused AudioSources
-    // (nothing is created while playing). One in the scene; filled by the editor (SourcedAssets).
+    // (nothing is created while playing). One in the scene; filled in the Editor.
     public sealed class SoundBank : MonoBehaviour
     {
         [System.Serializable]

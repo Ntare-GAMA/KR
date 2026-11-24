@@ -4,20 +4,19 @@ using UnityEngine.UI;
 
 namespace KR.Gameplay.Player
 {
-    // The automatic gear lever on the centre console, to the driver's right (owner feedback 2026-11-23: "gear change
-    // should appear on the gear shifter"; "the hands in the game should change the gear"). The car model has none, so
-    // a simple lever, knob and P R D gate are made here. The lever always shows the selected gear, whatever changed it
-    // (R key, right stick click or your hand), and the lit letter on the gate is the gear.
-    // In the headset with hand steering on: take the knob with the right grip and push it forward for P, to the
-    // middle for R or pull it back for D; the gear changes when the lever reaches that position (only when stopped,
-    // otherwise it springs back and the car tells you to stop first).
+    // The automatic gear lever on the centre console, to the driver's right. The car model has none, so a simple
+    // lever, knob and P R D gate are made here. The lever always shows the selected gear, whatever changed it (R key,
+    // right stick click or your hand), and the lit letter on the gate is the gear. In the headset with hand steering
+    // on: take the knob with the right grip and push it forward for P, to the middle for R or pull it back for D; the
+    // gear changes when the lever reaches that position (only when stopped, otherwise it springs back and the car
+    // tells you to stop first).
     public sealed class GearShifter : MonoBehaviour
     {
         // Lever lean (degrees forward) for each gear, and where the console sits from the driver's hip point.
         const float AngleP = 13f, AngleR = 0f, AngleD = -13f;
         const float LeverLength = 0.12f, GrabReach = 0.1f;
         // Over the car model's own (moulded, fixed) gear stick, so the working lever covers it: measured from the body
-        // mesh by PlayCheckDrive's console probe (car space, metres: centre of the console, 65 cm up, 25 cm ahead of
+        // mesh in the Editor (car space, metres: centre of the console, 65 cm up, 25 cm ahead of
         // the car's origin; that stick's knob tops out at 78 cm).
         static readonly Vector3 Mount = new Vector3(-0.01f, 0.65f, 0.25f);
 
@@ -64,8 +63,7 @@ namespace KR.Gameplay.Player
                 return;
             }
             Build();
-            // The lever jumps to the new gear at once, whatever changed it (owner 2026-11-23: "it should
-            // immediately happen").
+            // The lever jumps to the new gear at once, whatever changed it.
             _car.GearChanged += g =>
             {
                 _changedAt = Time.time;
@@ -92,7 +90,7 @@ namespace KR.Gameplay.Player
             _knob = Shape(PrimitiveType.Sphere, _pivot, new Vector3(0f, LeverLength, 0f), new Vector3(0.05f, 0.06f, 0.06f), new Color(0.09f, 0.08f, 0.08f));
 
             // The gate letters beside the lever on a dark plate, facing up and back towards the driver, big enough to
-            // read at a glance (owner 2026-11-23: "the marks ... on the gear shifter should be seen clearly").
+            // read at a glance.
             var plate = new GameObject("Gear gate", typeof(RectTransform));
             plate.transform.SetParent(root, false);
             plate.transform.localPosition = new Vector3(0.075f, 0.03f, 0f);

@@ -11,7 +11,7 @@ namespace KR.Editor.Perf
     // A text report of what the story scene costs to draw, for the GDD's performance section and to choose where
     // LODs and occlusion culling pay off: per top-level group the renderers, triangles, LOD groups, static flags
     // and instancing; then texture import settings (mipmaps, size, compression) across the project.
-    // Menu: Kigali Rush > Performance > Scene report. Batch: BatchTasks.PerfReport. Output: Logs/perf_report.txt.
+    // Menu: Kigali Rush > Performance > Scene report. Output: Logs/perf_report.txt.
     public static class PerfReport
     {
         public const string StoryScene = "Assets/Scenes/PC Only - Story Kimironko Kibagabaga.unity";

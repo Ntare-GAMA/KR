@@ -12,8 +12,8 @@ namespace KR.Gameplay.Player
         public static bool Teleport;                    // walk by teleport instead of the stick
         public static bool LargeText;
         public static bool Seated;                      // raises the view for seated play
-        // In VR: turn the steering wheel with your hands and move the gear lever by hand (owner feedback
-        // 2026-11-23). Off: the left stick steers and the right stick click changes gear.
+        // In VR: turn the steering wheel with your hands and move the gear lever by hand. Off: the left
+        // stick steers and the right stick click changes gear.
         public static bool HandSteering = true;
         public static bool RecenterRequested;
     }

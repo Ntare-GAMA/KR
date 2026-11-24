@@ -247,7 +247,7 @@ namespace KR.Gameplay.Player
             who.collected = false;
             if (onFoot)
             {
-                // Lying on the road: traffic stops for them and goes round (owner 2026-11-23).
+                // Lying on the road: traffic stops for them and goes round.
                 KR.Gameplay.World.RoadNetworkTraffic.AddObstacle(who.root, 0.6f);
                 LastVictim = who.root;
                 _lastVictim = who;

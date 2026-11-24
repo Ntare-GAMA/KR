@@ -5,11 +5,10 @@ using UnityEngine.SceneManagement;
 
 namespace KR.Gameplay.Player
 {
-    // People are solid to you on foot (owner 2026-11-23: "i just passed through the ALU students"). The city's people
-    // have no colliders, on purpose: hundreds of moving capsules would cost the Quest, and the traffic and the
-    // grounding raycasts must not hit them. Instead, each frame, after you have moved, you are pushed back out of
-    // anyone you walked into (a 0.3 m circle round them), through the CharacterController so walls still hold.
-    // Seated people, drivers and anyone hidden do not count.
+    // People are solid to you on foot. The city's people have no colliders, on purpose: hundreds of moving capsules
+    // would cost the Quest, and the traffic and the grounding raycasts must not hit them. Instead, each frame, after
+    // you have moved, you are pushed back out of anyone you walked into (a 0.3 m circle round them), through the
+    // CharacterController so walls still hold. Seated people, drivers and anyone hidden do not count.
     [DefaultExecutionOrder(100)]   // after PlayerMotor
     public sealed class PeopleBlocker : MonoBehaviour
     {

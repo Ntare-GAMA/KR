@@ -148,9 +148,8 @@ namespace KR.Gameplay.Player
 
             if (_seated)
             {
-                // Fixed to the seat in every axis, so the cabin never moves around you however you drive (owner
-                // 2026-11-23: "my seat should stay stationary regardless of how i drive"): up and down hills, over
-                // bumps and under braking you move with the car.
+                // Fixed to the seat in every axis, so the cabin never moves around you however you drive: up and
+                // down hills, over bumps and under braking you move with the car.
                 var seat = rig.Car.Seat;
                 transform.SetPositionAndRotation(seat.position + seat.rotation * _seatLocal, seat.rotation * Quaternion.Euler(0f, _seatYaw, 0f));
                 // Leaning (to see a mirror) is fine, but walking about the room never takes you out of the seat: the

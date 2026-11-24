@@ -24,9 +24,9 @@ namespace KR.Gameplay.Player
             arcMaterial = material;
         }
 
-        // Any floor you could walk on: the roads and the ground, and also building, restaurant and campus floors
-        // (owner 2026-11-23: inside a restaurant the arc only ever showed red). Never a vehicle, a person, a slope
-        // steeper than 35 degrees or a small piece of furniture (a table, a chair, a bench top).
+        // Any floor you could walk on: the roads and the ground, and also building, restaurant and campus floors.
+        // Never a vehicle, a person, a slope steeper than 35 degrees or a small piece of furniture (a table, a
+        // chair, a bench top).
         bool Walkable(RaycastHit hit)
         {
             var col = hit.collider;

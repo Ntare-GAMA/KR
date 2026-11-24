@@ -4,17 +4,16 @@ using UnityEngine;
 
 namespace KR.Gameplay.World
 {
-    // Moves cars (or pedestrians) along real road polylines in their own lane (Rwanda drives on the right).
-    // Bodies never pass through each other: each one looks down a corridor ahead and slows or stops for anything
-    // in it, whatever road it is on (same lane, crossing traffic at junctions, people on a footpath). Where two
-    // bodies block each other the lower index has right of way, so junctions never deadlock. Cars also stop at
-    // red signals. Wheels spin with speed and bodies pitch under braking and acceleration; walkers' animation
-    // speed follows their pace. Two-way paths turn bodies around at the end; one-way paths wrap to the start.
-    // Things outside the traffic (the player's parked car, an accident's police car and ambulance, an officer or
-    // someone lying on the road) are registered as obstacles: cars stop for them too, and after waiting behind one
-    // that is not moving (or a halted car) they pass it slowly in the other lane once that is clear, indicating out
-    // and back in (owner 2026-11-23: "they should wait or pass besides the scene but on the road ... and also have
-    // indicators").
+    // Moves cars (or pedestrians) along real road polylines in their own lane (Rwanda drives on the right). Bodies
+    // never pass through each other: each one looks down a corridor ahead and slows or stops for anything in it,
+    // whatever road it is on (same lane, crossing traffic at junctions, people on a footpath). Where two bodies
+    // block each other the lower index has right of way, so junctions never deadlock. Cars also stop at red
+    // signals. Wheels spin with speed and bodies pitch under braking and acceleration; walkers' animation speed
+    // follows their pace. Two-way paths turn bodies around at the end; one-way paths wrap to the start. Things
+    // outside the traffic (the player's parked car, an accident's police car and ambulance, an officer or someone
+    // lying on the road) are registered as obstacles: cars stop for them too, and after waiting behind one that is
+    // not moving (or a halted car) they pass it slowly in the other lane once that is clear, indicating out and
+    // back in.
     public sealed class RoadNetworkTraffic : MonoBehaviour
     {
         [Serializable]

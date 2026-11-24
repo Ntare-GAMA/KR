@@ -4,8 +4,7 @@ using UnityEngine.XR;
 
 namespace KR.Gameplay.Player
 {
-    // Resolution choices (owner feedback 2026-11-23: "make sure the resolution can be adjusted"), kept on this
-    // device in PlayerPrefs and applied at launch:
+    // Resolution choices, kept on this device in PlayerPrefs and applied at launch:
     //   - on a monitor: the screen resolution and windowed or full screen;
     //   - in a headset: the render resolution per eye (lower is smoother, higher is sharper).
     // Changed from the main menu's Settings and the in-game Settings page.
