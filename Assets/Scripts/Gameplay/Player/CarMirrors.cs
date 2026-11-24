@@ -21,7 +21,8 @@ namespace KR.Gameplay.Player
         // where it costs more.
         static int Width => VrRig.Active ? 1280 : 1792;
         static int Height => VrRig.Active ? 480 : 672;
-        const float VerticalFov = 22f, Far = 160f;
+        const float VerticalFov = 22f, Far = 160f, QuestFar = 110f;
+        static int Every => KR.Gameplay.Diagnostics.QuestPerformance.Applies ? 3 : 2;
 
         sealed class Glass
         {
@@ -118,6 +119,19 @@ namespace KR.Gameplay.Player
             data.antialiasing = AntialiasingMode.None;
             data.requiresDepthOption = CameraOverrideOption.Off;
             data.requiresColorOption = CameraOverrideOption.Off;
+            // Standalone headset: the mirror draws only the road, cars, people and buildings, nearer, and every third
+            // frame (every second on a desktop). It was a second full city draw, a large share of the Quest's
+            // 1,009 draw calls (Logs/QuestBench benchmark, 2026-11-22).
+            if (KR.Gameplay.Diagnostics.QuestPerformance.Applies)
+            {
+                foreach (var layer in new[] { "PcDetail", "PcTrees", "StreetDressing" })
+                {
+                    int l = LayerMask.NameToLayer(layer);
+                    if (l >= 0)
+                        _cam.cullingMask &= ~(1 << l);
+                }
+                _cam.farClipPlane = QuestFar;
+            }
 
             _mat = new Material(Shader.Find("Universal Render Pipeline/Unlit")) { name = "Car mirror glass" };
             _mat.SetTexture("_BaseMap", _rt);
@@ -174,7 +188,7 @@ namespace KR.Gameplay.Player
             if (!show)
                 return;
             var main = Camera.main;
-            Refresh(main != null ? main.transform.position : _car.EyePoint, ++_frame % 2 == 0);
+            Refresh(main != null ? main.transform.position : _car.EyePoint, ++_frame % Every == 0);
         }
 
         // Points each mirror at the right part of the view from this eye position; optionally draws the view.

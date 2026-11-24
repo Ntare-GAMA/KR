@@ -13,7 +13,7 @@ namespace KR.Gameplay.Diagnostics
     // 1811 draw calls, 591k triangles (BenchmarkRun). Applied when the city loads:
     //   - fewer pixels per eye (85%) and the strongest fixed foveation (sharp in the middle of the view);
     //   - no real-time shadows (the city's lighting stays);
-    //   - small things, trees and houses stop being drawn sooner; LODs switch to simpler models sooner;
+    //   - small things, street dressing, trees and houses stop being drawn sooner (per-layer cull distances); LODs switch to simpler models sooner;
     //   - the camera's far plane at 600 m (fog hides the edge).
     public sealed class QuestPerformance : MonoBehaviour
     {
@@ -21,7 +21,9 @@ namespace KR.Gameplay.Diagnostics
 
         static readonly Dictionary<string, float> LayerDistances = new Dictionary<string, float>
         {
-            { "PcDetail", 120f }, { "PcTrees", 220f }, { "PcHouses", 380f },
+            // Tightened 2026-11-24 after the Quest Pro benchmark (1,009 draw calls, 438k triangles: draw calls, not
+            // triangles, are the limit). Fog hides the edge at these distances.
+            { "PcDetail", 90f }, { "StreetDressing", 150f }, { "PcTrees", 180f }, { "PcHouses", 320f },
         };
 
         public static bool Applies => Application.platform == RuntimePlatform.Android;
