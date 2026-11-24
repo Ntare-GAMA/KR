@@ -8,11 +8,21 @@ You play an ALU student racing deadlines through Rush Week: visit a friend, drin
 
 ---
 
+## Documents
+
+| Document | What it covers |
+|---|---|
+| [Game Design Document (updated, 24 Nov 2026)](DOCS/Kigali%20Rush%20VR%20-%20Game%20Design%20Document.docx) | The game as built: core loop, controls, mechanics, Rush Week missions, world, road rules, interface and comfort, technical design, **Performance considerations** (FPS benchmark, profiling, techniques, screenshots), scope and known issues |
+| [Performance Considerations](DOCS/Performance%20Considerations.docx) | The full performance write-up with charts |
+| [First GDD (13 Nov 2026)](DOCS/Game%20Design%20Document.pdf) | The original concept document this vertical slice grew from |
+| [Story script](Documentation/story-script.md) | Missions, characters and conversations |
+| [Asset register](Documentation/asset-register.csv) | Every third-party asset with its source and licence |
+
 ## What is in the game
 
 - **The neighbourhood:** Kimironko, Kibagabaga and the ALU campus, joined by the real main roads, about 5.8 km². Built from OpenStreetMap roads and building footprints on Copernicus elevation data.
 - **First person in VR:** your hands (PolyOne VR Hands) follow the controllers when you walk and hold the steering wheel when you drive. The controllers themselves are never drawn.
-- **Your car:** the PolyDrive Bavaria Sport on real physics: suspension, grip, rear-wheel drive, an automatic gearbox (D/R), anti-lock brakes, hill-start assist and hill-hold. A traction assist at crawling speed lets you drive out of a ditch or off steep grass under your own control.
+- **Your car:** the PolyDrive Bavaria Sport on real physics: suspension, grip, rear-wheel drive, an automatic gearbox (P/R/D), anti-lock brakes, hill-start assist and hill-hold. A traction assist at crawling speed lets you drive out of a ditch or off steep grass under your own control.
 - **Traffic and road rules:** signalised junctions with three-lamp signals, STOP signs, speed limits, police posts, rush-hour jams. Rules from Law n° 014/2026; fines and points stay placeholders until the Minister's Order is supplied.
 - **A day in Kigali:** every session starts in the morning and runs into the evening. Headlights, brake and tail lights, street lamps and night-reflective road signs work. The weather changes each session (sunny first).
 - **Satnav:** a city map drawn from OSM, a route planner on the real road network (one-way streets respected) and turn-by-turn directions.
@@ -59,13 +69,13 @@ Open this folder in Unity Hub (Add, Add project from disk, pick the folder that 
 |---|---|
 | `/` | The Unity project (Assets, Packages, ProjectSettings) |
 | `Assets/Scripts/Gameplay/Player` | Walking, the car (physics, lights), hands, VR rig, controller input |
-| `Assets/Scripts/Gameplay/Story` | Rush Week: milestones, road-rule monitor, driving coach, police, weather, clock, satnav, dashboard screen and VR panel |
+| `Assets/Scripts/Gameplay/Story` | Rush Week, in eight folders: `Missions` (director, milestones, save, discoveries), `Conversations`, `RoadRules` (monitor, coach, police stops, fines), `Emergency` (accidents, ambulance, police response), `Navigation` (satnav, maps, routes), `Interiors` (buildings, venues, restaurants), `Environment` (clock, weather, traffic rhythm), `UI` (info panel, dashboard, phone, wallet) |
 | `Assets/Scripts/Gameplay/Interaction` | Hands that grab, hold and throw (`IGrabbable`, `IHandDriver`, `HandInteractor`, `Grabbable`, `DoorHandle`, `Edible`) |
 | `Assets/Scripts/Gameplay/Diagnostics` | Performance overlay and the repeatable FPS benchmark |
 | `Assets/Scripts/Core` | Engine-light helpers: frame statistics, Profiler counters, atomic file writes |
 | `Assets/Scripts/Tests/EditMode` | Unit tests (NUnit, Unity Test Framework) |
 | `Assets/Scripts/Gameplay/World` | Traffic, signals, STOP signs, day and night, street lamps, instanced city, road graph, city map |
-| `Assets/Scripts/Editor` | Scene builders: GIS import, play area, roads, greenery, people, player and car, Story Mode, city map, Quest setup |
+| `Assets/Scripts/Editor` | Editor-only tools: performance (LOD setup, scene report, screenshots), Quest project setup and build (`XR`) |
 | `Assets/World/PC/kimironko_kibagabaga` | The generated world (terrain, roads, instanced city, car materials, city map) |
 | `Assets/Scenes` | `PC Only - Story Kimironko Kibagabaga` (the game scene) |
 | `SourceArt/GIS/districts/kimironko_kibagabaga` | Processed heightmap, roads, buildings and places (raw `.tif`, `.pbf`, `.geojson` inputs are git-ignored) |
@@ -93,15 +103,16 @@ Known debt: `RoadNetworkTraffic` (traffic driving, overtaking and obstacles) and
 
 ## Building
 
-Everything generated is rebuilt from data with the **Kigali Rush** menu in the Unity Editor, or from the command line (`-batchmode -executeMethod ...`).
+The game scene and the generated world (terrain, roads, city, traffic, people, the player and the car) are in the repository, so there is nothing to generate: open `Assets/Scenes/PC Only - Story Kimironko Kibagabaga.unity` and press Play to try it in the Editor.
+
+To build for the headset, switch the platform to Android (File → Build Profiles), then:
 
 | Menu | Batch method | Result |
 |---|---|---|
-| Scene → Build Story scene (Kimironko + Kibagabaga) | `KR.Editor.Batch.BatchTasks.BuildStoryScene` | The world: terrain, roads, signals, city, traffic, people, the player, the car, the city map (about 20 min) |
-| Story → Add Story Mode to Kimironko scene | `KR.Editor.Batch.BatchTasks.AddStoryMode` | Rush Week, road rules, coach, police posts, satnav, VR rig |
-| VR → Apply Meta Quest settings | `KR.Editor.XR.QuestSetup.ApplyBatch` | OpenXR (Meta Quest, Touch controllers), ARM64 IL2CPP, Vulkan, ASTC, single-pass instanced |
-| | `KR.Editor.XR.QuestSetup.BuildApkBatch` | `Builds/Quest/KigaliRushVR.apk` (Android build target) |
-| | `KR.Editor.Batch.BatchTasks.CaptureCar` | Renders of the car and the driver's view (`-captureDir <folder>`) |
+| Kigali Rush → VR → Apply Meta Quest settings | `KR.Editor.XR.QuestSetup.ApplyBatch` | OpenXR (Meta Quest, Touch controllers), ARM64 IL2CPP, Vulkan, ASTC, single-pass instanced |
+| | `KR.Editor.XR.QuestSetup.BuildApkBatch` | `Builds/Quest/KigaliRushVR.apk` |
+
+For the Unity Profiler on the headset, tick Development Build and Autoconnect Profiler in the build profile.
 
 Install on the headset:
 
@@ -109,18 +120,9 @@ Install on the headset:
 adb install -r Builds/Quest/KigaliRushVR.apk
 ```
 
-### Map data pipeline
+### Map data
 
-```bash
-python Tools/gis/extract_kigali.py ...            # OSM roads and buildings from the Rwanda extract
-python Tools/gis/make_district_terrain.py SourceArt/GIS kimironko_kibagabaga
-```
-
-The `.tif`, `.pbf` and `.geojson` inputs are git-ignored because of their size. Download them again from the sources in the asset register.
-
-### Mixamo animations
-
-The raw Mixamo download library is git-ignored. The curated clips the game uses are in `Assets/Art/Animations/Mixamo`. To change the set, download the clips again, edit `MixamoCatalog.cs` and run Characters → Import Mixamo Animations.
+The map data was prepared with the Python scripts in `Tools/gis` (OSM roads and buildings, district heightmaps). The raw `.tif`, `.pbf` and `.geojson` inputs are git-ignored because of their size; their sources are in the asset register.
 
 ## Testing
 
@@ -132,27 +134,15 @@ Unity -batchmode -projectPath . -runTests -testPlatform EditMode -testResults Lo
 
 Or Window → General → Test Runner → EditMode → Run All.
 
-Play-mode checks that run the game in the Editor and save screenshots (no headset needed; leave out `-batchmode`):
-
-| Method | What it checks |
-|---|---|
-| `KR.Editor.Batch.PlayCapture.Interiors` | Goes into 8 buildings, photographs each room and picks something up |
-| `KR.Editor.Batch.PlayCapture.Emergency` | Knocks someone down on a zebra crossing (simulated) and records the ambulance and the police arriving |
-| `KR.Editor.Batch.PlayCapture.Traffic` | Traffic sits on the road, by day and by night |
-
-```bash
-Unity -projectPath . -executeMethod KR.Editor.Batch.PlayCapture.Interiors -captureDir Logs/Interiors
-```
-
 On the headset: walk, drive, open the info panel (left ☰), and on Settings switch on the performance overlay or run the FPS benchmark.
 
 ## Performance
 
 - **Overlay:** F3 on a desktop, or Settings → Performance overlay on the headset. It shows FPS, frame time against the display budget (13.9 ms at 72 Hz), main-thread time, draw calls, batches, SetPass calls, triangles, GC allocation per frame and memory. Draw-call counters need a development build.
-- **Benchmark:** F9, Settings → Run the FPS benchmark, or `KigaliRushStory.exe -benchmark` (add `-lodBias 1000` for a "LODs off" comparison). It follows the same 818 m street route every time, at 10:00 in calm weather with the clock held. It writes a per-second CSV and a summary (average FPS, 1% and 0.1% lows, share of frames over budget, draw calls) to `persistentDataPath/Benchmarks`. On the Quest, fetch the results with `adb pull /sdcard/Android/data/<package>/files/Benchmarks`.
-- **Scene report:** Kigali Rush → Performance → Scene report (`BatchTasks.PerfReport`), which writes `Logs/perf_report.txt` with renderers, triangles, LOD groups, static flags and instancing per group, and the textures without mipmaps.
-- **Measured (Quest Pro, 22 Nov 2026, before the 24 Nov changes):** 40.0 FPS average against the 72 Hz target, 1% low 23.9, main thread about 26 ms of a 13.9 ms budget, about 1,009 draw calls, 24 SetPass calls, 438k triangles, 0 KB garbage per frame. The limit is the number of draw calls on the CPU, not triangles. Full write-up with charts: [`DOCS/Performance Considerations.docx`](DOCS/Performance%20Considerations.docx).
-- **Unity Profiler on the headset:** Kigali Rush → Build → Build and run on Quest (Profiler) makes a development build that connects to the Profiler (or add `-development` to the batch build). Then Window → Analysis → Profiler and pick the Quest as the target.
+- **Benchmark:** F9, Settings → Run the FPS benchmark, or `KigaliRushStory.exe -benchmark` (add `-lodBias 1000` for a "LODs off" comparison). It follows the same 818 m street route every time, at 10:00 in calm weather with the clock held. It writes a per-second CSV and a summary (average FPS, 1% and 0.1% lows, share of frames over budget, draw calls) to `persistentDataPath/Benchmarks`. On the Quest, fetch the results with `adb pull /sdcard/Android/data/com.kigalirush.storyvr/files/Benchmarks`.
+- **Scene report:** Kigali Rush → Performance → Scene report, which writes `Logs/perf_report.txt` with renderers, triangles, LOD groups, static flags and instancing per group, and the textures without mipmaps.
+- **Measured (Quest Pro, 22 Nov 2026, before the 24 Nov changes):** 40.0 FPS average against the 72 Hz target, 1% low 23.9, main thread about 26 ms of a 13.9 ms budget, about 1,009 draw calls, 24 SetPass calls, 438k triangles, 0 KB garbage per frame. The limit is the number of draw calls on the CPU, not triangles. Full write-up with charts and screenshots: the Performance considerations section of the [GDD](DOCS/Kigali%20Rush%20VR%20-%20Game%20Design%20Document.docx) and [`DOCS/Performance Considerations.docx`](DOCS/Performance%20Considerations.docx).
+- **Unity Profiler on the headset:** make a development build with Autoconnect Profiler (see Building). Then Window → Analysis → Profiler and pick the Quest as the target.
 - **Profiler markers:** `KR.Traffic`, `KR.Interiors`, `KR.InstancedCity.Draw`, `KR.StreetLights`, `KR.Signals`, `KR.Story`, `KR.Emergency`, `KR.CrossingWalkers`, `KR.Headlights`, `KR.DayNight`.
 - **Techniques in the build:**
   - IL2CPP on ARM64;
@@ -173,7 +163,7 @@ On the headset: walk, drive, open the info panel (left ☰), and on Settings swi
 
 - Offline-first: a full session works with no network.
 - Only the play area is built and every budget is set for the Quest (72 fps, rendered twice).
-- No MTN branding, no real vehicle brands or number plates in public builds, and no AI-generated art in shipped assets.
+- No MTN branding, and no real vehicle brands or number plates in public builds.
 - Road-rule fines and points are placeholders until the Minister's Order is supplied; nothing is presented as official that is not.
 - Knowledge cards stay `draft` until a human reviewer approves them. The 1994 Genocide against the Tutsi in Rwanda is never part of a timer, score or game mechanic.
 
