@@ -19,6 +19,19 @@ namespace KR.Editor.Batch
         [MenuItem("Kigali Rush/Build/Build Quest APK only")]
         static void BuildMenu() => Build(false);
 
+        // A development build the Unity Profiler can attach to on the headset (Window > Analysis > Profiler, target
+        // the Quest over USB). Slower than a release build: use it for profiling, not for play tests.
+        [MenuItem("Kigali Rush/Build/Build and run on Quest (Profiler)")]
+        static void ProfilerMenu()
+        {
+            _menuDevelopment = true;
+            try { Build(true); }
+            finally { _menuDevelopment = false; }
+        }
+
+        static bool _menuDevelopment;
+        static bool Development => _menuDevelopment || System.Array.IndexOf(System.Environment.GetCommandLineArgs(), "-development") >= 0;
+
         public static bool Build(bool run)
         {
             if (EditorUserBuildSettings.activeBuildTarget != BuildTarget.Android &&
@@ -50,10 +63,11 @@ namespace KR.Editor.Batch
                 locationPathName = ApkPath,
                 target = BuildTarget.Android,
                 targetGroup = BuildTargetGroup.Android,
-                options = run ? BuildOptions.AutoRunPlayer : BuildOptions.None,
+                options = (run ? BuildOptions.AutoRunPlayer : BuildOptions.None) |
+                          (Development ? BuildOptions.Development | BuildOptions.ConnectWithProfiler : BuildOptions.None),
             });
             var sum = report.summary;
-            Debug.Log($"[Quest] {sum.result}: {ApkPath}, {sum.totalSize / (1024f * 1024f):0} MB, {sum.totalErrors} errors, {sum.totalTime.TotalMinutes:0.0} min");
+            Debug.Log($"[Quest] {sum.result}: {ApkPath}, {sum.totalSize / (1024f * 1024f):0} MB, {sum.totalErrors} errors, {sum.totalTime.TotalMinutes:0.0} min{(Development ? ", development (Profiler)" : "")}");
             if (sum.result != BuildResult.Succeeded)
             {
                 Debug.LogError("[Quest] Build failed; see the Console above.");
