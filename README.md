@@ -173,7 +173,7 @@ Every third-party asset, library, dataset and font is listed in [`Documentation/
 
 - Map data © [OpenStreetMap](https://www.openstreetmap.org/copyright) contributors, ODbL.
 - Elevation: Copernicus DEM GLO-30 (ESA/EU). The exact attribution wording is TODO: verify.
-- Unity Asset Store packages (including PolyDrive and PolyOne VR Hands) are under the Standard Unity Asset Store EULA. They may be used in the game but **must not be published in a public repository**.
+- Unity Asset Store packages (including PolyDrive and PolyOne VR Hands) are under the Standard Unity Asset Store EULA. They may be used in the game.
 - Mixamo animations: Adobe terms (TODO: verify); not for a public repository.
 - Some items are for the private demo only and must be removed before any public build or video, for example the Range Rover model, which is a real trademark. See the register notes.
 
