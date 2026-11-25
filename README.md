@@ -4,7 +4,7 @@ A first-person virtual reality driving and life game set in **Kimironko** and **
 
 You play an ALU student racing deadlines through Rush Week: visit a friend, drink tea, get to class, read a book, buy at the market. Every milestone has a par time, and you get around on foot or in your own car on real streets built from map data. You learn to drive the way it is done in Rwanda: drive on the right, stop at red lights and STOP signs, keep to the limit, wear your seatbelt. A driving coach warns you before you break a rule, and learners are not fined until they have driven 3 km cleanly.
 
-> Private repository. It contains Unity Asset Store packages and Mixamo animations that must not be redistributed publicly. See [Licences and credits](#licences-and-credits).
+> Private repository, only made public for the assignment fulfillment. It contains Unity Asset Store packages and Mixamo animations that must not be redistributed publicly. See [Licences and credits](#licences-and-credits).
 
 ---
 
