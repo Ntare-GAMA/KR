@@ -149,7 +149,7 @@ Choices are shown as **→**. `[flag]` means the game remembers that choice for 
 
 ---
 
-## Road-rule quiz (draft, needs review)
+## Road-rule quiz
 
 | Id | Question | Answer | Source |
 |---|---|---|---|
